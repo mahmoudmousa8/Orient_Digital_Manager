@@ -1,0 +1,89 @@
+import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+type AppRole = "admin" | "employee" | "client";
+
+async function assertAdmin(context: any) {
+  const { data: isAdmin } = await context.supabase.rpc("has_role", {
+    _user_id: context.userId,
+    _role: "admin",
+  });
+  if (!isAdmin) throw new Error("صلاحيات غير كافية");
+}
+
+export const listUserPermissions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const [{ data: profiles }, { data: roles }, { data: clients }] = await Promise.all([
+      supabaseAdmin.from("profiles").select("id, email, full_name"),
+      supabaseAdmin.from("user_roles").select("user_id, role"),
+      supabaseAdmin.from("clients").select("id, name, user_id"),
+    ]);
+
+    const rolesByUser = new Map<string, AppRole[]>();
+    (roles ?? []).forEach((r: any) => {
+      const arr = rolesByUser.get(r.user_id) ?? [];
+      arr.push(r.role);
+      rolesByUser.set(r.user_id, arr);
+    });
+
+    const clientByUser = new Map<string, { id: string; name: string }>();
+    (clients ?? []).forEach((c: any) => {
+      if (c.user_id) clientByUser.set(c.user_id, { id: c.id, name: c.name });
+    });
+
+    return (profiles ?? []).map((p: any) => ({
+      userId: p.id,
+      email: p.email,
+      fullName: p.full_name,
+      roles: rolesByUser.get(p.id) ?? [],
+      client: clientByUser.get(p.id) ?? null,
+    }));
+  });
+
+export const setUserRole = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: any) => {
+    const role = String(input?.role);
+    if (!["admin", "employee", "client"].includes(role)) throw new Error("دور غير صالح");
+    if (!input?.userId) throw new Error("المستخدم مطلوب");
+    return { userId: String(input.userId), role: role as AppRole };
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    if (data.userId === context.userId && data.role !== "admin") {
+      throw new Error("لا يمكنك إزالة صلاحيات المسؤول عن نفسك");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Replace roles: delete all then insert the chosen one
+    await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
+    const { error } = await supabaseAdmin
+      .from("user_roles")
+      .insert({ user_id: data.userId, role: data.role });
+    if (error) throw new Error(error.message);
+    // If switched away from client, unlink any client record
+    if (data.role !== "client") {
+      await supabaseAdmin.from("clients").update({ user_id: null }).eq("user_id", data.userId);
+    }
+    return { ok: true };
+  });
+
+export const unlinkUserFromClient = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: any) => {
+    if (!input?.clientId) throw new Error("العميل مطلوب");
+    return { clientId: String(input.clientId) };
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("clients")
+      .update({ user_id: null })
+      .eq("id", data.clientId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
