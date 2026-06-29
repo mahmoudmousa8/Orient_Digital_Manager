@@ -48,6 +48,10 @@ export type Database = {
           name: string
           status: Database["public"]["Enums"]["channel_status"]
           updated_at: string
+          system_id: string | null
+          system_percentage: number
+          company_percentage: number
+          is_monetized: boolean
         }
         Insert: {
           client_id: string
@@ -58,6 +62,10 @@ export type Database = {
           name: string
           status?: Database["public"]["Enums"]["channel_status"]
           updated_at?: string
+          system_id?: string | null
+          system_percentage?: number
+          company_percentage?: number
+          is_monetized?: boolean
         }
         Update: {
           client_id?: string
@@ -68,6 +76,10 @@ export type Database = {
           name?: string
           status?: Database["public"]["Enums"]["channel_status"]
           updated_at?: string
+          system_id?: string | null
+          system_percentage?: number
+          company_percentage?: number
+          is_monetized?: boolean
         }
         Relationships: [
           {
@@ -77,6 +89,13 @@ export type Database = {
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "channels_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          }
         ]
       }
       clients: {
@@ -129,6 +148,7 @@ export type Database = {
           updated_at: string
           views: number
           invoice_id: string | null
+          company_percentage: number
         }
         Insert: {
           channel_id: string
@@ -143,6 +163,7 @@ export type Database = {
           updated_at?: string
           views?: number
           invoice_id?: string | null
+          company_percentage?: number
         }
         Update: {
           channel_id?: string
@@ -157,6 +178,7 @@ export type Database = {
           updated_at?: string
           views?: number
           invoice_id?: string | null
+          company_percentage?: number
         }
         Relationships: [
           {
@@ -594,6 +616,27 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
+      }
+      systems: {
+        Row: {
+          id: string
+          name: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {

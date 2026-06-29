@@ -384,11 +384,30 @@ export function parseRevenueFile(file: File): Promise<Array<{ channel: string; m
   });
 }
 
-export function downloadRevenueTemplate() {
-  const ws = XLSX.utils.json_to_sheet([
-    { channel: "Ahmed Vlogs", month: "2026-06", revenue: 1500, percentage: 60 },
-    { channel: "Sara Kitchen", month: "2026-06", revenue: 2200, percentage: 65 },
-  ]);
+export function downloadRevenueTemplate(channels?: any[]) {
+  const currentMonth = new Date().toISOString().slice(0, 7); // e.g. "2026-06"
+  
+  let data = [];
+  if (channels && channels.length > 0) {
+    // Filter channels where is_monetized is not false
+    const monetized = channels.filter(c => c.is_monetized !== false);
+    data = monetized.map(c => ({
+      channel: c.name,
+      month: currentMonth,
+      revenue: 0,
+      percentage: c.client_percentage
+    }));
+  }
+
+  // If no monetized channels, fallback to mock examples
+  if (data.length === 0) {
+    data = [
+      { channel: "Ahmed Vlogs", month: currentMonth, revenue: 1500, percentage: 60 },
+      { channel: "Sara Kitchen", month: currentMonth, revenue: 2200, percentage: 65 },
+    ];
+  }
+
+  const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Revenues");
   XLSX.writeFile(wb, "revenue-import-template.xlsx");

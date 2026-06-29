@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Pencil, Trash2, Youtube, ExternalLink, Search } from "lucide-react";
 import { STATUS_AR } from "@/lib/format";
 import {
@@ -30,9 +31,18 @@ export const Route = createFileRoute("/_authenticated/channels")({
 });
 
 type Channel = {
-  id: string; client_id: string; name: string; link: string | null;
-  client_percentage: number; status: "active" | "paused" | "suspended" | "closed";
+  id: string;
+  client_id: string;
+  name: string;
+  link: string | null;
+  client_percentage: number;
+  status: "active" | "paused" | "suspended" | "closed";
   clients?: { name: string } | null;
+  system_id?: string | null;
+  system_percentage?: number | null;
+  company_percentage?: number | null;
+  is_monetized?: boolean;
+  systems?: { name: string } | null;
 };
 
 const statusVariant: Record<string, string> = {
@@ -52,7 +62,15 @@ function ChannelsPage() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterClient, setFilterClient] = useState<string>("all");
+  const [filterSystem, setFilterSystem] = useState<string>("all");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+
+  // New fields state
+  const [systemId, setSystemId] = useState<string>("none");
+  const [newSystemName, setNewSystemName] = useState<string>("");
+  const [isMonetized, setIsMonetized] = useState<boolean>(true);
+  const [clientPercentage, setClientPercentage] = useState<number>(50);
+  const [systemPercentage, setSystemPercentage] = useState<number>(0);
 
   const { data: clients = [] } = useQuery({
     queryKey: ["clients-min"],
@@ -62,12 +80,20 @@ function ChannelsPage() {
     },
   });
 
+  const { data: systems = [] } = useQuery({
+    queryKey: ["systems"],
+    queryFn: async () => {
+      const { data } = await supabase.from("systems").select("id, name").order("name");
+      return (data ?? []) as { id: string; name: string }[];
+    },
+  });
+
   const { data: channels = [], isLoading } = useQuery({
     queryKey: ["channels"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("channels")
-        .select("*, clients(name)")
+        .select("*, clients(name), systems(name)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as Channel[];
@@ -75,16 +101,44 @@ function ChannelsPage() {
   });
 
   const save = useMutation({
-    mutationFn: async (payload: any) => {
+    mutationFn: async ({ payload, newSystemName }: { payload: any; newSystemName?: string }) => {
+      let finalPayload = { ...payload };
+      if (newSystemName) {
+        // Check if system already exists (case-insensitive)
+        const { data: existing } = await supabase
+          .from("systems")
+          .select("id")
+          .eq("name", newSystemName.trim())
+          .maybeSingle();
+
+        if (existing) {
+          finalPayload.system_id = existing.id;
+        } else {
+          const { data: newSys, error: sysErr } = await supabase
+            .from("systems")
+            .insert({ name: newSystemName.trim() })
+            .select("id")
+            .single();
+          if (sysErr) throw sysErr;
+          finalPayload.system_id = newSys.id;
+        }
+      }
+
       if (editing) {
-        const { error } = await supabase.from("channels").update(payload).eq("id", editing.id);
+        const { error } = await supabase.from("channels").update(finalPayload).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("channels").insert(payload);
+        const { error } = await supabase.from("channels").insert(finalPayload);
         if (error) throw error;
       }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["channels"] }); toast.success("تم الحفظ"); setOpen(false); setEditing(null); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["channels"] });
+      qc.invalidateQueries({ queryKey: ["systems"] });
+      toast.success("تم الحفظ");
+      setOpen(false);
+      setEditing(null);
+    },
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -93,34 +147,84 @@ function ChannelsPage() {
       const { error } = await supabase.from("channels").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["channels"] }); toast.success("تم الحذف"); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["channels"] });
+      toast.success("تم الحذف");
+    },
     onError: (e: any) => toast.error(e.message),
   });
 
+  const companyPercentage = 100 - clientPercentage - (systemId !== "none" ? systemPercentage : 0);
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    save.mutate({
+
+    const payload: any = {
       client_id: clientId || editing?.client_id,
-      name: String(fd.get("name")),
-      link: String(fd.get("link") || "") || null,
-      client_percentage: Number(fd.get("client_percentage")),
+      name: String(new FormData(e.currentTarget).get("name")),
+      link: String(new FormData(e.currentTarget).get("link") || "") || null,
+      client_percentage: clientPercentage,
+      system_percentage: systemId !== "none" ? systemPercentage : 0,
+      company_percentage: companyPercentage,
       status,
+      is_monetized: isMonetized,
+    };
+
+    if (systemId !== "none" && systemId !== "new") {
+      payload.system_id = systemId;
+    } else if (systemId === "none") {
+      payload.system_id = null;
+    }
+
+    save.mutate({
+      payload,
+      newSystemName: systemId === "new" ? newSystemName : undefined,
     });
   }
 
-  function openNew() { setEditing(null); setClientId(""); setStatus("active"); setOpen(true); }
-  function openEdit(c: Channel) { setEditing(c); setClientId(c.client_id); setStatus(c.status); setOpen(true); }
+  function openNew() {
+    setEditing(null);
+    setClientId("");
+    setStatus("active");
+    setSystemId("none");
+    setNewSystemName("");
+    setIsMonetized(true);
+    setClientPercentage(50);
+    setSystemPercentage(0);
+    setOpen(true);
+  }
+
+  function openEdit(c: Channel) {
+    setEditing(c);
+    setClientId(c.client_id);
+    setStatus(c.status);
+    setSystemId(c.system_id || "none");
+    setNewSystemName("");
+    setIsMonetized(c.is_monetized ?? true);
+    setClientPercentage(c.client_percentage);
+    setSystemPercentage(c.system_percentage ?? 0);
+    setOpen(true);
+  }
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return channels.filter((c) => {
       if (filterStatus !== "all" && c.status !== filterStatus) return false;
       if (filterClient !== "all" && c.client_id !== filterClient) return false;
-      if (q && !c.name.toLowerCase().includes(q) && !(c.clients?.name ?? "").toLowerCase().includes(q)) return false;
+      if (filterSystem !== "all") {
+        if (filterSystem === "none" && c.system_id !== null) return false;
+        if (filterSystem !== "none" && c.system_id !== filterSystem) return false;
+      }
+      if (
+        q &&
+        !c.name.toLowerCase().includes(q) &&
+        !(c.clients?.name ?? "").toLowerCase().includes(q) &&
+        !(c.systems?.name ?? "").toLowerCase().includes(q)
+      )
+        return false;
       return true;
     });
-  }, [channels, search, filterStatus, filterClient]);
+  }, [channels, search, filterStatus, filterClient, filterSystem]);
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -130,38 +234,173 @@ function ChannelsPage() {
             <Youtube className="w-8 h-8 text-primary" />
             القنوات
           </h1>
-          <p className="text-sm text-muted-foreground mt-1.5">{isStaff ? "إدارة قنوات اليوتيوب لكل عميل" : "قنواتك المسجلة"}</p>
+          <p className="text-sm text-muted-foreground mt-1.5">
+            {isStaff ? "إدارة قنوات اليوتيوب لكل عميل" : "قنواتك المسجلة"}
+          </p>
         </div>
         {isStaff && (
-          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
+          <Dialog
+            open={open}
+            onOpenChange={(v) => {
+              setOpen(v);
+              if (!v) setEditing(null);
+            }}
+          >
             <DialogTrigger asChild>
-              <Button onClick={openNew} className="btn-header-action"><Plus className="w-4 h-4 ml-1" /> قناة جديدة</Button>
+              <Button onClick={openNew} className="btn-header-action">
+                <Plus className="w-4 h-4 ml-1" /> قناة جديدة
+              </Button>
             </DialogTrigger>
             <DialogContent dir="rtl">
-              <DialogHeader><DialogTitle>{editing ? "تعديل قناة" : "قناة جديدة"}</DialogTitle></DialogHeader>
+              <DialogHeader>
+                <DialogTitle>{editing ? "تعديل قناة" : "قناة جديدة"}</DialogTitle>
+              </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label>العميل *</Label>
                   <Select value={clientId} onValueChange={setClientId}>
-                    <SelectTrigger><SelectValue placeholder="اختر العميل" /></SelectTrigger>
-                    <SelectContent>{clients.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                    <SelectTrigger>
+                      <SelectValue placeholder="اختر العميل" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {clients.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2"><Label>اسم القناة *</Label><Input name="name" required defaultValue={editing?.name} /></div>
-                <div className="space-y-2"><Label>رابط القناة</Label><Input name="link" type="url" defaultValue={editing?.link ?? ""} dir="ltr" placeholder="https://youtube.com/@channel" /></div>
+                <div className="space-y-2">
+                  <Label>اسم القناة *</Label>
+                  <Input name="name" required defaultValue={editing?.name} />
+                </div>
+                <div className="space-y-2">
+                  <Label>رابط القناة</Label>
+                  <Input
+                    name="link"
+                    type="url"
+                    defaultValue={editing?.link ?? ""}
+                    dir="ltr"
+                    placeholder="https://youtube.com/@channel"
+                  />
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2"><Label>نسبة العميل % *</Label><Input name="client_percentage" type="number" step="0.01" min="0" max="100" required defaultValue={editing?.client_percentage ?? 50} dir="ltr" /></div>
                   <div className="space-y-2">
-                    <Label>الحالة</Label>
-                    <Select value={status} onValueChange={setStatus}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                    <Label>السيستم / الشبكة</Label>
+                    <Select
+                      value={systemId}
+                      onValueChange={(val) => {
+                        setSystemId(val);
+                        if (val === "none") setSystemPercentage(0);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="اختر السيستم" />
+                      </SelectTrigger>
                       <SelectContent>
-                        {["active","paused","suspended","closed"].map(s => <SelectItem key={s} value={s}>{STATUS_AR[s]}</SelectItem>)}
+                        <SelectItem value="none">بدون سيستم (مباشر)</SelectItem>
+                        {systems.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>
+                            {s.name}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="new">+ إضافة سيستم جديد...</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {systemId === "new" && (
+                    <div className="space-y-2 animate-fade-in">
+                      <Label>اسم السيستم الجديد *</Label>
+                      <Input
+                        required
+                        placeholder="أدخل اسم السيستم الجديد"
+                        value={newSystemName}
+                        onChange={(e) => setNewSystemName(e.target.value)}
+                      />
+                    </div>
+                  )}
                 </div>
-                <DialogFooter><Button type="submit" disabled={save.isPending}>حفظ</Button></DialogFooter>
+
+                <div className={`grid ${systemId !== "none" ? "grid-cols-3" : "grid-cols-2"} gap-3`}>
+                  <div className="space-y-2">
+                    <Label>نسبة العميل % *</Label>
+                    <Input
+                      name="client_percentage"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      required
+                      value={clientPercentage}
+                      onChange={(e) => setClientPercentage(Number(e.target.value) || 0)}
+                      dir="ltr"
+                    />
+                  </div>
+
+                  {systemId !== "none" && (
+                    <div className="space-y-2">
+                      <Label>نسبة السيستم % *</Label>
+                      <Input
+                        name="system_percentage"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        required
+                        value={systemPercentage}
+                        onChange={(e) => setSystemPercentage(Number(e.target.value) || 0)}
+                        dir="ltr"
+                      />
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label>نسبة الشركة %</Label>
+                    <Input
+                      type="number"
+                      value={companyPercentage}
+                      readOnly
+                      disabled
+                      className="bg-muted text-white font-bold"
+                      dir="ltr"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2 space-x-reverse py-2">
+                  <Checkbox
+                    id="is_monetized"
+                    checked={isMonetized}
+                    onCheckedChange={(checked) => setIsMonetized(!!checked)}
+                  />
+                  <Label htmlFor="is_monetized" className="cursor-pointer text-sm font-medium">
+                    مفعلة أرباح
+                  </Label>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>الحالة</Label>
+                  <Select value={status} onValueChange={setStatus}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["active", "paused", "suspended", "closed"].map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {STATUS_AR[s]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <DialogFooter>
+                  <Button type="submit" disabled={save.isPending}>
+                    حفظ
+                  </Button>
+                </DialogFooter>
               </form>
             </DialogContent>
           </Dialog>
@@ -171,22 +410,53 @@ function ChannelsPage() {
       <div className="flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="بحث باسم القناة أو العميل…" value={search} onChange={(e) => setSearch(e.target.value)} className="search-input-padding" />
+          <Input
+            placeholder="بحث باسم القناة أو العميل أو السيستم…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="search-input-padding"
+          />
         </div>
         {isStaff && (
           <Select value={filterClient} onValueChange={setFilterClient}>
-            <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">كل العملاء</SelectItem>
-              {clients.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              {clients.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         )}
+        <Select value={filterSystem} onValueChange={setFilterSystem}>
+          <SelectTrigger className="w-44">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">كل السيستمز</SelectItem>
+            <SelectItem value="none">مباشر (بدون سيستم)</SelectItem>
+            {systems.map((s) => (
+              <SelectItem key={s.id} value={s.id}>
+                {s.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">كل الحالات</SelectItem>
-            {["active","paused","suspended","closed"].map(s => <SelectItem key={s} value={s}>{STATUS_AR[s]}</SelectItem>)}
+            {["active", "paused", "suspended", "closed"].map((s) => (
+              <SelectItem key={s.id} value={s.id}>
+                {STATUS_AR[s]}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -198,28 +468,84 @@ function ChannelsPage() {
               <TableRow>
                 <TableHead className="text-right">القناة</TableHead>
                 <TableHead className="text-right">العميل</TableHead>
+                <TableHead className="text-right">السيستم / الشبكة</TableHead>
                 <TableHead className="text-center">نسبة العميل</TableHead>
+                <TableHead className="text-center">نسبة الشبكة</TableHead>
+                <TableHead className="text-center">نسبة الشركة</TableHead>
+                <TableHead className="text-center">تفعيل الأرباح</TableHead>
                 <TableHead className="text-right">الحالة</TableHead>
                 <TableHead className="text-right">الرابط</TableHead>
                 {isStaff && <TableHead className="text-left">إجراءات</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading && <TableRow><TableCell colSpan={6} className="text-center">جاري التحميل…</TableCell></TableRow>}
-              {!isLoading && filtered.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">لا توجد قنوات</TableCell></TableRow>}
+              {isLoading && (
+                <TableRow>
+                  <TableCell colSpan={10} className="text-center">
+                    جاري التحميل…
+                  </TableCell>
+                </TableRow>
+              )}
+              {!isLoading && filtered.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
+                    لا توجد قنوات
+                  </TableCell>
+                </TableRow>
+              )}
               {filtered.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell className="font-medium text-right">{c.name}</TableCell>
                   <TableCell className="text-right">{c.clients?.name ?? "—"}</TableCell>
-                  <TableCell dir="ltr" className="text-center text-white">{c.client_percentage}%</TableCell>
+                  <TableCell className="text-right text-white">{c.systems?.name ?? "مباشر"}</TableCell>
+                  <TableCell dir="ltr" className="text-center text-white">
+                    {c.client_percentage}%
+                  </TableCell>
+                  <TableCell dir="ltr" className="text-center text-white">
+                    {c.system_id ? `${c.system_percentage}%` : "—"}
+                  </TableCell>
+                  <TableCell dir="ltr" className="text-center text-white">
+                    {c.company_percentage ?? (100 - c.client_percentage - (c.system_percentage ?? 0))}%
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {c.is_monetized !== false ? (
+                      <Badge className="bg-[#fbbf24] text-black font-bold rounded-full border-none px-2.5 py-0.5">
+                        مفعلة
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-slate-600 text-slate-200 rounded-full border-none px-2.5 py-0.5">
+                        غير مفعلة
+                      </Badge>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right text-white font-medium">{STATUS_AR[c.status]}</TableCell>
-                  <TableCell className="text-right">{c.link ? <a href={c.link} target="_blank" rel="noreferrer" className="text-slate-100 hover:text-white inline-flex items-center gap-1"><ExternalLink className="w-3 h-3" />فتح</a> : "—"}</TableCell>
-                  {isStaff && <TableCell className="text-left">
-                    <div className="flex gap-1 justify-end">
-                      <Button size="icon" variant="ghost" onClick={() => openEdit(c)}><Pencil className="w-4 h-4" /></Button>
-                      <Button size="icon" variant="ghost" onClick={() => setDeleteTarget(c.id)}><Trash2 className="w-4 h-4 text-slate-300 hover:text-red-400 transition-colors" /></Button>
-                    </div>
-                  </TableCell>}
+                  <TableCell className="text-right">
+                    {c.link ? (
+                      <a
+                        href={c.link}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-slate-100 hover:text-white inline-flex items-center gap-1"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        فتح
+                      </a>
+                    ) : (
+                      "—"
+                    )}
+                  </TableCell>
+                  {isStaff && (
+                    <TableCell className="text-left">
+                      <div className="flex gap-1 justify-end">
+                        <Button size="icon" variant="ghost" onClick={() => openEdit(c)}>
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" onClick={() => setDeleteTarget(c.id)}>
+                          <Trash2 className="w-4 h-4 text-slate-300 hover:text-red-400 transition-colors" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>

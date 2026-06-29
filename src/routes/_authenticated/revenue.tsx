@@ -55,7 +55,7 @@ function RevenuePage() {
   const { data: channels = [] } = useQuery({
     queryKey: ["channels-min"],
     queryFn: async () => {
-      const { data } = await supabase.from("channels").select("id, name, client_percentage, clients(name)").order("name");
+      const { data } = await supabase.from("channels").select("id, name, client_percentage, system_percentage, company_percentage, clients(name)").order("name");
       return (data ?? []) as any[];
     },
   });
@@ -65,7 +65,7 @@ function RevenuePage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("monthly_revenues")
-        .select("*, channels(name, client_percentage, clients(name))")
+        .select("*, channels(name, client_percentage, clients(name), systems(name))")
         .order("period_month", { ascending: false });
       if (error) throw error;
       return data as Revenue[];
@@ -105,11 +105,15 @@ function RevenuePage() {
       for (const r of rows) {
         const ch = byName.get(r.channel.toLowerCase().trim());
         if (!ch) { missing.push(r.channel); continue; }
+        const clientPct = r.percentage ?? ch.client_percentage;
+        const systemPct = ch.system_percentage ?? 0;
+        const companyPct = 100 - clientPct - systemPct;
         payload.push({
           channel_id: ch.id,
           period_month: r.month,
           total_revenue: r.revenue,
-          client_percentage: r.percentage ?? ch.client_percentage,
+          client_percentage: clientPct,
+          company_percentage: companyPct,
         });
       }
       if (!payload.length) throw new Error(`لم يتم العثور على قنوات: ${missing.join(", ")}`);
@@ -129,11 +133,15 @@ function RevenuePage() {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     const ch = channels.find((c: any) => c.id === channelId);
+    const clientPct = Number(fd.get("client_percentage") || ch?.client_percentage || 50);
+    const systemPct = ch?.system_percentage ?? 0;
+    const companyPct = 100 - clientPct - systemPct;
     save.mutate({
       channel_id: channelId || editing?.channel_id,
       period_month: String(fd.get("period_month")) + "-01",
       total_revenue: Number(fd.get("total_revenue")),
-      client_percentage: Number(fd.get("client_percentage") || ch?.client_percentage || 50),
+      client_percentage: clientPct,
+      company_percentage: companyPct,
       notes: String(fd.get("notes") || "") || null,
     });
   }
@@ -157,7 +165,7 @@ function RevenuePage() {
       if (filterYear !== "all" && year !== filterYear) return false;
       if (filterMonth !== "all" && month !== filterMonth) return false;
       if (q) {
-        const hay = `${r.channels?.name ?? ""} ${r.channels?.clients?.name ?? ""}`.toLowerCase();
+        const hay = `${r.channels?.name ?? ""} ${r.channels?.clients?.name ?? ""} ${r.channels?.systems?.name ?? ""}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
@@ -176,7 +184,7 @@ function RevenuePage() {
         </div>
         {isStaff && (
           <div className="flex gap-2 flex-wrap">
-            <Button variant="outline" className="btn-header-action" onClick={() => downloadRevenueTemplate()}><Download className="w-4 h-4 ml-1" /> تحميل نموذج</Button>
+            <Button variant="outline" className="btn-header-action" onClick={() => downloadRevenueTemplate(channels)}><Download className="w-4 h-4 ml-1" /> تحميل نموذج</Button>
             <Dialog open={importOpen} onOpenChange={setImportOpen}>
               <DialogTrigger asChild><Button variant="outline" className="btn-header-action"><Upload className="w-4 h-4 ml-1" /> استيراد Excel/CSV</Button></DialogTrigger>
               <DialogContent dir="rtl">
