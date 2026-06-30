@@ -63,6 +63,7 @@ function ChannelsPage() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterClient, setFilterClient] = useState<string>("all");
   const [filterSystem, setFilterSystem] = useState<string>("all");
+  const [filterMonetized, setFilterMonetized] = useState<string>("all");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   // New fields state
@@ -215,6 +216,11 @@ function ChannelsPage() {
         if (filterSystem === "none" && c.system_id !== null) return false;
         if (filterSystem !== "none" && c.system_id !== filterSystem) return false;
       }
+      if (filterMonetized !== "all") {
+        const wantsMonetized = filterMonetized === "yes";
+        const isM = c.is_monetized !== false;
+        if (wantsMonetized !== isM) return false;
+      }
       if (
         q &&
         !c.name.toLowerCase().includes(q) &&
@@ -224,7 +230,7 @@ function ChannelsPage() {
         return false;
       return true;
     });
-  }, [channels, search, filterStatus, filterClient, filterSystem]);
+  }, [channels, search, filterStatus, filterClient, filterSystem, filterMonetized]);
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -453,10 +459,20 @@ function ChannelsPage() {
           <SelectContent>
             <SelectItem value="all">كل الحالات</SelectItem>
             {["active", "paused", "suspended", "closed"].map((s) => (
-              <SelectItem key={s.id} value={s.id}>
+              <SelectItem key={s} value={s}>
                 {STATUS_AR[s]}
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+        <Select value={filterMonetized} onValueChange={setFilterMonetized}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="حالة الأرباح" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">كل الأرباح</SelectItem>
+            <SelectItem value="yes">أرباح مفعلة</SelectItem>
+            <SelectItem value="no">أرباح غير مفعلة</SelectItem>
           </SelectContent>
         </Select>
       </div>
