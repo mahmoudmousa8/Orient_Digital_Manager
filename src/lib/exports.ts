@@ -362,9 +362,9 @@ export function parseRevenueFile(file: File): Promise<Array<{ channel: string; m
         const sheet = wb.Sheets[wb.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json<any>(sheet, { defval: "" });
         const out = rows.map((r) => {
-          const channel = String(r.channel ?? r.Channel ?? r["اسم القناة"] ?? "").trim();
+          const channel = String(r.channel ?? r.Channel ?? r["اسم القناة"] ?? r["القناة"] ?? "").trim();
           const monthRaw = String(r.month ?? r.Month ?? r["الشهر"] ?? "").trim();
-          const revenue = Number(r.revenue ?? r.Revenue ?? r["الإيراد"] ?? 0);
+          const revenue = Number(r.revenue ?? r.Revenue ?? r["الإيراد"] ?? r["إجمالي الإيراد"] ?? 0);
           const percentage = r.percentage ?? r.Percentage ?? r["النسبة"];
           let month = monthRaw;
           // accept YYYY-MM or YYYY-MM-DD or Date
@@ -391,19 +391,41 @@ export function downloadRevenueTemplate(channels?: any[]) {
   if (channels && channels.length > 0) {
     // Filter channels where is_monetized is not false
     const monetized = channels.filter(c => c.is_monetized !== false);
-    data = monetized.map(c => ({
-      channel: c.name,
-      month: currentMonth,
-      revenue: 0,
-      percentage: c.client_percentage
-    }));
+    data = monetized.map((c, index) => {
+      const rowNum = index + 2; // Row 1 is header, data starts at row 2
+      return {
+        "الشهر": currentMonth,
+        "القناة": c.name,
+        "العميل": c.clients?.name ?? "",
+        "إجمالي الإيراد": "", // Left empty for user input
+        "النسبة": c.client_percentage,
+        "حصة العميل": { t: "n", f: `ROUND(D${rowNum}*E${rowNum}/100, 2)` },
+        "حصة الشركة": { t: "n", f: `ROUND(D${rowNum}*(100-E${rowNum})/100, 2)` }
+      };
+    });
   }
 
   // If no monetized channels, fallback to mock examples
   if (data.length === 0) {
     data = [
-      { channel: "Ahmed Vlogs", month: currentMonth, revenue: 1500, percentage: 60 },
-      { channel: "Sara Kitchen", month: currentMonth, revenue: 2200, percentage: 65 },
+      {
+        "الشهر": currentMonth,
+        "القناة": "قناة تجريبية 1",
+        "العميل": "عميل تجريبي 1",
+        "إجمالي الإيراد": "",
+        "النسبة": 60,
+        "حصة العميل": { t: "n", f: "ROUND(D2*E2/100, 2)" },
+        "حصة الشركة": { t: "n", f: "ROUND(D2*(100-E2)/100, 2)" }
+      },
+      {
+        "الشهر": currentMonth,
+        "القناة": "قناة تجريبية 2",
+        "العميل": "عميل تجريبي 2",
+        "إجمالي الإيراد": "",
+        "النسبة": 65,
+        "حصة العميل": { t: "n", f: "ROUND(D3*E3/100, 2)" },
+        "حصة الشركة": { t: "n", f: "ROUND(D3*(100-E3)/100, 2)" }
+      }
     ];
   }
 

@@ -55,7 +55,7 @@ function RevenuePage() {
   const { data: channels = [] } = useQuery({
     queryKey: ["channels-min"],
     queryFn: async () => {
-      const { data } = await supabase.from("channels").select("id, name, client_percentage, system_percentage, company_percentage, clients(name)").order("name");
+      const { data } = await supabase.from("channels").select("id, name, client_percentage, system_percentage, company_percentage, is_monetized, clients(name)").order("name");
       return (data ?? []) as any[];
     },
   });
