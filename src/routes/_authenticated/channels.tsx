@@ -509,11 +509,11 @@ function ChannelsPage() {
                   </TableCell>
                   <TableCell className="text-center">
                     {c.is_monetized !== false ? (
-                      <Badge className="bg-[#fbbf24] text-black font-bold rounded-full border-none px-2.5 py-0.5">
+                      <Badge className="bg-primary text-primary-foreground font-bold rounded-full border-none px-2.5 py-0.5 hover:bg-primary">
                         مفعلة
                       </Badge>
                     ) : (
-                      <Badge className="bg-slate-600 text-slate-200 rounded-full border-none px-2.5 py-0.5">
+                      <Badge className="bg-slate-600 text-slate-200 rounded-full border-none px-2.5 py-0.5 hover:bg-slate-600">
                         غير مفعلة
                       </Badge>
                     )}
