@@ -288,7 +288,7 @@ function ChannelsPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <Label>السيستم / الشبكة</Label>
+                    <Label>السيستم</Label>
                     <Select
                       value={systemId}
                       onValueChange={(val) => {
@@ -468,9 +468,9 @@ function ChannelsPage() {
               <TableRow>
                 <TableHead className="text-right">القناة</TableHead>
                 <TableHead className="text-right">العميل</TableHead>
-                <TableHead className="text-right">السيستم / الشبكة</TableHead>
+                <TableHead className="text-right">السيستم</TableHead>
                 <TableHead className="text-center">نسبة العميل</TableHead>
-                <TableHead className="text-center">نسبة الشبكة</TableHead>
+                <TableHead className="text-center">نسبة السيستم</TableHead>
                 <TableHead className="text-center">نسبة الشركة</TableHead>
                 <TableHead className="text-center">تفعيل الأرباح</TableHead>
                 <TableHead className="text-right">الحالة</TableHead>
