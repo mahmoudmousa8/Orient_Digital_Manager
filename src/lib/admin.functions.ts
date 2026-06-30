@@ -92,11 +92,14 @@ export const createAppUser = createServerFn({ method: "POST" })
     const role = String(input?.role ?? "");
     const fullName = typeof input?.fullName === "string" ? input.fullName : undefined;
     const clientId = typeof input?.clientId === "string" && input.clientId ? input.clientId : null;
+    const newClientName = typeof input?.newClientName === "string" && input.newClientName ? input.newClientName.trim() : null;
     if (!/^\S+@\S+\.\S+$/.test(email)) throw new Error("بريد إلكتروني غير صالح");
     if (password.length < 6) throw new Error("كلمة السر يجب 6 أحرف على الأقل");
     if (!["admin", "employee", "client"].includes(role)) throw new Error("دور غير صالح");
-    if (role === "client" && !clientId) throw new Error("اختر العميل المرتبط");
-    return { email, password, role: role as "admin" | "employee" | "client", fullName, clientId };
+    if (role === "client" && !clientId && !newClientName) {
+      throw new Error("اختر العميل المرتبط أو أدخل اسم عميل جديد");
+    }
+    return { email, password, role: role as "admin" | "employee" | "client", fullName, clientId, newClientName };
   })
   .handler(async ({ data, context }) => {
     const { data: isAdmin } = await context.supabase.rpc("has_role", {
@@ -127,7 +130,19 @@ export const createAppUser = createServerFn({ method: "POST" })
       .insert({ user_id: newUserId, role: data.role });
     if (roleErr) throw new Error(roleErr.message);
 
-    if (data.clientId) {
+    if (data.role === "client" && data.newClientName) {
+      const { data: newClient, error: clientErr } = await supabaseAdmin
+        .from("clients")
+        .insert({
+          name: data.newClientName,
+          email: data.email,
+          user_id: newUserId,
+        })
+        .select("id")
+        .single();
+      if (clientErr || !newClient) throw new Error(clientErr?.message ?? "فشل إنشاء ملف العميل");
+    } else if (data.clientId) {
+      await supabaseAdmin.from("clients").update({ user_id: null }).eq("user_id", newUserId);
       const { error: linkErr } = await supabaseAdmin
         .from("clients")
         .update({ user_id: newUserId })

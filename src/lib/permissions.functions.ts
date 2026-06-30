@@ -18,7 +18,7 @@ export const listUserPermissions = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const [{ data: profiles }, { data: roles }, { data: clients }] = await Promise.all([
-      supabaseAdmin.from("profiles").select("id, email, full_name"),
+      supabaseAdmin.from("profiles").select("id, email, full_name, is_active"),
       supabaseAdmin.from("user_roles").select("user_id, role"),
       supabaseAdmin.from("clients").select("id, name, user_id"),
     ]);
@@ -39,6 +39,7 @@ export const listUserPermissions = createServerFn({ method: "GET" })
       userId: p.id,
       email: p.email,
       fullName: p.full_name,
+      isActive: p.is_active !== false,
       roles: rolesByUser.get(p.id) ?? [],
       client: clientByUser.get(p.id) ?? null,
     }));
@@ -84,6 +85,29 @@ export const unlinkUserFromClient = createServerFn({ method: "POST" })
       .from("clients")
       .update({ user_id: null })
       .eq("id", data.clientId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const toggleUserActive = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: any) => {
+    if (!input?.userId) throw new Error("المستخدم مطلوب");
+    return {
+      userId: String(input.userId),
+      isActive: Boolean(input.isActive),
+    };
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    if (data.userId === context.userId) {
+      throw new Error("لا يمكنك إلغاء تفعيل حسابك الخاص");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("profiles")
+      .update({ is_active: data.isActive })
+      .eq("id", data.userId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });

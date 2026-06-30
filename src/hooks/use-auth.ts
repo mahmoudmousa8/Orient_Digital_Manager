@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export type AppRole = "admin" | "employee" | "client";
 
@@ -31,9 +32,26 @@ export function useAuth() {
   }, []);
 
   async function loadRoles(uid: string) {
-    const { data } = await supabase.from("user_roles").select("role").eq("user_id", uid);
-    setRoles((data ?? []).map((r: any) => r.role));
-    setLoading(false);
+    try {
+      const [{ data: rolesData }, { data: profile }] = await Promise.all([
+        supabase.from("user_roles").select("role").eq("user_id", uid),
+        supabase.from("profiles").select("is_active").eq("id", uid).maybeSingle()
+      ]);
+
+      if (profile && profile.is_active === false) {
+        await supabase.auth.signOut();
+        toast.error("هذا الحساب معطل. يرجى التواصل مع الإدارة.");
+        setRoles([]);
+        setLoading(false);
+        return;
+      }
+
+      setRoles((rolesData ?? []).map((r: any) => r.role));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }
 
   const isAdmin = roles.includes("admin");
