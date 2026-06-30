@@ -484,10 +484,10 @@ function ChannelsPage() {
               <TableRow>
                 <TableHead className="text-right">القناة</TableHead>
                 <TableHead className="text-right">العميل</TableHead>
-                <TableHead className="text-right">السيستم</TableHead>
+                {isStaff && <TableHead className="text-right">السيستم</TableHead>}
                 <TableHead className="text-center">نسبة العميل</TableHead>
-                <TableHead className="text-center">نسبة السيستم</TableHead>
-                <TableHead className="text-center">نسبة الشركة</TableHead>
+                {isStaff && <TableHead className="text-center">نسبة السيستم</TableHead>}
+                {isStaff && <TableHead className="text-center">نسبة الشركة</TableHead>}
                 <TableHead className="text-center">تفعيل الأرباح</TableHead>
                 <TableHead className="text-right">الحالة</TableHead>
                 <TableHead className="text-right">الرابط</TableHead>
@@ -497,14 +497,14 @@ function ChannelsPage() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center">
+                  <TableCell colSpan={isStaff ? 10 : 6} className="text-center">
                     جاري التحميل…
                   </TableCell>
                 </TableRow>
               )}
               {!isLoading && filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={isStaff ? 10 : 6} className="text-center text-muted-foreground py-8">
                     لا توجد قنوات
                   </TableCell>
                 </TableRow>
@@ -513,16 +513,20 @@ function ChannelsPage() {
                 <TableRow key={c.id}>
                   <TableCell className="font-medium text-right">{c.name}</TableCell>
                   <TableCell className="text-right">{c.clients?.name ?? "—"}</TableCell>
-                  <TableCell className="text-right text-white">{c.systems?.name ?? "مباشر"}</TableCell>
+                  {isStaff && <TableCell className="text-right text-white">{c.systems?.name ?? "مباشر"}</TableCell>}
                   <TableCell dir="ltr" className="text-center text-white">
                     {c.client_percentage}%
                   </TableCell>
-                  <TableCell dir="ltr" className="text-center text-white">
-                    {c.system_id ? `${c.system_percentage}%` : "—"}
-                  </TableCell>
-                  <TableCell dir="ltr" className="text-center text-white">
-                    {c.company_percentage ?? (100 - c.client_percentage - (c.system_percentage ?? 0))}%
-                  </TableCell>
+                  {isStaff && (
+                    <TableCell dir="ltr" className="text-center text-white">
+                      {c.system_id ? `${c.system_percentage}%` : "—"}
+                    </TableCell>
+                  )}
+                  {isStaff && (
+                    <TableCell dir="ltr" className="text-center text-white">
+                      {c.company_percentage ?? (100 - c.client_percentage - (c.system_percentage ?? 0))}%
+                    </TableCell>
+                  )}
                   <TableCell className="text-center">
                     {c.is_monetized !== false ? (
                       <Badge className="bg-primary text-primary-foreground font-bold rounded-full border-none px-2.5 py-0.5 hover:bg-primary">
