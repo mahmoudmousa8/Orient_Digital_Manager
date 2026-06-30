@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ShieldCheck, Unlink, UserPlus, Link2, Search, Lock, ShieldAlert, Power } from "lucide-react";
+import { ShieldCheck, Unlink, UserPlus, Link2, Search, Lock, ShieldAlert, Power, Pencil, Users } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,11 +33,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   listUserPermissions,
-  setUserRole,
   unlinkUserFromClient,
   toggleUserActive,
 } from "@/lib/permissions.functions";
-import { createAppUser, linkUserToClientById, resetClientPassword } from "@/lib/admin.functions";
+import { createAppUser, resetClientPassword, updateAppUser } from "@/lib/admin.functions";
 
 const roleLabels: Record<string, string> = {
   admin: "مسؤول",
@@ -53,43 +52,20 @@ const roleVariants: Record<string, "default" | "secondary" | "outline"> = {
 
 type ClientOption = { id: string; name: string };
 
-export function PermissionsPage() {
+export function UsersPage() {
   const { isAdmin, loading, user } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  
+  // Server functions
   const listFn = useServerFn(listUserPermissions);
-  const setRoleFn = useServerFn(setUserRole);
   const unlinkFn = useServerFn(unlinkUserFromClient);
   const createUserFn = useServerFn(createAppUser);
-  const linkUserFn = useServerFn(linkUserToClientById);
+  const updateUserFn = useServerFn(updateAppUser);
   const toggleActiveFn = useServerFn(toggleUserActive);
   const resetPasswordFn = useServerFn(resetClientPassword);
 
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-    fullName: "",
-    role: "employee" as "admin" | "employee" | "client",
-    clientId: "",
-  });
-  const [submitting, setSubmitting] = useState(false);
-  const [unlinkTarget, setUnlinkTarget] = useState<string | null>(null);
-
-  // New features state
-  const [search, setSearch] = useState("");
-  const [filterRole, setFilterRole] = useState("all");
-  const [resetOpen, setResetOpen] = useState(false);
-  const [resetTarget, setResetTarget] = useState<{ userId: string; email: string } | null>(null);
-  const [newPassword, setNewPassword] = useState("");
-  const [resetting, setResetting] = useState(false);
-  const [newClientName, setNewClientName] = useState("");
-  const [showNewClientInput, setShowNewClientInput] = useState(false);
-
-  useEffect(() => {
-    if (!loading && !isAdmin) navigate({ to: "/dashboard", replace: true });
-  }, [loading, isAdmin, navigate]);
-
+  // Lists and Queries
   const { data, isLoading } = useQuery({
     queryKey: ["user-permissions"],
     queryFn: () => listFn(),
@@ -106,59 +82,110 @@ export function PermissionsPage() {
     enabled: isAdmin,
   });
 
-  async function changeRole(userId: string, role: string) {
-    try {
-      await setRoleFn({ data: { userId, role } });
-      toast.success("تم تحديث الصلاحيات بنجاح");
-      qc.invalidateQueries({ queryKey: ["user-permissions"] });
-    } catch (e: any) {
-      toast.error(e.message ?? "فشل التحديث");
-    }
-  }
+  // Local UI States
+  const [search, setSearch] = useState("");
+  const [filterRole, setFilterRole] = useState("all");
+  
+  // Create User State
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    email: "",
+    password: "",
+    fullName: "",
+    role: "employee" as "admin" | "employee" | "client",
+    clientId: "",
+  });
+  const [createSubmitting, setCreateSubmitting] = useState(false);
+  const [createShowNewClientInput, setCreateShowNewClientInput] = useState(false);
+  const [createNewClientName, setCreateNewClientName] = useState("");
 
-  async function unlink(clientId: string) {
-    try {
-      await unlinkFn({ data: { clientId } });
-      toast.success("تم فك الربط");
-      qc.invalidateQueries({ queryKey: ["user-permissions"] });
-    } catch (e: any) {
-      toast.error(e.message ?? "فشل فك الربط");
-    }
-  }
+  // Edit User State
+  const [editOpen, setEditOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    userId: "",
+    email: "",
+    fullName: "",
+    role: "employee" as "admin" | "employee" | "client",
+    clientId: "",
+  });
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editShowNewClientInput, setEditShowNewClientInput] = useState(false);
+  const [editNewClientName, setEditNewClientName] = useState("");
 
-  async function linkToClient(userId: string, clientId: string) {
-    try {
-      await linkUserFn({ data: { userId, clientId } });
-      toast.success("تم ربط المستخدم بالعميل");
-      qc.invalidateQueries({ queryKey: ["user-permissions"] });
-    } catch (e: any) {
-      toast.error(e.message ?? "فشل الربط");
-    }
-  }
+  // Password Reset State
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetTarget, setResetTarget] = useState<{ userId: string; email: string } | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [resetting, setResetting] = useState(false);
 
+  // Unlink State
+  const [unlinkTarget, setUnlinkTarget] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!loading && !isAdmin) navigate({ to: "/dashboard", replace: true });
+  }, [loading, isAdmin, navigate]);
+
+  // Actions
   async function submitCreate() {
-    setSubmitting(true);
+    setCreateSubmitting(true);
     try {
       await createUserFn({
         data: {
-          email: form.email,
-          password: form.password,
-          fullName: form.fullName || undefined,
-          role: form.role,
-          clientId: form.role === "client" && !showNewClientInput ? form.clientId || null : null,
-          newClientName: form.role === "client" && showNewClientInput ? newClientName : null,
+          email: createForm.email,
+          password: createForm.password,
+          fullName: createForm.fullName || undefined,
+          role: createForm.role,
+          clientId: createForm.role === "client" && !createShowNewClientInput ? createForm.clientId || null : null,
+          newClientName: createForm.role === "client" && createShowNewClientInput ? createNewClientName : null,
         },
       });
       toast.success("تم إنشاء المستخدم بنجاح");
-      setOpen(false);
-      setForm({ email: "", password: "", fullName: "", role: "employee", clientId: "" });
-      setNewClientName("");
-      setShowNewClientInput(false);
+      setCreateOpen(false);
+      setCreateForm({ email: "", password: "", fullName: "", role: "employee", clientId: "" });
+      setCreateNewClientName("");
+      setCreateShowNewClientInput(false);
       qc.invalidateQueries({ queryKey: ["user-permissions"] });
     } catch (e: any) {
       toast.error(e.message ?? "فشل إنشاء المستخدم");
     } finally {
-      setSubmitting(false);
+      setCreateSubmitting(false);
+    }
+  }
+
+  async function openEdit(u: any) {
+    const primaryRole = u.roles[0] ?? "client";
+    setEditForm({
+      userId: u.userId,
+      email: u.email,
+      fullName: u.fullName || "",
+      role: primaryRole,
+      clientId: u.client?.id ?? "",
+    });
+    setEditNewClientName("");
+    setEditShowNewClientInput(false);
+    setEditOpen(true);
+  }
+
+  async function submitEdit() {
+    setEditSubmitting(true);
+    try {
+      await updateUserFn({
+        data: {
+          userId: editForm.userId,
+          email: editForm.email,
+          fullName: editForm.fullName,
+          role: editForm.role,
+          clientId: editForm.role === "client" && !editShowNewClientInput ? editForm.clientId || "none" : "none",
+          newClientName: editForm.role === "client" && editShowNewClientInput ? editNewClientName : null,
+        },
+      });
+      toast.success("تم تحديث بيانات المستخدم بنجاح");
+      setEditOpen(false);
+      qc.invalidateQueries({ queryKey: ["user-permissions"] });
+    } catch (e: any) {
+      toast.error(e.message ?? "فشل تحديث البيانات");
+    } finally {
+      setEditSubmitting(false);
     }
   }
 
@@ -189,7 +216,17 @@ export function PermissionsPage() {
     }
   }
 
-  // Filtered users calculation
+  async function unlink(clientId: string) {
+    try {
+      await unlinkFn({ data: { clientId } });
+      toast.success("تم فك الارتباط");
+      qc.invalidateQueries({ queryKey: ["user-permissions"] });
+    } catch (e: any) {
+      toast.error(e.message ?? "فشل فك الارتباط");
+    }
+  }
+
+  // Filtered list
   const filteredUsers = useMemo(() => {
     const q = search.trim().toLowerCase();
     return (data ?? []).filter((u: any) => {
@@ -209,15 +246,15 @@ export function PermissionsPage() {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="space-y-1">
           <h1 className="text-2xl sm:text-3xl font-black flex items-center gap-2.5 text-white">
-            <ShieldCheck className="w-8 h-8 text-primary" />
-            الصلاحيات والمستخدمين
+            <Users className="w-8 h-8 text-primary" />
+            المستخدمون
           </h1>
           <p className="text-sm text-muted-foreground mt-1.5">
-            إدارة المستخدمين والأدوار والربط بالعملاء وتفعيل الحسابات
+            إدارة حسابات المسؤولين، الموظفين، والعملاء وتعديل الصلاحيات وتفعيل الدخول
           </p>
         </div>
 
-        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setNewClientName(""); setShowNewClientInput(false); } }}>
+        <Dialog open={createOpen} onOpenChange={(v) => { setCreateOpen(v); if (!v) { setCreateNewClientName(""); setCreateShowNewClientInput(false); } }}>
           <DialogTrigger asChild>
             <Button className="btn-header-action">
               <UserPlus className="h-4 w-4 ml-2" />
@@ -226,14 +263,14 @@ export function PermissionsPage() {
           </DialogTrigger>
           <DialogContent dir="rtl">
             <DialogHeader>
-              <DialogTitle>إنشاء مستخدم جديد</DialogTitle>
+              <DialogTitle>إنشاء حساب مستخدم جديد</DialogTitle>
             </DialogHeader>
             <div className="grid gap-3">
               <div>
                 <Label>الاسم الكامل</Label>
                 <Input
-                  value={form.fullName}
-                  onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+                  value={createForm.fullName}
+                  onChange={(e) => setCreateForm({ ...createForm, fullName: e.target.value })}
                   placeholder="اسم الشخص أو الموظف (اختياري)"
                 />
               </div>
@@ -242,8 +279,8 @@ export function PermissionsPage() {
                 <Input
                   type="email"
                   required
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  value={createForm.email}
+                  onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
                   placeholder="example@domain.com"
                   dir="ltr"
                 />
@@ -253,8 +290,8 @@ export function PermissionsPage() {
                 <Input
                   type="text"
                   required
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  value={createForm.password}
+                  onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
                   placeholder="6 أحرف على الأقل"
                   dir="ltr"
                 />
@@ -262,11 +299,11 @@ export function PermissionsPage() {
               <div>
                 <Label>الدور *</Label>
                 <Select
-                  value={form.role}
+                  value={createForm.role}
                   onValueChange={(v: any) => {
-                    setForm({ ...form, role: v });
+                    setCreateForm({ ...createForm, role: v });
                     if (v !== "client") {
-                      setShowNewClientInput(false);
+                      setCreateShowNewClientInput(false);
                     }
                   }}
                 >
@@ -279,15 +316,15 @@ export function PermissionsPage() {
                 </Select>
               </div>
 
-              {form.role === "client" && (
+              {createForm.role === "client" && (
                 <div className="space-y-3 p-3 bg-slate-900/50 rounded-lg border border-slate-800">
                   <div className="flex items-center gap-4 mb-1">
                     <label className="flex items-center gap-2 text-sm cursor-pointer text-white">
                       <input
                         type="radio"
-                        name="clientType"
-                        checked={!showNewClientInput}
-                        onChange={() => setShowNewClientInput(false)}
+                        name="createClientType"
+                        checked={!createShowNewClientInput}
+                        onChange={() => setCreateShowNewClientInput(false)}
                         className="accent-primary h-4 w-4"
                       />
                       عميل مسجل حالياً
@@ -295,21 +332,21 @@ export function PermissionsPage() {
                     <label className="flex items-center gap-2 text-sm cursor-pointer text-white">
                       <input
                         type="radio"
-                        name="clientType"
-                        checked={showNewClientInput}
-                        onChange={() => setShowNewClientInput(true)}
+                        name="createClientType"
+                        checked={createShowNewClientInput}
+                        onChange={() => setCreateShowNewClientInput(true)}
                         className="accent-primary h-4 w-4"
                       />
                       إنشاء عميل جديد تلقائياً
                     </label>
                   </div>
 
-                  {!showNewClientInput ? (
+                  {!createShowNewClientInput ? (
                     <div>
                       <Label>العميل المرتبط *</Label>
                       <Select
-                        value={form.clientId}
-                        onValueChange={(v) => setForm({ ...form, clientId: v })}
+                        value={createForm.clientId}
+                        onValueChange={(v) => setCreateForm({ ...createForm, clientId: v })}
                       >
                         <SelectTrigger><SelectValue placeholder="اختر العميل" /></SelectTrigger>
                         <SelectContent>
@@ -323,8 +360,8 @@ export function PermissionsPage() {
                     <div>
                       <Label>اسم العميل الجديد *</Label>
                       <Input
-                        value={newClientName}
-                        onChange={(e) => setNewClientName(e.target.value)}
+                        value={createNewClientName}
+                        onChange={(e) => setCreateNewClientName(e.target.value)}
                         placeholder="اسم العميل أو الشركة لتسجيلها..."
                       />
                     </div>
@@ -333,9 +370,9 @@ export function PermissionsPage() {
               )}
             </div>
             <DialogFooter className="gap-2 mt-2">
-              <Button variant="outline" onClick={() => setOpen(false)}>إلغاء</Button>
-              <Button onClick={submitCreate} disabled={submitting}>
-                {submitting ? "جارٍ الإنشاء..." : "إنشاء المستخدم"}
+              <Button variant="outline" onClick={() => setCreateOpen(false)}>إلغاء</Button>
+              <Button onClick={submitCreate} disabled={createSubmitting}>
+                {createSubmitting ? "جارٍ الإنشاء..." : "إنشاء الحساب"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -368,7 +405,7 @@ export function PermissionsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>قائمة المستخدمين</CardTitle>
+          <CardTitle>قائمة الحسابات</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
@@ -381,13 +418,12 @@ export function PermissionsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-right">الاسم</TableHead>
+                    <TableHead className="text-right">الاسم الكامل</TableHead>
                     <TableHead className="text-right">البريد الإلكتروني</TableHead>
                     <TableHead className="text-right">الدور</TableHead>
                     <TableHead className="text-right">حالة الحساب</TableHead>
                     <TableHead className="text-right">العميل المرتبط</TableHead>
-                    <TableHead className="text-right">تعديل الدور والربط</TableHead>
-                    <TableHead className="text-left">إجراءات</TableHead>
+                    <TableHead className="text-left">إجراءات التحكم</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -424,49 +460,17 @@ export function PermissionsPage() {
                             <span className="text-xs text-muted-foreground">—</span>
                           )}
                         </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex gap-2 items-center flex-wrap">
-                            <Select
-                              value={primaryRole}
-                              onValueChange={(v) => changeRole(u.userId, v)}
-                              disabled={isSelf}
-                            >
-                              <SelectTrigger className="w-28 h-8 text-xs bg-slate-900/50 border-slate-800">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="admin">مسؤول</SelectItem>
-                                <SelectItem value="employee">موظف</SelectItem>
-                                <SelectItem value="client">عميل</SelectItem>
-                              </SelectContent>
-                            </Select>
-
-                            {primaryRole === "client" && (
-                              <Select
-                                value={u.client?.id ?? "none"}
-                                onValueChange={(v) => {
-                                  if (v === "none") {
-                                    if (u.client?.id) setUnlinkTarget(u.client.id);
-                                  } else {
-                                    linkToClient(u.userId, v);
-                                  }
-                                }}
-                              >
-                                <SelectTrigger className="w-36 h-8 text-xs bg-slate-900/50 border-slate-800">
-                                  <SelectValue placeholder="ربط بعميل" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="none">غير مرتبط</SelectItem>
-                                  {clients.map((c) => (
-                                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            )}
-                          </div>
-                        </TableCell>
                         <TableCell className="text-left">
                           <div className="flex gap-1 justify-end">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              title="تعديل بيانات الحساب"
+                              onClick={() => openEdit(u)}
+                              className="text-slate-400 hover:text-primary hover:bg-slate-800"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
                             <Button
                               size="icon"
                               variant="ghost"
@@ -507,7 +511,7 @@ export function PermissionsPage() {
                   })}
                   {filteredUsers.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                         لا يوجد مستخدمون يطابقون خيارات البحث.
                       </TableCell>
                     </TableRow>
@@ -532,6 +536,117 @@ export function PermissionsPage() {
         </CardContent>
       </Card>
 
+      {/* Edit User Dialog */}
+      <Dialog open={editOpen} onOpenChange={(v) => { setEditOpen(v); if (!v) { setEditNewClientName(""); setEditShowNewClientInput(false); } }}>
+        <DialogContent dir="rtl">
+          <DialogHeader>
+            <DialogTitle>تعديل بيانات حساب المستخدم</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3">
+            <div>
+              <Label>الاسم الكامل</Label>
+              <Input
+                value={editForm.fullName}
+                onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
+                placeholder="اسم الشخص أو الموظف"
+              />
+            </div>
+            <div>
+              <Label>البريد الإلكتروني *</Label>
+              <Input
+                type="email"
+                required
+                value={editForm.email}
+                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                placeholder="example@domain.com"
+                dir="ltr"
+              />
+            </div>
+            <div>
+              <Label>الدور *</Label>
+              <Select
+                value={editForm.role}
+                onValueChange={(v: any) => {
+                  setEditForm({ ...editForm, role: v });
+                  if (v !== "client") {
+                    setEditShowNewClientInput(false);
+                  }
+                }}
+                disabled={editForm.userId === user?.id} // Prevent changing own role
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">مسؤول (صلاحيات كاملة)</SelectItem>
+                  <SelectItem value="employee">موظف</SelectItem>
+                  <SelectItem value="client">عميل (يرى قنواته فقط)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {editForm.role === "client" && (
+              <div className="space-y-3 p-3 bg-slate-900/50 rounded-lg border border-slate-800">
+                <div className="flex items-center gap-4 mb-1">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer text-white">
+                    <input
+                      type="radio"
+                      name="editClientType"
+                      checked={!editShowNewClientInput}
+                      onChange={() => setEditShowNewClientInput(false)}
+                      className="accent-primary h-4 w-4"
+                    />
+                    عميل مسجل حالياً
+                  </label>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer text-white">
+                    <input
+                      type="radio"
+                      name="editClientType"
+                      checked={editShowNewClientInput}
+                      onChange={() => setEditShowNewClientInput(true)}
+                      className="accent-primary h-4 w-4"
+                    />
+                    إنشاء عميل جديد تلقائياً
+                  </label>
+                </div>
+
+                {!editShowNewClientInput ? (
+                  <div>
+                    <Label>العميل المرتبط *</Label>
+                    <Select
+                      value={editForm.clientId || "none"}
+                      onValueChange={(v) => setEditForm({ ...editForm, clientId: v })}
+                    >
+                      <SelectTrigger><SelectValue placeholder="ربط العميل" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">غير مرتبط</SelectItem>
+                        {clients.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  <div>
+                    <Label>اسم العميل الجديد *</Label>
+                    <Input
+                      value={editNewClientName}
+                      onChange={(e) => setEditNewClientName(e.target.value)}
+                      placeholder="اسم العميل أو الشركة لتسجيلها..."
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          <DialogFooter className="gap-2 mt-2">
+            <Button variant="outline" onClick={() => setEditOpen(false)}>إلغاء</Button>
+            <Button onClick={submitEdit} disabled={editSubmitting}>
+              {editSubmitting ? "جاري التحديث..." : "حفظ التغييرات"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Password Reset Dialog */}
       <Dialog open={resetOpen} onOpenChange={(v) => { setResetOpen(v); if (!v) { setResetTarget(null); setNewPassword(""); } }}>
         <DialogContent dir="rtl">
           <DialogHeader>
@@ -563,6 +678,7 @@ export function PermissionsPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Unlink AlertDialog */}
       <AlertDialog open={!!unlinkTarget} onOpenChange={(o) => !o && setUnlinkTarget(null)}>
         <AlertDialogContent dir="rtl">
           <AlertDialogHeader>

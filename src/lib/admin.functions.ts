@@ -193,3 +193,82 @@ export const resetClientPassword = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const updateAppUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: any) => {
+    const userId = String(input?.userId ?? "");
+    const email = String(input?.email ?? "").trim().toLowerCase();
+    const role = String(input?.role ?? "");
+    const fullName = String(input?.fullName ?? "").trim();
+    const clientId = typeof input?.clientId === "string" && input.clientId ? input.clientId : null;
+    const newClientName = typeof input?.newClientName === "string" && input.newClientName ? input.newClientName.trim() : null;
+
+    if (!userId) throw new Error("المستخدم مطلوب");
+    if (!/^\S+@\S+\.\S+$/.test(email)) throw new Error("بريد إلكتروني غير صالح");
+    if (!["admin", "employee", "client"].includes(role)) throw new Error("دور غير صالح");
+    if (role === "client" && !clientId && !newClientName) {
+      throw new Error("اختر العميل المرتبط أو أدخل اسم عميل جديد");
+    }
+    return { userId, email, role: role as "admin" | "employee" | "client", fullName, clientId, newClientName };
+  })
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("صلاحيات غير كافية");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // 1. Update Auth user
+    const { error: authErr } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
+      email: data.email,
+      user_metadata: { full_name: data.fullName },
+    });
+    if (authErr) throw new Error(authErr.message);
+
+    // 2. Update Profiles
+    const { error: profErr } = await supabaseAdmin
+      .from("profiles")
+      .update({
+        email: data.email,
+        full_name: data.fullName,
+      })
+      .eq("id", data.userId);
+    if (profErr) throw new Error(profErr.message);
+
+    // 3. Update User Roles (unless it is own user to avoid self-demotion)
+    if (data.userId !== context.userId) {
+      await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
+      const { error: roleErr } = await supabaseAdmin
+        .from("user_roles")
+        .insert({ user_id: data.userId, role: data.role });
+      if (roleErr) throw new Error(roleErr.message);
+    }
+
+    // 4. Update Client linkage (Clean current first)
+    await supabaseAdmin.from("clients").update({ user_id: null }).eq("user_id", data.userId);
+
+    if (data.role === "client") {
+      if (data.newClientName) {
+        const { data: newClient, error: clientErr } = await supabaseAdmin
+          .from("clients")
+          .insert({
+            name: data.newClientName,
+            email: data.email,
+            user_id: data.userId,
+          })
+          .select("id")
+          .single();
+        if (clientErr || !newClient) throw new Error(clientErr?.message ?? "فشل إنشاء ملف العميل");
+      } else if (data.clientId && data.clientId !== "none") {
+        const { error: linkErr } = await supabaseAdmin
+          .from("clients")
+          .update({ user_id: data.userId })
+          .eq("id", data.clientId);
+        if (linkErr) throw new Error(linkErr.message);
+      }
+    }
+
+    return { ok: true };
+  });

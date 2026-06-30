@@ -19,8 +19,7 @@ const staffNav = [
 ];
 
 const adminExtras = [
-  { to: "/users", label: "المستخدمون", icon: UserPlus },
-  { to: "/permissions", label: "الصلاحيات", icon: ShieldCheck },
+  { to: "/users", label: "المستخدمون", icon: Users },
   { to: "/settings", label: "الإعدادات", icon: Settings },
 ];
 
