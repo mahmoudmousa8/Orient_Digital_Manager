@@ -467,10 +467,10 @@ function ChannelsPage() {
         </Select>
         <Select value={filterMonetized} onValueChange={setFilterMonetized}>
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="تفعيل الأرباح" />
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">كل الأرباح</SelectItem>
+            <SelectItem value="all">تفعيل الأرباح</SelectItem>
             <SelectItem value="yes">أرباح مفعلة</SelectItem>
             <SelectItem value="no">أرباح غير مفعلة</SelectItem>
           </SelectContent>
