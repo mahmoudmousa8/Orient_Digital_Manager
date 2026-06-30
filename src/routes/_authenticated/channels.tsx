@@ -13,8 +13,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Pencil, Trash2, Youtube, ExternalLink, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Youtube, ExternalLink, Search, Download } from "lucide-react";
 import { STATUS_AR } from "@/lib/format";
+import { exportChannelsToExcel } from "@/lib/exports";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -244,19 +245,28 @@ function ChannelsPage() {
             {isStaff ? "إدارة قنوات اليوتيوب لكل عميل" : "قنواتك المسجلة"}
           </p>
         </div>
-        {isStaff && (
-          <Dialog
-            open={open}
-            onOpenChange={(v) => {
-              setOpen(v);
-              if (!v) setEditing(null);
-            }}
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="border-primary/20 hover:bg-primary/10 text-white flex items-center gap-1.5"
+            onClick={() => exportChannelsToExcel("orient-channels-report.xlsx", filtered, isStaff)}
           >
-            <DialogTrigger asChild>
-              <Button onClick={openNew} className="btn-header-action">
-                <Plus className="w-4 h-4 ml-1" /> قناة جديدة
-              </Button>
-            </DialogTrigger>
+            <Download className="w-4 h-4 ml-1" /> تصدير Excel
+          </Button>
+
+          {isStaff && (
+            <Dialog
+              open={open}
+              onOpenChange={(v) => {
+                setOpen(v);
+                if (!v) setEditing(null);
+              }}
+            >
+              <DialogTrigger asChild>
+                <Button onClick={openNew} className="btn-header-action">
+                  <Plus className="w-4 h-4 ml-1" /> قناة جديدة
+                </Button>
+              </DialogTrigger>
             <DialogContent dir="rtl">
               <DialogHeader>
                 <DialogTitle>{editing ? "تعديل قناة" : "قناة جديدة"}</DialogTitle>
@@ -411,6 +421,7 @@ function ChannelsPage() {
             </DialogContent>
           </Dialog>
         )}
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-3 items-center">

@@ -638,3 +638,41 @@ export function exportInvoicePDF(filename: string, opts: InvoicePDFOpts) {
   doc.save(filename);
 }
 
+export function exportChannelsToExcel(filename: string, channels: any[], isStaff: boolean) {
+  const STATUS_AR: Record<string, string> = {
+    active: "نشطة",
+    paused: "متوقفة مؤقتاً",
+    suspended: "موقوفة مؤقتاً",
+    closed: "مغلقة",
+  };
+
+  const data = channels.map((c) => {
+    const row: any = {
+      "القناة": c.name,
+      "العميل": c.clients?.name ?? "—",
+    };
+
+    if (isStaff) {
+      row["السيستم"] = c.systems?.name ?? "مباشر";
+    }
+
+    row["نسبة العميل"] = `${c.client_percentage}%`;
+
+    if (isStaff) {
+      row["نسبة السيستم"] = c.system_id ? `${c.system_percentage}%` : "—";
+      row["نسبة الشركة"] = `${c.company_percentage ?? (100 - c.client_percentage - (c.system_percentage ?? 0))}%`;
+    }
+
+    row["تفعيل الأرباح"] = c.is_monetized !== false ? "مفعلة" : "غير مفعلة";
+    row["الحالة"] = STATUS_AR[c.status] || c.status;
+    row["الرابط"] = c.link ?? "—";
+
+    return row;
+  });
+
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Channels");
+  XLSX.writeFile(wb, filename);
+}
+
