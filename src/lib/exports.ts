@@ -365,7 +365,7 @@ export function parseRevenueFile(file: File): Promise<Array<{ channel: string; m
           const channel = String(r.channel ?? r.Channel ?? r["اسم القناة"] ?? r["القناة"] ?? "").trim();
           const monthRaw = String(r.month ?? r.Month ?? r["الشهر"] ?? "").trim();
           const revenue = Number(r.revenue ?? r.Revenue ?? r["الإيراد"] ?? r["إجمالي الإيراد"] ?? 0);
-          const percentage = r.percentage ?? r.Percentage ?? r["النسبة"];
+          const percentage = r.percentage ?? r.Percentage ?? r["النسبة"] ?? r["نسبة العميل %"] ?? r["نسبة العميل"];
           let month = "";
           if (monthRaw) {
             const match = monthRaw.match(/^(\d{4})[-/](\d{1,2})(?:[-/](\d{1,2}))?$/);
@@ -401,14 +401,20 @@ export function downloadRevenueTemplate(channels?: any[]) {
     const activeChannels = channels.filter(c => c.status === 'active' || !c.status);
     data = activeChannels.map((c, index) => {
       const rowNum = index + 2; // Row 1 is header, data starts at row 2
+      const clientPct = c.client_percentage ?? 50;
+      const systemPct = c.system_percentage ?? 0;
+      const companyPct = 100 - clientPct - systemPct;
       return {
         "الشهر": currentMonth,
         "القناة": c.name,
         "العميل": c.clients?.name ?? "",
         "إجمالي الإيراد": "", // Left empty for user input
-        "النسبة": c.client_percentage ?? 50,
+        "نسبة العميل %": clientPct,
+        "نسبة السيستم %": systemPct,
+        "نسبة الشركة %": companyPct,
         "حصة العميل": { t: "n", f: `ROUND(D${rowNum}*E${rowNum}/100, 2)` },
-        "حصة الشركة": { t: "n", f: `ROUND(D${rowNum}*(100-E${rowNum})/100, 2)` }
+        "حصة السيستم": { t: "n", f: `ROUND(D${rowNum}*F${rowNum}/100, 2)` },
+        "حصة الشركة": { t: "n", f: `ROUND(D${rowNum}*G${rowNum}/100, 2)` }
       };
     });
   }
@@ -421,18 +427,24 @@ export function downloadRevenueTemplate(channels?: any[]) {
         "القناة": "قناة تجريبية 1",
         "العميل": "عميل تجريبي 1",
         "إجمالي الإيراد": "",
-        "النسبة": 60,
+        "نسبة العميل %": 60,
+        "نسبة السيستم %": 10,
+        "نسبة الشركة %": 30,
         "حصة العميل": { t: "n", f: "ROUND(D2*E2/100, 2)" },
-        "حصة الشركة": { t: "n", f: "ROUND(D2*(100-E2)/100, 2)" }
+        "حصة السيستم": { t: "n", f: "ROUND(D2*F2/100, 2)" },
+        "حصة الشركة": { t: "n", f: "ROUND(D2*G2/100, 2)" }
       },
       {
         "الشهر": currentMonth,
         "القناة": "قناة تجريبية 2",
         "العميل": "عميل تجريبي 2",
         "إجمالي الإيراد": "",
-        "النسبة": 65,
+        "نسبة العميل %": 65,
+        "نسبة السيستم %": 0,
+        "نسبة الشركة %": 35,
         "حصة العميل": { t: "n", f: "ROUND(D3*E3/100, 2)" },
-        "حصة الشركة": { t: "n", f: "ROUND(D3*(100-E3)/100, 2)" }
+        "حصة السيستم": { t: "n", f: "ROUND(D3*F3/100, 2)" },
+        "حصة الشركة": { t: "n", f: "ROUND(D3*G3/100, 2)" }
       }
     ];
   }
