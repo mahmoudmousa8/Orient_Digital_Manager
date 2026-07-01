@@ -47,6 +47,7 @@ function RevenuePage() {
   const [importOpen, setImportOpen] = useState(false);
   const [editing, setEditing] = useState<Revenue | null>(null);
   const [channelId, setChannelId] = useState("");
+  const [clientPctInput, setClientPctInput] = useState("");
   const [search, setSearch] = useState("");
   const [filterYear, setFilterYear] = useState("all");
   const [filterMonth, setFilterMonth] = useState("all");
@@ -133,7 +134,7 @@ function RevenuePage() {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     const ch = channels.find((c: any) => c.id === channelId);
-    const clientPct = Number(fd.get("client_percentage") || ch?.client_percentage || 50);
+    const clientPct = Number(clientPctInput || ch?.client_percentage || 50);
     const systemPct = ch?.system_percentage ?? 0;
     const companyPct = 100 - clientPct - systemPct;
     save.mutate({
@@ -146,8 +147,18 @@ function RevenuePage() {
     });
   }
 
-  function openNew() { setEditing(null); setChannelId(""); setOpen(true); }
-  function openEdit(r: Revenue) { setEditing(r); setChannelId(r.channel_id); setOpen(true); }
+  function openNew() { 
+    setEditing(null); 
+    setChannelId(""); 
+    setClientPctInput(""); 
+    setOpen(true); 
+  }
+  function openEdit(r: Revenue) { 
+    setEditing(r); 
+    setChannelId(r.channel_id); 
+    setClientPctInput(String(r.client_percentage)); 
+    setOpen(true); 
+  }
 
   const availableYears = useMemo(() => {
     const years = new Set<string>();
@@ -205,7 +216,16 @@ function RevenuePage() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
                     <Label>القناة *</Label>
-                    <Select value={channelId} onValueChange={setChannelId}>
+                    <Select 
+                      value={channelId} 
+                      onValueChange={(val) => {
+                        setChannelId(val);
+                        const ch = channels.find((c: any) => c.id === val);
+                        if (ch) {
+                          setClientPctInput(String(ch.client_percentage ?? 50));
+                        }
+                      }}
+                    >
                       <SelectTrigger><SelectValue placeholder="اختر القناة" /></SelectTrigger>
                       <SelectContent>{channels.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name} — {c.clients?.name}</SelectItem>)}</SelectContent>
                     </Select>
@@ -214,7 +234,19 @@ function RevenuePage() {
                     <div className="space-y-2"><Label>الشهر *</Label><Input name="period_month" type="month" required defaultValue={editing ? editing.period_month.slice(0, 7) : firstOfMonth().slice(0, 7)} dir="ltr" /></div>
                     <div className="space-y-2"><Label>إجمالي الإيراد (USD) *</Label><Input name="total_revenue" type="number" step="0.01" min="0" required defaultValue={editing?.total_revenue} dir="ltr" /></div>
                   </div>
-                  <div className="space-y-2"><Label>نسبة العميل % (يمكن تجاوز قيمة القناة)</Label><Input name="client_percentage" type="number" step="0.01" min="0" max="100" defaultValue={editing?.client_percentage ?? channels.find((c: any) => c.id === channelId)?.client_percentage ?? 50} dir="ltr" /></div>
+                  <div className="space-y-2">
+                    <Label>نسبة العميل % (يمكن تجاوز قيمة القناة)</Label>
+                    <Input 
+                      name="client_percentage" 
+                      type="number" 
+                      step="0.01" 
+                      min="0" 
+                      max="100" 
+                      value={clientPctInput} 
+                      onChange={(e) => setClientPctInput(e.target.value)} 
+                      dir="ltr" 
+                    />
+                  </div>
                   <DialogFooter><Button type="submit" disabled={save.isPending}>حفظ</Button></DialogFooter>
                 </form>
               </DialogContent>
