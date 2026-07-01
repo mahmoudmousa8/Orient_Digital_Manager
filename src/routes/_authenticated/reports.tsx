@@ -32,7 +32,7 @@ function currentMonthStr() {
 const COLORS = ["#8b5cf6", "#a21caf", "#3b82f6", "#10b981", "#d946ef", "#f59e0b"];
 
 function ReportsDashboard() {
-  const { isStaff, user } = useAuth();
+  const { isStaff, user, loading: isAuthLoading } = useAuth();
   const [clientId, setClientId] = useState<string>("all");
   const [startMonth, setStartMonth] = useState<string>(firstOfCurrentYear());
   const [endMonth, setEndMonth] = useState<string>(currentMonthStr());
@@ -44,12 +44,13 @@ function ReportsDashboard() {
       const { data } = await supabase.from("clients").select("id, name").order("name");
       return (data ?? []) as { id: string; name: string }[];
     },
-    enabled: isStaff,
+    enabled: !isAuthLoading && isStaff,
   });
 
   // 2. Fetch Data for Period
-  const { data: reportData, isLoading } = useQuery({
-    queryKey: ["reports-dashboard-data", clientId, startMonth, endMonth, isStaff],
+  const { data: reportData, isLoading: isQueryLoading } = useQuery({
+    queryKey: ["reports-dashboard-data", user?.id, clientId, startMonth, endMonth, isStaff],
+    enabled: !isAuthLoading && (isStaff || !!user?.id),
     queryFn: async () => {
       const start = startMonth + "-01";
       
@@ -109,6 +110,8 @@ function ReportsDashboard() {
       return { revenues, invoices };
     },
   });
+
+  const isLoading = isAuthLoading || isQueryLoading;
 
   const revenues = reportData?.revenues ?? [];
   const invoices = reportData?.invoices ?? [];
