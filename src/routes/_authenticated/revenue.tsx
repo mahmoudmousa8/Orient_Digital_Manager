@@ -310,9 +310,9 @@ function RevenuePage() {
                 <TableHead className="text-right">القناة</TableHead>
                 <TableHead className="text-right">العميل</TableHead>
                 {isStaff && <TableHead className="text-right">إجمالي الإيراد</TableHead>}
-                {isStaff && <TableHead className="text-right">نسبة العميل %</TableHead>}
-                {isStaff && <TableHead className="text-right">نسبة السيستم %</TableHead>}
-                {isStaff && <TableHead className="text-right">نسبة الشركة %</TableHead>}
+                {isStaff && <TableHead className="text-right">نسبة العميل</TableHead>}
+                {isStaff && <TableHead className="text-right">نسبة السيستم</TableHead>}
+                {isStaff && <TableHead className="text-right">نسبة الشركة</TableHead>}
                 <TableHead className="text-right">حصة العميل</TableHead>
                 {isStaff && <TableHead className="text-right">حصة السيستم</TableHead>}
                 {isStaff && <TableHead className="text-right">حصة الشركة</TableHead>}
