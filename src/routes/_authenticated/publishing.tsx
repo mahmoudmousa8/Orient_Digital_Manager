@@ -291,9 +291,9 @@ function PublishingPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-right min-w-[130px] text-xs">القناة</TableHead>
-                  <TableHead className="text-right text-xs">الموظف المسؤول</TableHead>
-                  <TableHead className="text-right text-xs">العميل</TableHead>
+                  <TableHead className="text-center min-w-[130px] text-xs">القناة</TableHead>
+                  <TableHead className="text-center text-xs">الموظف المسؤول</TableHead>
+                  <TableHead className="text-center text-xs">العميل</TableHead>
                   <TableHead className="text-center min-w-[90px] text-xs">تفعيل الأرباح</TableHead>
                   <TableHead className="text-center p-0.5 sm:p-1 text-[11px] sm:text-xs font-black min-w-[24px] sm:min-w-[32px] text-slate-300">1</TableHead>
                   <TableHead className="text-center p-0.5 sm:p-1 text-[11px] sm:text-xs font-black min-w-[24px] sm:min-w-[32px] text-slate-300">2</TableHead>
@@ -307,9 +307,9 @@ function PublishingPage() {
                   <TableHead className="text-center p-0.5 sm:p-1 text-[11px] sm:text-xs font-black min-w-[24px] sm:min-w-[32px] text-slate-300">10</TableHead>
                   <TableHead className="text-center p-0.5 sm:p-1 text-[11px] sm:text-xs font-black min-w-[24px] sm:min-w-[32px] text-slate-300">11</TableHead>
                   <TableHead className="text-center p-0.5 sm:p-1 text-[11px] sm:text-xs font-black min-w-[24px] sm:min-w-[32px] text-slate-300">12</TableHead>
-                  <TableHead className="text-right min-w-[200px]">ملاحظات</TableHead>
-                  <TableHead className="text-center min-w-[120px]">التقدم</TableHead>
-                  <TableHead className="text-right">الرابط</TableHead>
+                  <TableHead className="text-center min-w-[200px] text-xs">ملاحظات</TableHead>
+                  <TableHead className="text-center min-w-[120px] text-xs">التقدم</TableHead>
+                  <TableHead className="text-center text-xs">الرابط</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -347,34 +347,36 @@ function PublishingPage() {
                     return (
                       <TableRow key={t.channelId} className={isAssignedToMe ? "bg-primary/5" : ""}>
                         {/* Channel Name */}
-                        <TableCell className="font-bold text-right text-slate-200 text-xs py-1.5">
+                        <TableCell className="font-bold text-center text-slate-200 text-xs py-1.5">
                           {t.channelName}
                         </TableCell>
 
                         {/* Assigned Staff */}
-                        <TableCell className="text-right py-1.5">
+                        <TableCell className="text-center py-1.5">
                           {isAdmin ? (
-                            <Select
-                              value={t.assignedTo || "none"}
-                              onValueChange={(val) =>
-                                updateMutation.mutate({
-                                  channelId: t.channelId,
-                                  assignedTo: val === "none" ? null : val,
-                                })
-                              }
-                            >
-                              <SelectTrigger className="w-36 h-7 bg-slate-900 border-slate-700 text-xs">
-                                <SelectValue placeholder="اختر موظف" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="none">غير معين</SelectItem>
-                                {staff.map((s) => (
-                                  <SelectItem key={s.id} value={s.id} className="text-xs">
-                                    {s.fullName || s.email}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <div className="flex justify-center">
+                              <Select
+                                value={t.assignedTo || "none"}
+                                onValueChange={(val) =>
+                                  updateMutation.mutate({
+                                    channelId: t.channelId,
+                                    assignedTo: val === "none" ? null : val,
+                                  })
+                                }
+                              >
+                                <SelectTrigger className="w-36 h-7 bg-slate-900 border-slate-700 text-xs mx-auto">
+                                  <SelectValue placeholder="اختر موظف" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="none">غير معين</SelectItem>
+                                  {staff.map((s) => (
+                                    <SelectItem key={s.id} value={s.id} className="text-xs">
+                                      {s.fullName || s.email}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
                           ) : (
                             <span className="text-xs text-slate-300">
                               {staff.find((s) => s.id === t.assignedTo)?.fullName ?? "غير معين"}
@@ -383,7 +385,7 @@ function PublishingPage() {
                         </TableCell>
 
                         {/* Client Name */}
-                        <TableCell className="text-right text-xs text-slate-300 py-1.5">
+                        <TableCell className="text-center text-xs text-slate-300 py-1.5">
                           {t.clientName}
                         </TableCell>
 
@@ -631,7 +633,7 @@ function PublishingPage() {
                         </TableCell>
 
                         {/* Notes */}
-                        <TableCell className="text-right">
+                        <TableCell className="text-center">
                           <Input
                             defaultValue={t.notes}
                             disabled={!canEdit}
@@ -649,7 +651,7 @@ function PublishingPage() {
                               }
                             }}
                             placeholder="ملاحظات..."
-                            className="h-8 bg-slate-900 border-slate-700 text-xs w-full text-slate-100"
+                            className="h-8 bg-slate-900 border-slate-700 text-xs w-full text-slate-100 text-center"
                           />
                         </TableCell>
 
@@ -662,13 +664,13 @@ function PublishingPage() {
                         </TableCell>
 
                         {/* External Link */}
-                        <TableCell className="text-right">
+                        <TableCell className="text-center">
                           {t.link ? (
                             <a
                               href={t.link}
                               target="_blank"
                               rel="noreferrer"
-                              className="text-slate-300 hover:text-white inline-flex items-center gap-1 text-xs"
+                              className="text-slate-300 hover:text-white inline-flex items-center gap-1 text-xs justify-center w-full"
                             >
                               <ExternalLink className="w-3 h-3" />
                               فتح
