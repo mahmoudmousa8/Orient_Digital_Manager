@@ -291,10 +291,10 @@ function PublishingPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-right min-w-[150px]">القناة</TableHead>
-                  <TableHead className="text-right">الموظف المسؤول</TableHead>
-                  <TableHead className="text-right">العميل</TableHead>
-                  <TableHead className="text-center min-w-[100px]">تفعيل الأرباح</TableHead>
+                  <TableHead className="text-right min-w-[130px] text-xs">القناة</TableHead>
+                  <TableHead className="text-right text-xs">الموظف المسؤول</TableHead>
+                  <TableHead className="text-right text-xs">العميل</TableHead>
+                  <TableHead className="text-center min-w-[90px] text-xs">تفعيل الأرباح</TableHead>
                   <TableHead className="text-center p-0.5 sm:p-1 text-[11px] sm:text-xs font-black min-w-[24px] sm:min-w-[32px] text-slate-300">1</TableHead>
                   <TableHead className="text-center p-0.5 sm:p-1 text-[11px] sm:text-xs font-black min-w-[24px] sm:min-w-[32px] text-slate-300">2</TableHead>
                   <TableHead className="text-center p-0.5 sm:p-1 text-[11px] sm:text-xs font-black min-w-[24px] sm:min-w-[32px] text-slate-300">3</TableHead>
@@ -347,12 +347,12 @@ function PublishingPage() {
                     return (
                       <TableRow key={t.channelId} className={isAssignedToMe ? "bg-primary/5" : ""}>
                         {/* Channel Name */}
-                        <TableCell className="font-bold text-right text-white">
+                        <TableCell className="font-bold text-right text-slate-200 text-xs py-1.5">
                           {t.channelName}
                         </TableCell>
 
                         {/* Assigned Staff */}
-                        <TableCell className="text-right">
+                        <TableCell className="text-right py-1.5">
                           {isAdmin ? (
                             <Select
                               value={t.assignedTo || "none"}
@@ -363,7 +363,7 @@ function PublishingPage() {
                                 })
                               }
                             >
-                              <SelectTrigger className="w-44 h-8 bg-slate-900 border-slate-700 text-xs">
+                              <SelectTrigger className="w-36 h-7 bg-slate-900 border-slate-700 text-xs">
                                 <SelectValue placeholder="اختر موظف" />
                               </SelectTrigger>
                               <SelectContent>
@@ -383,18 +383,18 @@ function PublishingPage() {
                         </TableCell>
 
                         {/* Client Name */}
-                        <TableCell className="text-right text-xs text-slate-300">
+                        <TableCell className="text-right text-xs text-slate-300 py-1.5">
                           {t.clientName}
                         </TableCell>
 
                         {/* Monetization Status Badge */}
-                        <TableCell className="text-center">
+                        <TableCell className="text-center py-1.5">
                           {t.isMonetized !== false ? (
-                            <span className="inline-block px-3 py-1 rounded-full text-xs font-extrabold bg-[#9b51e0] text-white shadow-sm border border-purple-500/20">
+                            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#9b51e0] text-white shadow-sm border border-purple-500/20">
                               مفعلة
                             </span>
                           ) : (
-                            <span className="inline-block px-3 py-1 rounded-full text-xs font-extrabold bg-[#334155] text-slate-300 border border-slate-600">
+                            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#334155] text-slate-300 border border-slate-600">
                               غير مفعلة
                             </span>
                           )}
