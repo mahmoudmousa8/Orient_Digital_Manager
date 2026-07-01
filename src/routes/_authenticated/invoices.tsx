@@ -142,7 +142,13 @@ function InvoicesPage() {
     }
     setBusy(true);
     try {
-      const start = formMonth + "-01";
+      // Calculate 2 months prior for revenues (e.g. invoice month 7 gets revenues of month 5)
+      const [year, month] = formMonth.split("-").map(Number);
+      const priorDate = new Date(year, month - 1 - 2, 1);
+      const priorYear = priorDate.getFullYear();
+      const priorMonth = String(priorDate.getMonth() + 1).padStart(2, '0');
+      const priorMonthStr = `${priorYear}-${priorMonth}`;
+      const start = priorMonthStr + "-01";
       
       // Get all channels belonging to this client
       const { data: clientChannels, error: chErr } = await supabase
@@ -168,7 +174,7 @@ function InvoicesPage() {
 
       if (error) throw error;
       if (!revenues || revenues.length === 0) {
-        toast.info("لا توجد إيرادات غير مفوترة لهذا العميل في الشهر المحدد");
+        toast.info(`لا توجد إيرادات غير مفوترة لهذا العميل في شهر أرباحه المحدد (${priorMonthStr})`);
         setBusy(false);
         return;
       }
@@ -176,7 +182,7 @@ function InvoicesPage() {
       const mapped = revenues.map((r: any) => ({
         revenueId: r.id,
         channelId: r.channel_id,
-        description: `أرباح قناة (${r.channels?.name}) - شهر ${formMonth}`,
+        description: `أرباح قناة (${r.channels?.name}) - شهر ${priorMonthStr}`,
         views: Number(r.views || 0),
         amount: Number(r.client_share || 0),
         clientPercentage: Number(r.client_percentage || 50),
