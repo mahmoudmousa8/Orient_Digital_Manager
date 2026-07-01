@@ -158,7 +158,7 @@ function PublishingPage() {
         <div className="space-y-1">
           <h1 className="text-2xl sm:text-3xl font-black flex items-center gap-2.5 text-white">
             <ClipboardCheck className="w-8 h-8 text-primary" />
-            نشر القنوات (YouTube Channel Tracker)
+            نشر القنوات
           </h1>
           <p className="text-sm text-muted-foreground mt-1.5">
             تتبع مهام النشر الشهرية للقنوات وإسنادها للموظفين
