@@ -293,29 +293,28 @@ function PublishingPage() {
                 <TableRow>
                   <TableHead className="text-center min-w-[130px] text-[10px]">القناة</TableHead>
                   <TableHead className="text-center text-[10px] min-w-[100px]">الموظف</TableHead>
-                  <TableHead className="text-center text-[10px] min-w-[140px]">العميل</TableHead>
+                  <TableHead className="text-center text-[10px] min-w-[220px]">العميل</TableHead>
                   <TableHead className="text-center min-w-[90px] text-[10px]">تفعيل الأرباح</TableHead>
-                  <TableHead className="text-center p-0.5 sm:p-1 text-[10px] font-black min-w-[24px] sm:min-w-[32px] text-slate-300">1</TableHead>
-                  <TableHead className="text-center p-0.5 sm:p-1 text-[10px] font-black min-w-[24px] sm:min-w-[32px] text-slate-300">2</TableHead>
-                  <TableHead className="text-center p-0.5 sm:p-1 text-[10px] font-black min-w-[24px] sm:min-w-[32px] text-slate-300">3</TableHead>
-                  <TableHead className="text-center p-0.5 sm:p-1 text-[10px] font-black min-w-[24px] sm:min-w-[32px] text-slate-300">4</TableHead>
-                  <TableHead className="text-center p-0.5 sm:p-1 text-[10px] font-black min-w-[24px] sm:min-w-[32px] text-slate-300">5</TableHead>
-                  <TableHead className="text-center p-0.5 sm:p-1 text-[10px] font-black min-w-[24px] sm:min-w-[32px] text-slate-300">6</TableHead>
-                  <TableHead className="text-center p-0.5 sm:p-1 text-[10px] font-black min-w-[24px] sm:min-w-[32px] text-slate-300">7</TableHead>
-                  <TableHead className="text-center p-0.5 sm:p-1 text-[10px] font-black min-w-[24px] sm:min-w-[32px] text-slate-300">8</TableHead>
-                  <TableHead className="text-center p-0.5 sm:p-1 text-[10px] font-black min-w-[24px] sm:min-w-[32px] text-slate-300">9</TableHead>
-                  <TableHead className="text-center p-0.5 sm:p-1 text-[10px] font-black min-w-[24px] sm:min-w-[32px] text-slate-300">10</TableHead>
-                  <TableHead className="text-center p-0.5 sm:p-1 text-[10px] font-black min-w-[24px] sm:min-w-[32px] text-slate-300">11</TableHead>
-                  <TableHead className="text-center p-0.5 sm:p-1 text-[10px] font-black min-w-[24px] sm:min-w-[32px] text-slate-300">12</TableHead>
+                  <TableHead className="text-center p-0.5 text-[10px] font-black min-w-[18px] sm:min-w-[22px] text-slate-300">1</TableHead>
+                  <TableHead className="text-center p-0.5 text-[10px] font-black min-w-[18px] sm:min-w-[22px] text-slate-300">2</TableHead>
+                  <TableHead className="text-center p-0.5 text-[10px] font-black min-w-[18px] sm:min-w-[22px] text-slate-300">3</TableHead>
+                  <TableHead className="text-center p-0.5 text-[10px] font-black min-w-[18px] sm:min-w-[22px] text-slate-300">4</TableHead>
+                  <TableHead className="text-center p-0.5 text-[10px] font-black min-w-[18px] sm:min-w-[22px] text-slate-300">5</TableHead>
+                  <TableHead className="text-center p-0.5 text-[10px] font-black min-w-[18px] sm:min-w-[22px] text-slate-300">6</TableHead>
+                  <TableHead className="text-center p-0.5 text-[10px] font-black min-w-[18px] sm:min-w-[22px] text-slate-300">7</TableHead>
+                  <TableHead className="text-center p-0.5 text-[10px] font-black min-w-[18px] sm:min-w-[22px] text-slate-300">8</TableHead>
+                  <TableHead className="text-center p-0.5 text-[10px] font-black min-w-[18px] sm:min-w-[22px] text-slate-300">9</TableHead>
+                  <TableHead className="text-center p-0.5 text-[10px] font-black min-w-[18px] sm:min-w-[22px] text-slate-300">10</TableHead>
+                  <TableHead className="text-center p-0.5 text-[10px] font-black min-w-[18px] sm:min-w-[22px] text-slate-300">11</TableHead>
+                  <TableHead className="text-center p-0.5 text-[10px] font-black min-w-[18px] sm:min-w-[22px] text-slate-300">12</TableHead>
                   <TableHead className="text-center min-w-[200px] text-[10px]">ملاحظات</TableHead>
-                  <TableHead className="text-center min-w-[120px] text-[10px]">التقدم</TableHead>
                   <TableHead className="text-center text-[10px]">الرابط</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading && (
                   <TableRow>
-                    <TableCell colSpan={19} className="text-center py-8">
+                    <TableCell colSpan={18} className="text-center py-8">
                       <div className="flex items-center justify-center gap-2">
                         <Loader2 className="w-5 h-5 animate-spin text-primary" />
                         <span>جاري تحميل قنوات التتبع…</span>
@@ -325,7 +324,7 @@ function PublishingPage() {
                 )}
                 {!isLoading && filteredTasks.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={19} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={18} className="text-center text-muted-foreground py-8">
                       لا توجد نتائج مطابقة للفلاتر الحالية.
                     </TableCell>
                   </TableRow>
@@ -403,7 +402,7 @@ function PublishingPage() {
                         </TableCell>
 
                         {/* Month Checkboxes */}
-                        <TableCell className="text-center p-0.5 sm:p-1 min-w-[20px] sm:min-w-[28px]">
+                        <TableCell className="text-center p-0.5 min-w-[18px] sm:min-w-[22px]">
                           <button
                             type="button"
                             disabled={!canEdit || isMonthDisabled(1)}
@@ -422,7 +421,7 @@ function PublishingPage() {
                             )}
                           />
                         </TableCell>
-                        <TableCell className="text-center p-0.5 sm:p-1 min-w-[20px] sm:min-w-[28px]">
+                        <TableCell className="text-center p-0.5 min-w-[18px] sm:min-w-[22px]">
                           <button
                             type="button"
                             disabled={!canEdit || isMonthDisabled(2)}
@@ -441,7 +440,7 @@ function PublishingPage() {
                             )}
                           />
                         </TableCell>
-                        <TableCell className="text-center p-0.5 sm:p-1 min-w-[20px] sm:min-w-[28px]">
+                        <TableCell className="text-center p-0.5 min-w-[18px] sm:min-w-[22px]">
                           <button
                             type="button"
                             disabled={!canEdit || isMonthDisabled(3)}
@@ -460,7 +459,7 @@ function PublishingPage() {
                             )}
                           />
                         </TableCell>
-                        <TableCell className="text-center p-0.5 sm:p-1 min-w-[20px] sm:min-w-[28px]">
+                        <TableCell className="text-center p-0.5 min-w-[18px] sm:min-w-[22px]">
                           <button
                             type="button"
                             disabled={!canEdit || isMonthDisabled(4)}
@@ -479,7 +478,7 @@ function PublishingPage() {
                             )}
                           />
                         </TableCell>
-                        <TableCell className="text-center p-0.5 sm:p-1 min-w-[20px] sm:min-w-[28px]">
+                        <TableCell className="text-center p-0.5 min-w-[18px] sm:min-w-[22px]">
                           <button
                             type="button"
                             disabled={!canEdit || isMonthDisabled(5)}
@@ -498,7 +497,7 @@ function PublishingPage() {
                             )}
                           />
                         </TableCell>
-                        <TableCell className="text-center p-0.5 sm:p-1 min-w-[20px] sm:min-w-[28px]">
+                        <TableCell className="text-center p-0.5 min-w-[18px] sm:min-w-[22px]">
                           <button
                             type="button"
                             disabled={!canEdit || isMonthDisabled(6)}
@@ -517,7 +516,7 @@ function PublishingPage() {
                             )}
                           />
                         </TableCell>
-                        <TableCell className="text-center p-0.5 sm:p-1 min-w-[20px] sm:min-w-[28px]">
+                        <TableCell className="text-center p-0.5 min-w-[18px] sm:min-w-[22px]">
                           <button
                             type="button"
                             disabled={!canEdit || isMonthDisabled(7)}
@@ -536,7 +535,7 @@ function PublishingPage() {
                             )}
                           />
                         </TableCell>
-                        <TableCell className="text-center p-0.5 sm:p-1 min-w-[20px] sm:min-w-[28px]">
+                        <TableCell className="text-center p-0.5 min-w-[18px] sm:min-w-[22px]">
                           <button
                             type="button"
                             disabled={!canEdit || isMonthDisabled(8)}
@@ -555,7 +554,7 @@ function PublishingPage() {
                             )}
                           />
                         </TableCell>
-                        <TableCell className="text-center p-0.5 sm:p-1 min-w-[20px] sm:min-w-[28px]">
+                        <TableCell className="text-center p-0.5 min-w-[18px] sm:min-w-[22px]">
                           <button
                             type="button"
                             disabled={!canEdit || isMonthDisabled(9)}
@@ -574,7 +573,7 @@ function PublishingPage() {
                             )}
                           />
                         </TableCell>
-                        <TableCell className="text-center p-0.5 sm:p-1 min-w-[20px] sm:min-w-[28px]">
+                        <TableCell className="text-center p-0.5 min-w-[18px] sm:min-w-[22px]">
                           <button
                             type="button"
                             disabled={!canEdit || isMonthDisabled(10)}
@@ -593,7 +592,7 @@ function PublishingPage() {
                             )}
                           />
                         </TableCell>
-                        <TableCell className="text-center p-0.5 sm:p-1 min-w-[20px] sm:min-w-[28px]">
+                        <TableCell className="text-center p-0.5 min-w-[18px] sm:min-w-[22px]">
                           <button
                             type="button"
                             disabled={!canEdit || isMonthDisabled(11)}
@@ -612,7 +611,7 @@ function PublishingPage() {
                             )}
                           />
                         </TableCell>
-                        <TableCell className="text-center p-0.5 sm:p-1 min-w-[20px] sm:min-w-[28px]">
+                        <TableCell className="text-center p-0.5 min-w-[18px] sm:min-w-[22px]">
                           <button
                             type="button"
                             disabled={!canEdit || isMonthDisabled(12)}
@@ -653,14 +652,6 @@ function PublishingPage() {
                             placeholder="ملاحظات..."
                             className="h-8 bg-slate-900 border-slate-700 text-xs w-full text-slate-100 text-center"
                           />
-                        </TableCell>
-
-                        {/* Progress */}
-                        <TableCell className="text-center">
-                          <div className="flex flex-col items-center gap-1">
-                            <span className="text-xs font-bold text-white">{percent}%</span>
-                            <Progress value={percent} className="w-16 h-1.5" />
-                          </div>
                         </TableCell>
 
                         {/* External Link */}
