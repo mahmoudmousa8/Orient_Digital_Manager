@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Users, Youtube, DollarSign, CreditCard, FileText, FileSpreadsheet, LogOut, Menu, UserPlus, Settings, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, Users, Youtube, DollarSign, CreditCard, FileText, FileSpreadsheet, LogOut, Menu, UserPlus, Settings, ShieldCheck, ClipboardCheck } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ const staffNav = [
   { to: "/dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
   { to: "/clients", label: "العملاء", icon: Users },
   { to: "/channels", label: "القنوات", icon: Youtube },
+  { to: "/publishing", label: "نشر القنوات", icon: ClipboardCheck },
   { to: "/revenue", label: "الإيرادات الشهرية", icon: DollarSign },
   { to: "/invoices", label: "الفواتير", icon: FileText },
   { to: "/payments", label: "المدفوعات", icon: CreditCard },
