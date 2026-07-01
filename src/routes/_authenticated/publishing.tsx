@@ -292,8 +292,8 @@ function PublishingPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-center min-w-[130px] text-[10px]">القناة</TableHead>
-                  <TableHead className="text-center text-[10px]">الموظف المسؤول</TableHead>
-                  <TableHead className="text-center text-[10px]">العميل</TableHead>
+                  <TableHead className="text-center text-[10px] min-w-[100px]">الموظف</TableHead>
+                  <TableHead className="text-center text-[10px] min-w-[140px]">العميل</TableHead>
                   <TableHead className="text-center min-w-[90px] text-[10px]">تفعيل الأرباح</TableHead>
                   <TableHead className="text-center p-0.5 sm:p-1 text-[10px] font-black min-w-[24px] sm:min-w-[32px] text-slate-300">1</TableHead>
                   <TableHead className="text-center p-0.5 sm:p-1 text-[10px] font-black min-w-[24px] sm:min-w-[32px] text-slate-300">2</TableHead>
@@ -364,7 +364,7 @@ function PublishingPage() {
                                   })
                                 }
                               >
-                                <SelectTrigger className="w-36 h-7 bg-slate-900 border-slate-700 text-[10px] mx-auto">
+                                <SelectTrigger className="w-28 h-7 bg-slate-900 border-slate-700 text-[10px] mx-auto">
                                   <SelectValue placeholder="اختر موظف" />
                                 </SelectTrigger>
                                 <SelectContent>
