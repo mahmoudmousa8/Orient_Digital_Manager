@@ -366,13 +366,21 @@ export function parseRevenueFile(file: File): Promise<Array<{ channel: string; m
           const monthRaw = String(r.month ?? r.Month ?? r["الشهر"] ?? "").trim();
           const revenue = Number(r.revenue ?? r.Revenue ?? r["الإيراد"] ?? r["إجمالي الإيراد"] ?? 0);
           const percentage = r.percentage ?? r.Percentage ?? r["النسبة"];
-          let month = monthRaw;
-          // accept YYYY-MM or YYYY-MM-DD or Date
-          if (/^\d{4}-\d{2}$/.test(monthRaw)) month = monthRaw + "-01";
-          else if (/^\d{4}-\d{2}-\d{2}/.test(monthRaw)) month = monthRaw.slice(0, 10);
-          else if (monthRaw) {
-            const d = new Date(monthRaw);
-            if (!isNaN(d.getTime())) month = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10);
+          let month = "";
+          if (monthRaw) {
+            const match = monthRaw.match(/^(\d{4})[-/](\d{1,2})(?:[-/](\d{1,2}))?$/);
+            if (match) {
+              const y = match[1];
+              const m = match[2].padStart(2, '0');
+              month = `${y}-${m}-01`;
+            } else {
+              const d = new Date(monthRaw);
+              if (!isNaN(d.getTime())) {
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                month = `${y}-${m}-01`;
+              }
+            }
           }
           return { channel, month, revenue, percentage: percentage !== "" && percentage != null ? Number(percentage) : undefined };
         }).filter((r) => r.channel && r.month && r.revenue > 0);
@@ -389,23 +397,23 @@ export function downloadRevenueTemplate(channels?: any[]) {
   
   let data = [];
   if (channels && channels.length > 0) {
-    // Filter channels where is_monetized is not false and status is active
-    const monetized = channels.filter(c => c.is_monetized !== false && c.status === 'active');
-    data = monetized.map((c, index) => {
+    // Include all active channels so user can fill revenues manually
+    const activeChannels = channels.filter(c => c.status === 'active' || !c.status);
+    data = activeChannels.map((c, index) => {
       const rowNum = index + 2; // Row 1 is header, data starts at row 2
       return {
         "الشهر": currentMonth,
         "القناة": c.name,
         "العميل": c.clients?.name ?? "",
         "إجمالي الإيراد": "", // Left empty for user input
-        "النسبة": c.client_percentage,
+        "النسبة": c.client_percentage ?? 50,
         "حصة العميل": { t: "n", f: `ROUND(D${rowNum}*E${rowNum}/100, 2)` },
         "حصة الشركة": { t: "n", f: `ROUND(D${rowNum}*(100-E${rowNum})/100, 2)` }
       };
     });
   }
 
-  // If no monetized channels, fallback to mock examples
+  // If no active channels, fallback to mock examples
   if (data.length === 0) {
     data = [
       {

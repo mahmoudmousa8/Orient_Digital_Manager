@@ -10,9 +10,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Pencil, Trash2, Users, Search } from "lucide-react";
-import { money } from "@/lib/format";
+import { money, parsePaymentMethod } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,6 +42,8 @@ function ClientsPage() {
   const [editing, setEditing] = useState<Client | null>(null);
   const [search, setSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [filterPayment, setFilterPayment] = useState("all"); // all, instapay, wallet
+  const [paymentType, setPaymentType] = useState<"wallet" | "instapay">("wallet");
 
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ["clients"],
@@ -100,23 +104,59 @@ function ClientsPage() {
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
+    const pType = String(fd.get("payment_type"));
+    const pValue = String(fd.get("payment_value") || "").trim();
+    
+    let vodafoneCash = null;
+    if (pValue) {
+      vodafoneCash = pType === "instapay" ? `إنستاباي: ${pValue}` : `محفظة: ${pValue}`;
+    }
+
     save.mutate({
       name: String(fd.get("name") || ""),
       phone: String(fd.get("phone") || "") || null,
-      vodafone_cash: String(fd.get("vodafone_cash") || "") || null,
+      vodafone_cash: vodafoneCash,
       email: String(fd.get("email") || "") || null,
       notes: String(fd.get("notes") || "") || null,
     });
   }
 
   const filtered = useMemo(() => {
+    let list = clients;
+    
+    // 1. Payment method filter
+    if (filterPayment === "instapay") {
+      list = list.filter((c) => c.vodafone_cash?.startsWith("إنستاباي:"));
+    } else if (filterPayment === "wallet") {
+      list = list.filter((c) => c.vodafone_cash && !c.vodafone_cash.startsWith("إنستاباي:"));
+    }
+
+    // 2. Search query filter
     const q = search.trim().toLowerCase();
-    if (!q) return clients;
-    return clients.filter((c) =>
+    if (!q) return list;
+    return list.filter((c) =>
       c.name.toLowerCase().includes(q) ||
       (c.email ?? "").toLowerCase().includes(q) ||
-      (c.phone ?? "").includes(q));
-  }, [clients, search]);
+      (c.phone ?? "").includes(q) ||
+      (c.vodafone_cash ?? "").toLowerCase().includes(q)
+    );
+  }, [clients, search, filterPayment]);
+
+  const handleOpenChange = (v: boolean) => {
+    setOpen(v);
+    if (!v) {
+      setEditing(null);
+    } else if (!editing) {
+      setPaymentType("wallet");
+    }
+  };
+
+  const handleEditClick = (c: Client) => {
+    setEditing(c);
+    const parsed = parsePaymentMethod(c.vodafone_cash);
+    setPaymentType(parsed.type);
+    setOpen(true);
+  };
 
   if (!isStaff) return <div className="text-muted-foreground">هذه الصفحة متاحة للموظفين فقط.</div>;
 
@@ -130,7 +170,7 @@ function ClientsPage() {
           </h1>
           <p className="text-sm text-muted-foreground mt-1.5">إدارة بيانات العملاء وقنواتهم</p>
         </div>
-        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
             <Button className="btn-header-action"><Plus className="w-4 h-4 ml-1" /> عميل جديد</Button>
           </DialogTrigger>
@@ -140,7 +180,27 @@ function ClientsPage() {
               <div className="space-y-2"><Label>الاسم *</Label><Input name="name" required defaultValue={editing?.name} /></div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2"><Label>رقم الهاتف</Label><Input name="phone" defaultValue={editing?.phone ?? ""} dir="ltr" /></div>
-                <div className="space-y-2"><Label>إنستاباي / محفظة إلكترونية</Label><Input name="vodafone_cash" defaultValue={editing?.vodafone_cash ?? ""} placeholder="عنوان InstaPay أو رقم المحفظة..." dir="ltr" /></div>
+                <div className="space-y-2">
+                  <Label>إنستاباي / محفظة إلكترونية</Label>
+                  <div className="flex gap-2">
+                    <Select value={paymentType} onValueChange={(val: any) => setPaymentType(val)} name="payment_type">
+                      <SelectTrigger className="w-[100px] bg-slate-900 border-slate-700">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="wallet">محفظة</SelectItem>
+                        <SelectItem value="instapay">إنستاباي</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input 
+                      name="payment_value" 
+                      defaultValue={parsePaymentMethod(editing?.vodafone_cash).value} 
+                      placeholder={paymentType === "instapay" ? "عنوان InstaPay..." : "رقم المحفظة..."}
+                      dir="ltr"
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
               </div>
               <div className="space-y-2"><Label>البريد الإلكتروني</Label><Input name="email" type="email" defaultValue={editing?.email ?? ""} dir="ltr" /></div>
               <div className="space-y-2"><Label>ملاحظات</Label><Textarea name="notes" defaultValue={editing?.notes ?? ""} /></div>
@@ -152,9 +212,22 @@ function ClientsPage() {
         </Dialog>
       </div>
 
-      <div className="relative max-w-md">
-        <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input placeholder="بحث بالاسم أو البريد أو الهاتف…" value={search} onChange={(e) => setSearch(e.target.value)} className="search-input-padding" />
+      <div className="flex flex-wrap gap-3 items-center justify-between">
+        <div className="relative flex-1 min-w-[200px] max-w-md">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input placeholder="بحث بالاسم أو البريد أو الهاتف…" value={search} onChange={(e) => setSearch(e.target.value)} className="search-input-padding" />
+        </div>
+
+        <Select value={filterPayment} onValueChange={setFilterPayment}>
+          <SelectTrigger className="w-48 bg-slate-900 border-slate-700">
+            <SelectValue placeholder="طريقة التحويل" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">كل طرق الدفع</SelectItem>
+            <SelectItem value="instapay">إنستاباي فقط</SelectItem>
+            <SelectItem value="wallet">محفظة إلكترونية فقط</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <Card>
@@ -181,14 +254,38 @@ function ClientsPage() {
                   <TableRow key={c.id}>
                     <TableCell className="font-medium text-right">{c.name}</TableCell>
                     <TableCell dir="ltr" className="text-right">{c.phone || "—"}</TableCell>
-                    <TableCell dir="ltr" className="text-right">{c.vodafone_cash || "—"}</TableCell>
+                    <TableCell dir="ltr" className="text-right">
+                      {c.vodafone_cash ? (
+                        (() => {
+                          const parsed = parsePaymentMethod(c.vodafone_cash);
+                          return (
+                            <div className="flex items-center gap-1.5 justify-end">
+                              <span className="text-[11px] text-slate-300 font-medium truncate max-w-[150px]" title={parsed.value}>
+                                {parsed.value}
+                              </span>
+                              {parsed.type === "instapay" ? (
+                                <span className="text-[9px] bg-purple-500/15 text-purple-300 font-extrabold px-1.5 py-0.5 rounded border border-purple-500/20">
+                                  إنستاباي
+                                </span>
+                              ) : (
+                                <span className="text-[9px] bg-sky-500/15 text-sky-300 font-extrabold px-1.5 py-0.5 rounded border border-sky-500/20">
+                                  محفظة
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })()
+                      ) : (
+                        "—"
+                      )}
+                    </TableCell>
                     <TableCell dir="ltr" className="text-right">{c.email || "—"}</TableCell>
                     <TableCell dir="ltr" className="font-medium text-center">{s.channels}</TableCell>
                     <TableCell dir="ltr" className="text-white font-medium text-left">{money(s.revenue)}</TableCell>
                     <TableCell dir="ltr" className="text-white font-medium text-left">{money(s.payout)}</TableCell>
                     <TableCell className="text-left">
                       <div className="flex gap-1 justify-end">
-                        <Button size="icon" variant="ghost" onClick={() => { setEditing(c); setOpen(true); }}><Pencil className="w-4 h-4" /></Button>
+                        <Button size="icon" variant="ghost" onClick={() => handleEditClick(c)}><Pencil className="w-4 h-4" /></Button>
                         <Button size="icon" variant="ghost" onClick={() => setDeleteTarget(c.id)}><Trash2 className="w-4 h-4 text-slate-300 hover:text-red-400 transition-colors" /></Button>
                       </div>
                     </TableCell>

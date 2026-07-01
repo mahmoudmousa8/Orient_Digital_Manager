@@ -26,3 +26,24 @@ export const STATUS_AR: Record<string, string> = {
   overdue: "متأخرة",
   cancelled: "ملغاة",
 };
+
+export function parsePaymentMethod(val: string | null | undefined) {
+  if (!val) return { type: "wallet" as const, value: "", label: "" };
+  if (val.startsWith("إنستاباي: ")) {
+    const value = val.replace("إنستاباي: ", "");
+    return { type: "instapay" as const, value, label: `إنستاباي: ${value}` };
+  }
+  if (val.startsWith("إنستاباي:")) {
+    const value = val.replace("إنستاباي:", "");
+    return { type: "instapay" as const, value, label: `إنستاباي: ${value}` };
+  }
+  if (val.startsWith("محفظة: ")) {
+    const value = val.replace("محفظة: ", "");
+    return { type: "wallet" as const, value, label: `محفظة: ${value}` };
+  }
+  if (val.startsWith("محفظة:")) {
+    const value = val.replace("محفظة:", "");
+    return { type: "wallet" as const, value, label: `محفظة: ${value}` };
+  }
+  return { type: "wallet" as const, value: val, label: `محفظة: ${val}` }; // Default legacy
+}

@@ -137,7 +137,18 @@ function PaymentsPage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return payments.filter((p) => {
-      if (filterStatus !== "all" && p.status !== filterStatus) return false;
+      if (filterStatus !== "all") {
+        if (filterStatus === "paid") {
+          if (p.status !== "paid") return false;
+        } else if (filterStatus === "unpaid") {
+          // unpaid or partial (i.e. remaining > 0)
+          if (p.status === "paid") return false;
+        } else if (filterStatus === "only_unpaid") {
+          if (p.status !== "unpaid") return false;
+        } else if (filterStatus === "partial") {
+          if (p.status !== "partial") return false;
+        }
+      }
       const period = p.monthly_revenues?.period_month;
       if (period) {
         const [year, month] = period.split("-");
@@ -184,10 +195,15 @@ function PaymentsPage() {
         <div className="space-y-1.5">
           <Label className="text-xs text-slate-300">حالة الدفع</Label>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-40"><SelectValue placeholder="حالة الدفع" /></SelectTrigger>
+            <SelectTrigger className="w-48 bg-slate-900 border-slate-700">
+              <SelectValue placeholder="حالة الدفع" />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">كل الحالات</SelectItem>
-              {["paid","partial","unpaid"].map(s => <SelectItem key={s} value={s}>{STATUS_AR[s]}</SelectItem>)}
+              <SelectItem value="paid">المدفوع (كامل)</SelectItem>
+              <SelectItem value="unpaid">غير مدفوع (متبقي)</SelectItem>
+              <SelectItem value="only_unpaid">غير مدفوع نهائياً</SelectItem>
+              <SelectItem value="partial">مدفوع جزئياً</SelectItem>
             </SelectContent>
           </Select>
         </div>
