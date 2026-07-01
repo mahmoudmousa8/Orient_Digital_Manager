@@ -389,8 +389,8 @@ export function downloadRevenueTemplate(channels?: any[]) {
   
   let data = [];
   if (channels && channels.length > 0) {
-    // Filter channels where is_monetized is not false
-    const monetized = channels.filter(c => c.is_monetized !== false);
+    // Filter channels where is_monetized is not false and status is active
+    const monetized = channels.filter(c => c.is_monetized !== false && c.status === 'active');
     data = monetized.map((c, index) => {
       const rowNum = index + 2; // Row 1 is header, data starts at row 2
       return {
