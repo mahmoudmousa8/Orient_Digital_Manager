@@ -294,6 +294,7 @@ function PublishingPage() {
                   <TableHead className="text-right min-w-[150px]">القناة</TableHead>
                   <TableHead className="text-right">الموظف المسؤول</TableHead>
                   <TableHead className="text-right">العميل</TableHead>
+                  <TableHead className="text-center min-w-[100px]">تفعيل الأرباح</TableHead>
                   <TableHead className="text-center p-0.5 sm:p-1 text-[11px] sm:text-xs font-black min-w-[24px] sm:min-w-[32px] text-slate-300">1</TableHead>
                   <TableHead className="text-center p-0.5 sm:p-1 text-[11px] sm:text-xs font-black min-w-[24px] sm:min-w-[32px] text-slate-300">2</TableHead>
                   <TableHead className="text-center p-0.5 sm:p-1 text-[11px] sm:text-xs font-black min-w-[24px] sm:min-w-[32px] text-slate-300">3</TableHead>
@@ -314,7 +315,7 @@ function PublishingPage() {
               <TableBody>
                 {isLoading && (
                   <TableRow>
-                    <TableCell colSpan={18} className="text-center py-8">
+                    <TableCell colSpan={19} className="text-center py-8">
                       <div className="flex items-center justify-center gap-2">
                         <Loader2 className="w-5 h-5 animate-spin text-primary" />
                         <span>جاري تحميل قنوات التتبع…</span>
@@ -324,7 +325,7 @@ function PublishingPage() {
                 )}
                 {!isLoading && filteredTasks.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={18} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={19} className="text-center text-muted-foreground py-8">
                       لا توجد نتائج مطابقة للفلاتر الحالية.
                     </TableCell>
                   </TableRow>
@@ -347,18 +348,7 @@ function PublishingPage() {
                       <TableRow key={t.channelId} className={isAssignedToMe ? "bg-primary/5" : ""}>
                         {/* Channel Name */}
                         <TableCell className="font-bold text-right text-white">
-                          <div className="flex flex-col gap-1 items-start">
-                            <span>{t.channelName}</span>
-                            {t.isMonetized !== false ? (
-                              <span className="text-[10px] bg-emerald-500/15 text-emerald-400 font-extrabold px-1.5 py-0.5 rounded border border-emerald-500/20">
-                                مفعلة
-                              </span>
-                            ) : (
-                              <span className="text-[10px] bg-rose-500/15 text-rose-400 font-extrabold px-1.5 py-0.5 rounded border border-rose-500/20">
-                                غير مفعلة
-                              </span>
-                            )}
-                          </div>
+                          {t.channelName}
                         </TableCell>
 
                         {/* Assigned Staff */}
@@ -395,6 +385,19 @@ function PublishingPage() {
                         {/* Client Name */}
                         <TableCell className="text-right text-xs text-slate-300">
                           {t.clientName}
+                        </TableCell>
+
+                        {/* Monetization Status Badge */}
+                        <TableCell className="text-center">
+                          {t.isMonetized !== false ? (
+                            <span className="inline-block px-3 py-1 rounded-full text-xs font-extrabold bg-[#9b51e0] text-white shadow-sm border border-purple-500/20">
+                              مفعلة
+                            </span>
+                          ) : (
+                            <span className="inline-block px-3 py-1 rounded-full text-xs font-extrabold bg-[#334155] text-slate-300 border border-slate-600">
+                              غير مفعلة
+                            </span>
+                          )}
                         </TableCell>
 
                         {/* Month Checkboxes */}
