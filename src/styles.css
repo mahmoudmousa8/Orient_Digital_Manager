@@ -216,10 +216,10 @@ table th {
   background-color: #1d1b22 !important;
 }
 tbody tr {
-  transition: background-color 0.15s ease-out !important;
+  transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 tbody tr:hover {
-  background-color: rgba(162, 28, 175, 0.05) !important;
+  background-color: rgba(162, 28, 175, 0.15) !important;
 }
 
 /* Premium Focus Rings */
