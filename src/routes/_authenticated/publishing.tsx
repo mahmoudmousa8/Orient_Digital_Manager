@@ -330,7 +330,18 @@ function PublishingPage() {
                       <TableRow key={t.channelId} className={isAssignedToMe ? "bg-primary/5" : ""}>
                         {/* Channel Name */}
                         <TableCell className="font-bold text-right text-white">
-                          {t.channelName}
+                          <div className="flex flex-col gap-1 items-start">
+                            <span>{t.channelName}</span>
+                            {t.isMonetized !== false ? (
+                              <span className="text-[10px] bg-emerald-500/15 text-emerald-400 font-extrabold px-1.5 py-0.5 rounded border border-emerald-500/20">
+                                مفعلة
+                              </span>
+                            ) : (
+                              <span className="text-[10px] bg-rose-500/15 text-rose-400 font-extrabold px-1.5 py-0.5 rounded border border-rose-500/20">
+                                غير مفعلة
+                              </span>
+                            )}
+                          </div>
                         </TableCell>
 
                         {/* Assigned Staff */}
