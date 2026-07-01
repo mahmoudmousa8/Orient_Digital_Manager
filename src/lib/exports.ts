@@ -621,14 +621,12 @@ export function exportInvoicePDF(filename: string, opts: InvoicePDFOpts) {
   doc.setFont("helvetica", "normal");
   doc.text(`Account Name`, 14, payY + 5);
   doc.text(`KHALED MAHMOUD`, 42, payY + 5);
-  doc.text(`Account Number`, 14, payY + 9);
-  doc.text(`01125581125 (Vodafone Cash)`, 42, payY + 9);
-  doc.text(`Address`, 14, payY + 13);
-  doc.text(`Apartment 1, 2nd Floor, Building 113, Egypt`, 42, payY + 13);
-  doc.text(`Email`, 14, payY + 17);
+  doc.text(`Address`, 14, payY + 9);
+  doc.text(`Apartment 1, 2nd Floor, Building 113, Abu Youssef, Alexandria, Egypt`, 42, payY + 9);
+  doc.text(`Support Email`, 14, payY + 13);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(162, 28, 175);
-  doc.text(companyEmail || `info@orientdigitals.com`, 42, payY + 17);
+  doc.text(companyEmail || `info@orientdigitals.com`, 42, payY + 13);
 
   // 9. Notes & Footer
   if (notes) {
