@@ -257,8 +257,8 @@ function StatementsPage() {
               <TableRow>
                 <TableHead className="text-right">الشهر</TableHead>
                 <TableHead className="text-right">القناة</TableHead>
-                <TableHead className="text-left">إجمالي الأرباح</TableHead>
-                <TableHead className="text-center">النسبة</TableHead>
+                {isStaff && <TableHead className="text-left">إجمالي الأرباح</TableHead>}
+                {isStaff && <TableHead className="text-center">النسبة</TableHead>}
                 <TableHead className="text-left">صافي حصة العميل</TableHead>
                 <TableHead className="text-left">المدفوع للعميل</TableHead>
                 <TableHead className="text-left">الرصيد المتبقي للشهر</TableHead>
@@ -269,7 +269,7 @@ function StatementsPage() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8">
+                  <TableCell colSpan={isStaff ? 9 : 7} className="text-center py-8">
                     <div className="flex items-center justify-center gap-2 text-muted-foreground">
                       <RefreshCw className="w-4 h-4 animate-spin" />
                       جاري تحميل كشف الحساب…
@@ -279,7 +279,7 @@ function StatementsPage() {
               )}
               {!isLoading && !statementRows.length && (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center text-muted-foreground py-12">
+                  <TableCell colSpan={isStaff ? 9 : 7} className="text-center text-muted-foreground py-12">
                     لا توجد معاملات مسجلة للفترة المحددة
                   </TableCell>
                 </TableRow>
@@ -288,8 +288,8 @@ function StatementsPage() {
                 <TableRow key={i}>
                   <TableCell dir="ltr" className="text-right font-medium">{r.month}</TableCell>
                   <TableCell className="font-semibold">{r.channel}</TableCell>
-                  <TableCell dir="ltr" className="text-left text-white">{money(r.revenue)}</TableCell>
-                  <TableCell dir="ltr" className="text-center text-white">{r.percentage}%</TableCell>
+                  {isStaff && <TableCell dir="ltr" className="text-left text-white">{money(r.revenue)}</TableCell>}
+                  {isStaff && <TableCell dir="ltr" className="text-center text-white">{r.percentage}%</TableCell>}
                   <TableCell dir="ltr" className="text-left text-white font-semibold">{money(r.clientShare)}</TableCell>
                   <TableCell dir="ltr" className="text-left text-white">{money(r.amountPaid)}</TableCell>
                   <TableCell dir="ltr" className="text-left text-white">{money(r.remaining)}</TableCell>
@@ -300,8 +300,8 @@ function StatementsPage() {
               {statementRows.length > 0 && (
                 <TableRow className="bg-muted/50 font-bold">
                   <TableCell colSpan={2}>إجمالي الفترة</TableCell>
-                  <TableCell dir="ltr" className="text-left text-white">{money(totals.revenue)}</TableCell>
-                  <TableCell></TableCell>
+                  {isStaff && <TableCell dir="ltr" className="text-left text-white">{money(totals.revenue)}</TableCell>}
+                  {isStaff && <TableCell></TableCell>}
                   <TableCell dir="ltr" className="text-left text-white">{money(totals.clientShare)}</TableCell>
                   <TableCell dir="ltr" className="text-left text-white">{money(totals.paid)}</TableCell>
                   <TableCell dir="ltr" className="text-left text-white">{money(totals.remaining)}</TableCell>

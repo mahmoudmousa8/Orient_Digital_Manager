@@ -128,6 +128,38 @@ function Dashboard() {
     },
   ];
 
+  const visibleCards = isStaff 
+    ? cards 
+    : [
+        {
+          label: "إجمالي الأرباح المستحقة",
+          value: money(data?.clientPayouts),
+          icon: Wallet,
+          cardBg: "bg-card border-border hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-950/20",
+          iconBg: "bg-purple-600 text-white shadow-sm shadow-purple-600/20 border-none",
+          valueColor: "text-purple-400",
+          subtext: "إجمالي مستحقاتك من الأرباح"
+        },
+        {
+          label: "مستحقات معلقة غير مدفوعة",
+          value: money(data?.unpaid),
+          icon: AlertTriangle,
+          cardBg: "bg-card border-border hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-950/20",
+          iconBg: "bg-amber-500 text-white shadow-sm shadow-amber-500/20 border-none",
+          valueColor: "text-amber-400",
+          subtext: "المبالغ المتبقية قيد التحصيل"
+        },
+        {
+          label: "عدد القنوات",
+          value: data?.channels ?? 0,
+          icon: Youtube,
+          cardBg: "bg-card border-border hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-950/20",
+          iconBg: "bg-blue-600 text-white shadow-sm shadow-blue-600/20 border-none",
+          valueColor: "text-blue-400",
+          subtext: "قنوات اليوتيوب التابعة لك"
+        }
+      ];
+
   return (
     <div className="space-y-8 animate-fade-in-up">
       {/* Header Section */}
@@ -142,8 +174,8 @@ function Dashboard() {
       </div>
 
       {/* Symmetric Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {cards.map((c, i) => {
+      <div className={`grid grid-cols-1 sm:grid-cols-2 ${isStaff ? 'lg:grid-cols-3' : 'lg:grid-cols-3'} gap-6`}>
+        {visibleCards.map((c, i) => {
           const Icon = c.icon;
           return (
             <Card 
@@ -184,7 +216,7 @@ function Dashboard() {
       >
         <CardHeader className="p-6 border-b">
           <CardTitle className="text-base sm:text-lg font-extrabold text-white flex items-center justify-between">
-            <span>منحنى الإيرادات وحصص الأرباح (12 شهر الأخيرة)</span>
+            <span>{isStaff ? "منحنى الإيرادات وحصص الأرباح (12 شهر الأخيرة)" : "منحنى الأرباح المستحقة (12 شهر الأخيرة)"}</span>
             <span className="text-xs sm:text-sm font-bold text-slate-300">القيم بالدولار الأمريكي (USD)</span>
           </CardTitle>
         </CardHeader>
@@ -210,8 +242,14 @@ function Dashboard() {
                   contentStyle={{ backgroundColor: '#17151a', borderRadius: '12px', border: '1px solid #25222b', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)' }} 
                   cursor={{ fill: 'rgba(255, 255, 255, 0.03)' }}
                 />
-                <Bar dataKey="clientShare" stackId="a" fill="url(#colorClient)" name="حصة العميل" radius={[4, 4, 0, 0]} barSize={28} />
-                <Bar dataKey="companyShare" stackId="a" fill="url(#colorCompany)" name="حصة الشركة" radius={[4, 4, 0, 0]} barSize={28} />
+                {isStaff ? (
+                  <>
+                    <Bar dataKey="clientShare" stackId="a" fill="url(#colorClient)" name="حصة العميل" radius={[4, 4, 0, 0]} barSize={28} />
+                    <Bar dataKey="companyShare" stackId="a" fill="url(#colorCompany)" name="حصة الشركة" radius={[4, 4, 0, 0]} barSize={28} />
+                  </>
+                ) : (
+                  <Bar dataKey="clientShare" fill="url(#colorClient)" name="الأرباح المستحقة" radius={[4, 4, 0, 0]} barSize={28} />
+                )}
               </BarChart>
             </ResponsiveContainer>
           </div>
