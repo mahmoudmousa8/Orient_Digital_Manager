@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Search, Download, FileSpreadsheet, ExternalLink, ClipboardCheck, Loader2 } from "lucide-react";
 import { STATUS_AR } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
 import {
   listPublishingTasks,
@@ -398,159 +399,231 @@ function PublishingPage() {
 
                         {/* Month Checkboxes */}
                         <TableCell className="text-center p-0.5 sm:p-1 min-w-[20px] sm:min-w-[28px]">
-                          <Checkbox
-                            className="w-3 h-3 mx-auto block"
-                            checked={t.month1}
+                          <button
+                            type="button"
                             disabled={!canEdit || isMonthDisabled(1)}
-                            onCheckedChange={(checked) =>
+                            onClick={() =>
                               updateMutation.mutate({
                                 channelId: t.channelId,
-                                month1: !!checked,
+                                month1: !t.month1,
                               })
                             }
+                            className={cn(
+                              "w-3 h-3 rounded-full border transition-all mx-auto block",
+                              t.month1
+                                ? "bg-primary border-primary"
+                                : "border-slate-600 hover:border-slate-400 bg-transparent",
+                              (!canEdit || isMonthDisabled(1)) && "opacity-30 cursor-not-allowed"
+                            )}
                           />
                         </TableCell>
                         <TableCell className="text-center p-0.5 sm:p-1 min-w-[20px] sm:min-w-[28px]">
-                          <Checkbox
-                            className="w-3 h-3 mx-auto block"
-                            checked={t.month2}
+                          <button
+                            type="button"
                             disabled={!canEdit || isMonthDisabled(2)}
-                            onCheckedChange={(checked) =>
+                            onClick={() =>
                               updateMutation.mutate({
                                 channelId: t.channelId,
-                                month2: !!checked,
+                                month2: !t.month2,
                               })
                             }
+                            className={cn(
+                              "w-3 h-3 rounded-full border transition-all mx-auto block",
+                              t.month2
+                                ? "bg-primary border-primary"
+                                : "border-slate-600 hover:border-slate-400 bg-transparent",
+                              (!canEdit || isMonthDisabled(2)) && "opacity-30 cursor-not-allowed"
+                            )}
                           />
                         </TableCell>
                         <TableCell className="text-center p-0.5 sm:p-1 min-w-[20px] sm:min-w-[28px]">
-                          <Checkbox
-                            className="w-3 h-3 mx-auto block"
-                            checked={t.month3}
+                          <button
+                            type="button"
                             disabled={!canEdit || isMonthDisabled(3)}
-                            onCheckedChange={(checked) =>
+                            onClick={() =>
                               updateMutation.mutate({
                                 channelId: t.channelId,
-                                month3: !!checked,
+                                month3: !t.month3,
                               })
                             }
+                            className={cn(
+                              "w-3 h-3 rounded-full border transition-all mx-auto block",
+                              t.month3
+                                ? "bg-primary border-primary"
+                                : "border-slate-600 hover:border-slate-400 bg-transparent",
+                              (!canEdit || isMonthDisabled(3)) && "opacity-30 cursor-not-allowed"
+                            )}
                           />
                         </TableCell>
                         <TableCell className="text-center p-0.5 sm:p-1 min-w-[20px] sm:min-w-[28px]">
-                          <Checkbox
-                            className="w-3 h-3 mx-auto block"
-                            checked={t.month4}
+                          <button
+                            type="button"
                             disabled={!canEdit || isMonthDisabled(4)}
-                            onCheckedChange={(checked) =>
+                            onClick={() =>
                               updateMutation.mutate({
                                 channelId: t.channelId,
-                                month4: !!checked,
+                                month4: !t.month4,
                               })
                             }
+                            className={cn(
+                              "w-3 h-3 rounded-full border transition-all mx-auto block",
+                              t.month4
+                                ? "bg-primary border-primary"
+                                : "border-slate-600 hover:border-slate-400 bg-transparent",
+                              (!canEdit || isMonthDisabled(4)) && "opacity-30 cursor-not-allowed"
+                            )}
                           />
                         </TableCell>
                         <TableCell className="text-center p-0.5 sm:p-1 min-w-[20px] sm:min-w-[28px]">
-                          <Checkbox
-                            className="w-3 h-3 mx-auto block"
-                            checked={t.month5}
+                          <button
+                            type="button"
                             disabled={!canEdit || isMonthDisabled(5)}
-                            onCheckedChange={(checked) =>
+                            onClick={() =>
                               updateMutation.mutate({
                                 channelId: t.channelId,
-                                month5: !!checked,
+                                month5: !t.month5,
                               })
                             }
+                            className={cn(
+                              "w-3 h-3 rounded-full border transition-all mx-auto block",
+                              t.month5
+                                ? "bg-primary border-primary"
+                                : "border-slate-600 hover:border-slate-400 bg-transparent",
+                              (!canEdit || isMonthDisabled(5)) && "opacity-30 cursor-not-allowed"
+                            )}
                           />
                         </TableCell>
                         <TableCell className="text-center p-0.5 sm:p-1 min-w-[20px] sm:min-w-[28px]">
-                          <Checkbox
-                            className="w-3 h-3 mx-auto block"
-                            checked={t.month6}
+                          <button
+                            type="button"
                             disabled={!canEdit || isMonthDisabled(6)}
-                            onCheckedChange={(checked) =>
+                            onClick={() =>
                               updateMutation.mutate({
                                 channelId: t.channelId,
-                                month6: !!checked,
+                                month6: !t.month6,
                               })
                             }
+                            className={cn(
+                              "w-3 h-3 rounded-full border transition-all mx-auto block",
+                              t.month6
+                                ? "bg-primary border-primary"
+                                : "border-slate-600 hover:border-slate-400 bg-transparent",
+                              (!canEdit || isMonthDisabled(6)) && "opacity-30 cursor-not-allowed"
+                            )}
                           />
                         </TableCell>
                         <TableCell className="text-center p-0.5 sm:p-1 min-w-[20px] sm:min-w-[28px]">
-                          <Checkbox
-                            className="w-3 h-3 mx-auto block"
-                            checked={t.month7}
+                          <button
+                            type="button"
                             disabled={!canEdit || isMonthDisabled(7)}
-                            onCheckedChange={(checked) =>
+                            onClick={() =>
                               updateMutation.mutate({
                                 channelId: t.channelId,
-                                month7: !!checked,
+                                month7: !t.month7,
                               })
                             }
+                            className={cn(
+                              "w-3 h-3 rounded-full border transition-all mx-auto block",
+                              t.month7
+                                ? "bg-primary border-primary"
+                                : "border-slate-600 hover:border-slate-400 bg-transparent",
+                              (!canEdit || isMonthDisabled(7)) && "opacity-30 cursor-not-allowed"
+                            )}
                           />
                         </TableCell>
                         <TableCell className="text-center p-0.5 sm:p-1 min-w-[20px] sm:min-w-[28px]">
-                          <Checkbox
-                            className="w-3 h-3 mx-auto block"
-                            checked={t.month8}
+                          <button
+                            type="button"
                             disabled={!canEdit || isMonthDisabled(8)}
-                            onCheckedChange={(checked) =>
+                            onClick={() =>
                               updateMutation.mutate({
                                 channelId: t.channelId,
-                                month8: !!checked,
+                                month8: !t.month8,
                               })
                             }
+                            className={cn(
+                              "w-3 h-3 rounded-full border transition-all mx-auto block",
+                              t.month8
+                                ? "bg-primary border-primary"
+                                : "border-slate-600 hover:border-slate-400 bg-transparent",
+                              (!canEdit || isMonthDisabled(8)) && "opacity-30 cursor-not-allowed"
+                            )}
                           />
                         </TableCell>
                         <TableCell className="text-center p-0.5 sm:p-1 min-w-[20px] sm:min-w-[28px]">
-                          <Checkbox
-                            className="w-3 h-3 mx-auto block"
-                            checked={t.month9}
+                          <button
+                            type="button"
                             disabled={!canEdit || isMonthDisabled(9)}
-                            onCheckedChange={(checked) =>
+                            onClick={() =>
                               updateMutation.mutate({
                                 channelId: t.channelId,
-                                month9: !!checked,
+                                month9: !t.month9,
                               })
                             }
+                            className={cn(
+                              "w-3 h-3 rounded-full border transition-all mx-auto block",
+                              t.month9
+                                ? "bg-primary border-primary"
+                                : "border-slate-600 hover:border-slate-400 bg-transparent",
+                              (!canEdit || isMonthDisabled(9)) && "opacity-30 cursor-not-allowed"
+                            )}
                           />
                         </TableCell>
                         <TableCell className="text-center p-0.5 sm:p-1 min-w-[20px] sm:min-w-[28px]">
-                          <Checkbox
-                            className="w-3 h-3 mx-auto block"
-                            checked={t.month10}
+                          <button
+                            type="button"
                             disabled={!canEdit || isMonthDisabled(10)}
-                            onCheckedChange={(checked) =>
+                            onClick={() =>
                               updateMutation.mutate({
                                 channelId: t.channelId,
-                                month10: !!checked,
+                                month10: !t.month10,
                               })
                             }
+                            className={cn(
+                              "w-3 h-3 rounded-full border transition-all mx-auto block",
+                              t.month10
+                                ? "bg-primary border-primary"
+                                : "border-slate-600 hover:border-slate-400 bg-transparent",
+                              (!canEdit || isMonthDisabled(10)) && "opacity-30 cursor-not-allowed"
+                            )}
                           />
                         </TableCell>
                         <TableCell className="text-center p-0.5 sm:p-1 min-w-[20px] sm:min-w-[28px]">
-                          <Checkbox
-                            className="w-3 h-3 mx-auto block"
-                            checked={t.month11}
+                          <button
+                            type="button"
                             disabled={!canEdit || isMonthDisabled(11)}
-                            onCheckedChange={(checked) =>
+                            onClick={() =>
                               updateMutation.mutate({
                                 channelId: t.channelId,
-                                month11: !!checked,
+                                month11: !t.month11,
                               })
                             }
+                            className={cn(
+                              "w-3 h-3 rounded-full border transition-all mx-auto block",
+                              t.month11
+                                ? "bg-primary border-primary"
+                                : "border-slate-600 hover:border-slate-400 bg-transparent",
+                              (!canEdit || isMonthDisabled(11)) && "opacity-30 cursor-not-allowed"
+                            )}
                           />
                         </TableCell>
                         <TableCell className="text-center p-0.5 sm:p-1 min-w-[20px] sm:min-w-[28px]">
-                          <Checkbox
-                            className="w-3 h-3 mx-auto block"
-                            checked={t.month12}
+                          <button
+                            type="button"
                             disabled={!canEdit || isMonthDisabled(12)}
-                            onCheckedChange={(checked) =>
+                            onClick={() =>
                               updateMutation.mutate({
                                 channelId: t.channelId,
-                                month12: !!checked,
+                                month12: !t.month12,
                               })
                             }
+                            className={cn(
+                              "w-3 h-3 rounded-full border transition-all mx-auto block",
+                              t.month12
+                                ? "bg-primary border-primary"
+                                : "border-slate-600 hover:border-slate-400 bg-transparent",
+                              (!canEdit || isMonthDisabled(12)) && "opacity-30 cursor-not-allowed"
+                            )}
                           />
                         </TableCell>
 
