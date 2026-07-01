@@ -277,18 +277,18 @@ function PublishingPage() {
                   <TableHead className="text-right min-w-[150px]">القناة</TableHead>
                   <TableHead className="text-right">الموظف المسؤول</TableHead>
                   <TableHead className="text-right">العميل</TableHead>
-                  <TableHead className="text-center">يناير (1)</TableHead>
-                  <TableHead className="text-center">فبراير (2)</TableHead>
-                  <TableHead className="text-center">مارس (3)</TableHead>
-                  <TableHead className="text-center">أبريل (4)</TableHead>
-                  <TableHead className="text-center">مايو (5)</TableHead>
-                  <TableHead className="text-center">يونيو (6)</TableHead>
-                  <TableHead className="text-center">يوليو (7)</TableHead>
-                  <TableHead className="text-center">أغسطس (8)</TableHead>
-                  <TableHead className="text-center">سبتمبر (9)</TableHead>
-                  <TableHead className="text-center">أكتوبر (10)</TableHead>
-                  <TableHead className="text-center">نوفمبر (11)</TableHead>
-                  <TableHead className="text-center">ديسمبر (12)</TableHead>
+                  <TableHead className="text-center p-1 sm:p-1.5 text-[11px] sm:text-xs font-black min-w-[32px] sm:min-w-[40px] text-slate-300">يناير (1)</TableHead>
+                  <TableHead className="text-center p-1 sm:p-1.5 text-[11px] sm:text-xs font-black min-w-[32px] sm:min-w-[40px] text-slate-300">فبراير (2)</TableHead>
+                  <TableHead className="text-center p-1 sm:p-1.5 text-[11px] sm:text-xs font-black min-w-[32px] sm:min-w-[40px] text-slate-300">مارس (3)</TableHead>
+                  <TableHead className="text-center p-1 sm:p-1.5 text-[11px] sm:text-xs font-black min-w-[32px] sm:min-w-[40px] text-slate-300">أبريل (4)</TableHead>
+                  <TableHead className="text-center p-1 sm:p-1.5 text-[11px] sm:text-xs font-black min-w-[32px] sm:min-w-[40px] text-slate-300">مايو (5)</TableHead>
+                  <TableHead className="text-center p-1 sm:p-1.5 text-[11px] sm:text-xs font-black min-w-[32px] sm:min-w-[40px] text-slate-300">يونيو (6)</TableHead>
+                  <TableHead className="text-center p-1 sm:p-1.5 text-[11px] sm:text-xs font-black min-w-[32px] sm:min-w-[40px] text-slate-300">يوليو (7)</TableHead>
+                  <TableHead className="text-center p-1 sm:p-1.5 text-[11px] sm:text-xs font-black min-w-[32px] sm:min-w-[40px] text-slate-300">أغسطس (8)</TableHead>
+                  <TableHead className="text-center p-1 sm:p-1.5 text-[11px] sm:text-xs font-black min-w-[32px] sm:min-w-[40px] text-slate-300">سبتمبر (9)</TableHead>
+                  <TableHead className="text-center p-1 sm:p-1.5 text-[11px] sm:text-xs font-black min-w-[32px] sm:min-w-[40px] text-slate-300">أكتوبر (10)</TableHead>
+                  <TableHead className="text-center p-1 sm:p-1.5 text-[11px] sm:text-xs font-black min-w-[32px] sm:min-w-[40px] text-slate-300">نوفمبر (11)</TableHead>
+                  <TableHead className="text-center p-1 sm:p-1.5 text-[11px] sm:text-xs font-black min-w-[32px] sm:min-w-[40px] text-slate-300">ديسمبر (12)</TableHead>
                   <TableHead className="text-right min-w-[200px]">ملاحظات</TableHead>
                   <TableHead className="text-center min-w-[120px]">التقدم</TableHead>
                   <TableHead className="text-right">الرابط</TableHead>
@@ -381,8 +381,9 @@ function PublishingPage() {
                         </TableCell>
 
                         {/* Month Checkboxes */}
-                        <TableCell className="text-center">
+                        <TableCell className="text-center p-1 sm:p-1.5 min-w-[32px] sm:min-w-[40px]">
                           <Checkbox
+                            className="w-3.5 h-3.5 mx-auto block"
                             checked={t.month1}
                             disabled={!canEdit || isMonthDisabled(1)}
                             onCheckedChange={(checked) =>
@@ -393,8 +394,9 @@ function PublishingPage() {
                             }
                           />
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="text-center p-1 sm:p-1.5 min-w-[32px] sm:min-w-[40px]">
                           <Checkbox
+                            className="w-3.5 h-3.5 mx-auto block"
                             checked={t.month2}
                             disabled={!canEdit || isMonthDisabled(2)}
                             onCheckedChange={(checked) =>
@@ -405,8 +407,9 @@ function PublishingPage() {
                             }
                           />
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="text-center p-1 sm:p-1.5 min-w-[32px] sm:min-w-[40px]">
                           <Checkbox
+                            className="w-3.5 h-3.5 mx-auto block"
                             checked={t.month3}
                             disabled={!canEdit || isMonthDisabled(3)}
                             onCheckedChange={(checked) =>
@@ -417,8 +420,9 @@ function PublishingPage() {
                             }
                           />
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="text-center p-1 sm:p-1.5 min-w-[32px] sm:min-w-[40px]">
                           <Checkbox
+                            className="w-3.5 h-3.5 mx-auto block"
                             checked={t.month4}
                             disabled={!canEdit || isMonthDisabled(4)}
                             onCheckedChange={(checked) =>
@@ -429,8 +433,9 @@ function PublishingPage() {
                             }
                           />
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="text-center p-1 sm:p-1.5 min-w-[32px] sm:min-w-[40px]">
                           <Checkbox
+                            className="w-3.5 h-3.5 mx-auto block"
                             checked={t.month5}
                             disabled={!canEdit || isMonthDisabled(5)}
                             onCheckedChange={(checked) =>
@@ -441,8 +446,9 @@ function PublishingPage() {
                             }
                           />
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="text-center p-1 sm:p-1.5 min-w-[32px] sm:min-w-[40px]">
                           <Checkbox
+                            className="w-3.5 h-3.5 mx-auto block"
                             checked={t.month6}
                             disabled={!canEdit || isMonthDisabled(6)}
                             onCheckedChange={(checked) =>
@@ -453,8 +459,9 @@ function PublishingPage() {
                             }
                           />
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="text-center p-1 sm:p-1.5 min-w-[32px] sm:min-w-[40px]">
                           <Checkbox
+                            className="w-3.5 h-3.5 mx-auto block"
                             checked={t.month7}
                             disabled={!canEdit || isMonthDisabled(7)}
                             onCheckedChange={(checked) =>
@@ -465,8 +472,9 @@ function PublishingPage() {
                             }
                           />
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="text-center p-1 sm:p-1.5 min-w-[32px] sm:min-w-[40px]">
                           <Checkbox
+                            className="w-3.5 h-3.5 mx-auto block"
                             checked={t.month8}
                             disabled={!canEdit || isMonthDisabled(8)}
                             onCheckedChange={(checked) =>
@@ -477,8 +485,9 @@ function PublishingPage() {
                             }
                           />
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="text-center p-1 sm:p-1.5 min-w-[32px] sm:min-w-[40px]">
                           <Checkbox
+                            className="w-3.5 h-3.5 mx-auto block"
                             checked={t.month9}
                             disabled={!canEdit || isMonthDisabled(9)}
                             onCheckedChange={(checked) =>
@@ -489,8 +498,9 @@ function PublishingPage() {
                             }
                           />
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="text-center p-1 sm:p-1.5 min-w-[32px] sm:min-w-[40px]">
                           <Checkbox
+                            className="w-3.5 h-3.5 mx-auto block"
                             checked={t.month10}
                             disabled={!canEdit || isMonthDisabled(10)}
                             onCheckedChange={(checked) =>
@@ -501,8 +511,9 @@ function PublishingPage() {
                             }
                           />
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="text-center p-1 sm:p-1.5 min-w-[32px] sm:min-w-[40px]">
                           <Checkbox
+                            className="w-3.5 h-3.5 mx-auto block"
                             checked={t.month11}
                             disabled={!canEdit || isMonthDisabled(11)}
                             onCheckedChange={(checked) =>
@@ -513,8 +524,9 @@ function PublishingPage() {
                             }
                           />
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="text-center p-1 sm:p-1.5 min-w-[32px] sm:min-w-[40px]">
                           <Checkbox
+                            className="w-3.5 h-3.5 mx-auto block"
                             checked={t.month12}
                             disabled={!canEdit || isMonthDisabled(12)}
                             onCheckedChange={(checked) =>
