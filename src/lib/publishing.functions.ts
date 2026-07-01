@@ -10,7 +10,13 @@ async function assertStaff(context: any) {
 
 export const listPublishingTasks = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .validator((input: any) => {
+    return {
+      year: input?.year ? Number(input.year) : new Date().getFullYear(),
+    };
+  })
+  .handler(async ({ data: inputData, context }) => {
+    const year = inputData.year;
     await assertStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -23,7 +29,7 @@ export const listPublishingTasks = createServerFn({ method: "GET" })
       supabaseAdmin
         .from("channel_publishing_tracker")
         .select("*")
-        .eq("year", 2026),
+        .eq("year", year),
       supabaseAdmin
         .from("profiles")
         .select("id, full_name, email"),
@@ -50,6 +56,12 @@ export const listPublishingTasks = createServerFn({ method: "GET" })
     const tasks = (channels ?? []).map((ch: any) => {
       const track = trackerByChannelId.get(ch.id) ?? {
         assigned_to: null,
+        month_1: false,
+        month_2: false,
+        month_3: false,
+        month_4: false,
+        month_5: false,
+        month_6: false,
         month_7: false,
         month_8: false,
         month_9: false,
@@ -67,6 +79,12 @@ export const listPublishingTasks = createServerFn({ method: "GET" })
         isMonetized: ch.is_monetized,
         clientName: ch.clients?.name ?? "—",
         assignedTo: track.assigned_to,
+        month1: track.month_1,
+        month2: track.month_2,
+        month3: track.month_3,
+        month4: track.month_4,
+        month5: track.month_5,
+        month6: track.month_6,
         month7: track.month_7,
         month8: track.month_8,
         month9: track.month_9,
@@ -82,11 +100,18 @@ export const listPublishingTasks = createServerFn({ method: "GET" })
 
 export const updatePublishingTask = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: any) => {
+  .validator((input: any) => {
     if (!input?.channelId) throw new Error("القناة مطلوبة");
     return {
       channelId: String(input.channelId),
+      year: input.year ? Number(input.year) : new Date().getFullYear(),
       assignedTo: input.assignedTo !== undefined ? (input.assignedTo === "none" || !input.assignedTo ? null : String(input.assignedTo)) : undefined,
+      month1: input.month1 !== undefined ? Boolean(input.month1) : undefined,
+      month2: input.month2 !== undefined ? Boolean(input.month2) : undefined,
+      month3: input.month3 !== undefined ? Boolean(input.month3) : undefined,
+      month4: input.month4 !== undefined ? Boolean(input.month4) : undefined,
+      month5: input.month5 !== undefined ? Boolean(input.month5) : undefined,
+      month6: input.month6 !== undefined ? Boolean(input.month6) : undefined,
       month7: input.month7 !== undefined ? Boolean(input.month7) : undefined,
       month8: input.month8 !== undefined ? Boolean(input.month8) : undefined,
       month9: input.month9 !== undefined ? Boolean(input.month9) : undefined,
@@ -115,7 +140,7 @@ export const updatePublishingTask = createServerFn({ method: "POST" })
       .from("channel_publishing_tracker")
       .select("*")
       .eq("channel_id", data.channelId)
-      .eq("year", 2026)
+      .eq("year", data.year)
       .maybeSingle();
 
     // Authorization Check:
@@ -133,7 +158,7 @@ export const updatePublishingTask = createServerFn({ method: "POST" })
     // Construct payload
     const payload: any = {
       channel_id: data.channelId,
-      year: 2026,
+      year: data.year,
       updated_at: new Date().toISOString(),
     };
 
@@ -144,6 +169,12 @@ export const updatePublishingTask = createServerFn({ method: "POST" })
       payload.assigned_to = null;
     }
 
+    if (data.month1 !== undefined) payload.month_1 = data.month1;
+    if (data.month2 !== undefined) payload.month_2 = data.month2;
+    if (data.month3 !== undefined) payload.month_3 = data.month3;
+    if (data.month4 !== undefined) payload.month_4 = data.month4;
+    if (data.month5 !== undefined) payload.month_5 = data.month5;
+    if (data.month6 !== undefined) payload.month_6 = data.month6;
     if (data.month7 !== undefined) payload.month_7 = data.month7;
     if (data.month8 !== undefined) payload.month_8 = data.month8;
     if (data.month9 !== undefined) payload.month_9 = data.month9;

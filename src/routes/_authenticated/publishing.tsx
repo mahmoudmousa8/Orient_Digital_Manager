@@ -32,14 +32,15 @@ function PublishingPage() {
   const updateFn = useServerFn(updatePublishingTask);
   const importFn = useServerFn(importExcelPublishingData);
 
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [search, setSearch] = useState("");
   const [filterAssignee, setFilterAssignee] = useState("all"); // all, me, unassigned
   const [filterStatus, setFilterStatus] = useState("all");
 
   // Fetching data
   const { data, isLoading } = useQuery({
-    queryKey: ["publishing-tasks"],
-    queryFn: () => listFn(),
+    queryKey: ["publishing-tasks", selectedYear],
+    queryFn: () => listFn({ year: selectedYear }),
     enabled: isStaff,
   });
 
@@ -51,6 +52,12 @@ function PublishingPage() {
     mutationFn: (variables: {
       channelId: string;
       assignedTo?: string | null;
+      month1?: boolean;
+      month2?: boolean;
+      month3?: boolean;
+      month4?: boolean;
+      month5?: boolean;
+      month6?: boolean;
       month7?: boolean;
       month8?: boolean;
       month9?: boolean;
@@ -58,9 +65,9 @@ function PublishingPage() {
       month11?: boolean;
       month12?: boolean;
       notes?: string;
-    }) => updateFn({ data: variables }),
+    }) => updateFn({ data: { ...variables, year: selectedYear } }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["publishing-tasks"] });
+      qc.invalidateQueries({ queryKey: ["publishing-tasks", selectedYear] });
     },
     onError: (err: any) => {
       toast.error(err.message || "حدث خطأ أثناء التحديث");
@@ -71,7 +78,7 @@ function PublishingPage() {
   const importMutation = useMutation({
     mutationFn: () => importFn(),
     onSuccess: (res: any) => {
-      qc.invalidateQueries({ queryKey: ["publishing-tasks"] });
+      qc.invalidateQueries({ queryKey: ["publishing-tasks", selectedYear] });
       toast.success(`تم استيراد وتحديث ${res.importedCount} قناة بنجاح من ملف الإكسيل!`);
     },
     onError: (err: any) => {
@@ -115,31 +122,48 @@ function PublishingPage() {
 
     const exportData = filteredTasks.map((t) => {
       const staffName = staff.find((s) => s.id === t.assignedTo)?.fullName ?? "غير معين";
-      const totalChecked = [t.month7, t.month8, t.month9, t.month10, t.month11, t.month12].filter(Boolean).length;
-      const progress = `${Math.round((totalChecked / 6) * 100)}%`;
+      const is2026 = selectedYear === 2026;
+      const totalPossible = is2026 ? 6 : 12;
+      const checkedMonths = is2026 
+        ? [t.month7, t.month8, t.month9, t.month10, t.month11, t.month12]
+        : [t.month1, t.month2, t.month3, t.month4, t.month5, t.month6, t.month7, t.month8, t.month9, t.month10, t.month11, t.month12];
+      const totalChecked = checkedMonths.filter(Boolean).length;
+      const progress = `${Math.round((totalChecked / totalPossible) * 100)}%`;
 
-      return {
+      const baseRow: any = {
         "اسم القناة": t.channelName,
         "الموظف المسؤول": staffName,
         "العميل": t.clientName,
         "الحالة": STATUS_AR_LOCAL[t.status] || t.status,
         "حالة الأرباح": t.isMonetized !== false ? "مفعلة" : "غير مفعلة",
-        "يوليو": t.month7 ? "تم" : "—",
-        "أغسطس": t.month8 ? "تم" : "—",
-        "سبتمبر": t.month9 ? "تم" : "—",
-        "أكتوبر": t.month10 ? "تم" : "—",
-        "نوفمبر": t.month11 ? "تم" : "—",
-        "ديسمبر": t.month12 ? "تم" : "—",
-        "ملاحظات": t.notes || "",
-        "التقدم": progress,
-        "الرابط": t.link || "",
       };
+
+      if (!is2026) {
+        baseRow["يناير"] = t.month1 ? "تم" : "—";
+        baseRow["فبراير"] = t.month2 ? "تم" : "—";
+        baseRow["مارس"] = t.month3 ? "تم" : "—";
+        baseRow["أبريل"] = t.month4 ? "تم" : "—";
+        baseRow["مايو"] = t.month5 ? "تم" : "—";
+        baseRow["يونيو"] = t.month6 ? "تم" : "—";
+      }
+
+      baseRow["يوليو"] = t.month7 ? "تم" : "—";
+      baseRow["أغسطس"] = t.month8 ? "تم" : "—";
+      baseRow["سبتمبر"] = t.month9 ? "تم" : "—";
+      baseRow["أكتوبر"] = t.month10 ? "تم" : "—";
+      baseRow["نوفمبر"] = t.month11 ? "تم" : "—";
+      baseRow["ديسمبر"] = t.month12 ? "تم" : "—";
+      baseRow["ملاحظات"] = t.notes || "";
+      baseRow["التقدم"] = progress;
+      baseRow["الرابط"] = t.link || "";
+
+      return baseRow;
     });
 
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "نشر القنوات");
-    XLSX.writeFile(wb, "orient-publishing-tracker.xlsx");
+    XLSX.writeFile(wb, `orient-publishing-tracker-${selectedYear}.xlsx`);
     toast.success("تم تصدير ملف Excel بنجاح");
   }
 
@@ -204,6 +228,19 @@ function PublishingPage() {
           />
         </div>
 
+        <Select value={String(selectedYear)} onValueChange={(val) => setSelectedYear(Number(val))}>
+          <SelectTrigger className="w-28 bg-slate-900 border-slate-700">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {[2026, 2027, 2028, 2029, 2030].map((y) => (
+              <SelectItem key={y} value={String(y)}>
+                السنة {y}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         <Select value={filterAssignee} onValueChange={setFilterAssignee}>
           <SelectTrigger className="w-40">
             <SelectValue placeholder="الموظف المسؤول" />
@@ -240,6 +277,12 @@ function PublishingPage() {
                   <TableHead className="text-right min-w-[150px]">القناة</TableHead>
                   <TableHead className="text-right">الموظف المسؤول</TableHead>
                   <TableHead className="text-right">العميل</TableHead>
+                  <TableHead className="text-center">يناير (1)</TableHead>
+                  <TableHead className="text-center">فبراير (2)</TableHead>
+                  <TableHead className="text-center">مارس (3)</TableHead>
+                  <TableHead className="text-center">أبريل (4)</TableHead>
+                  <TableHead className="text-center">مايو (5)</TableHead>
+                  <TableHead className="text-center">يونيو (6)</TableHead>
                   <TableHead className="text-center">يوليو (7)</TableHead>
                   <TableHead className="text-center">أغسطس (8)</TableHead>
                   <TableHead className="text-center">سبتمبر (9)</TableHead>
@@ -254,7 +297,7 @@ function PublishingPage() {
               <TableBody>
                 {isLoading && (
                   <TableRow>
-                    <TableCell colSpan={12} className="text-center py-8">
+                    <TableCell colSpan={18} className="text-center py-8">
                       <div className="flex items-center justify-center gap-2">
                         <Loader2 className="w-5 h-5 animate-spin text-primary" />
                         <span>جاري تحميل قنوات التتبع…</span>
@@ -264,7 +307,7 @@ function PublishingPage() {
                 )}
                 {!isLoading && filteredTasks.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={12} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={18} className="text-center text-muted-foreground py-8">
                       لا توجد نتائج مطابقة للفلاتر الحالية.
                     </TableCell>
                   </TableRow>
@@ -273,17 +316,14 @@ function PublishingPage() {
                   filteredTasks.map((t) => {
                     const isAssignedToMe = t.assignedTo === user?.id;
                     const canEdit = isAdmin || isAssignedToMe;
+                    const isMonthDisabled = (m: number) => selectedYear === 2026 && m <= 6;
 
                     // Calculate progress
-                    const totalMonths = 6;
-                    const checkedCount = [
-                      t.month7,
-                      t.month8,
-                      t.month9,
-                      t.month10,
-                      t.month11,
-                      t.month12,
-                    ].filter(Boolean).length;
+                    const is2026 = selectedYear === 2026;
+                    const totalMonths = is2026 ? 6 : 12;
+                    const checkedCount = is2026
+                      ? [t.month7, t.month8, t.month9, t.month10, t.month11, t.month12].filter(Boolean).length
+                      : [t.month1, t.month2, t.month3, t.month4, t.month5, t.month6, t.month7, t.month8, t.month9, t.month10, t.month11, t.month12].filter(Boolean).length;
                     const percent = Math.round((checkedCount / totalMonths) * 100);
 
                     return (
@@ -332,8 +372,80 @@ function PublishingPage() {
                         {/* Month Checkboxes */}
                         <TableCell className="text-center">
                           <Checkbox
+                            checked={t.month1}
+                            disabled={!canEdit || isMonthDisabled(1)}
+                            onCheckedChange={(checked) =>
+                              updateMutation.mutate({
+                                channelId: t.channelId,
+                                month1: !!checked,
+                              })
+                            }
+                          />
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Checkbox
+                            checked={t.month2}
+                            disabled={!canEdit || isMonthDisabled(2)}
+                            onCheckedChange={(checked) =>
+                              updateMutation.mutate({
+                                channelId: t.channelId,
+                                month2: !!checked,
+                              })
+                            }
+                          />
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Checkbox
+                            checked={t.month3}
+                            disabled={!canEdit || isMonthDisabled(3)}
+                            onCheckedChange={(checked) =>
+                              updateMutation.mutate({
+                                channelId: t.channelId,
+                                month3: !!checked,
+                              })
+                            }
+                          />
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Checkbox
+                            checked={t.month4}
+                            disabled={!canEdit || isMonthDisabled(4)}
+                            onCheckedChange={(checked) =>
+                              updateMutation.mutate({
+                                channelId: t.channelId,
+                                month4: !!checked,
+                              })
+                            }
+                          />
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Checkbox
+                            checked={t.month5}
+                            disabled={!canEdit || isMonthDisabled(5)}
+                            onCheckedChange={(checked) =>
+                              updateMutation.mutate({
+                                channelId: t.channelId,
+                                month5: !!checked,
+                              })
+                            }
+                          />
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Checkbox
+                            checked={t.month6}
+                            disabled={!canEdit || isMonthDisabled(6)}
+                            onCheckedChange={(checked) =>
+                              updateMutation.mutate({
+                                channelId: t.channelId,
+                                month6: !!checked,
+                              })
+                            }
+                          />
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Checkbox
                             checked={t.month7}
-                            disabled={!canEdit}
+                            disabled={!canEdit || isMonthDisabled(7)}
                             onCheckedChange={(checked) =>
                               updateMutation.mutate({
                                 channelId: t.channelId,
@@ -345,7 +457,7 @@ function PublishingPage() {
                         <TableCell className="text-center">
                           <Checkbox
                             checked={t.month8}
-                            disabled={!canEdit}
+                            disabled={!canEdit || isMonthDisabled(8)}
                             onCheckedChange={(checked) =>
                               updateMutation.mutate({
                                 channelId: t.channelId,
@@ -357,7 +469,7 @@ function PublishingPage() {
                         <TableCell className="text-center">
                           <Checkbox
                             checked={t.month9}
-                            disabled={!canEdit}
+                            disabled={!canEdit || isMonthDisabled(9)}
                             onCheckedChange={(checked) =>
                               updateMutation.mutate({
                                 channelId: t.channelId,
@@ -369,7 +481,7 @@ function PublishingPage() {
                         <TableCell className="text-center">
                           <Checkbox
                             checked={t.month10}
-                            disabled={!canEdit}
+                            disabled={!canEdit || isMonthDisabled(10)}
                             onCheckedChange={(checked) =>
                               updateMutation.mutate({
                                 channelId: t.channelId,
@@ -381,7 +493,7 @@ function PublishingPage() {
                         <TableCell className="text-center">
                           <Checkbox
                             checked={t.month11}
-                            disabled={!canEdit}
+                            disabled={!canEdit || isMonthDisabled(11)}
                             onCheckedChange={(checked) =>
                               updateMutation.mutate({
                                 channelId: t.channelId,
@@ -393,7 +505,7 @@ function PublishingPage() {
                         <TableCell className="text-center">
                           <Checkbox
                             checked={t.month12}
-                            disabled={!canEdit}
+                            disabled={!canEdit || isMonthDisabled(12)}
                             onCheckedChange={(checked) =>
                               updateMutation.mutate({
                                 channelId: t.channelId,
