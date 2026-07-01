@@ -633,7 +633,7 @@ function PublishingPage() {
                         </TableCell>
 
                         {/* Notes */}
-                        <TableCell className="text-right">
+                        <TableCell className="text-center">
                           <Input
                             defaultValue={t.notes}
                             disabled={!canEdit}
@@ -651,7 +651,7 @@ function PublishingPage() {
                               }
                             }}
                             placeholder="ملاحظات..."
-                            className="h-8 bg-slate-900 border-slate-700 text-xs w-full text-slate-100 text-right"
+                            className="h-8 bg-slate-900 border-slate-700 text-xs w-full text-slate-100 text-center"
                           />
                         </TableCell>
 
@@ -664,13 +664,13 @@ function PublishingPage() {
                         </TableCell>
 
                         {/* External Link */}
-                        <TableCell className="text-right">
+                        <TableCell className="text-center">
                           {t.link ? (
                             <a
                               href={t.link}
                               target="_blank"
                               rel="noreferrer"
-                              className="text-slate-300 hover:text-white inline-flex items-center gap-1 text-xs justify-end w-full"
+                              className="text-slate-300 hover:text-white inline-flex items-center gap-1 text-xs justify-center w-full"
                             >
                               <ExternalLink className="w-3 h-3" />
                               فتح
