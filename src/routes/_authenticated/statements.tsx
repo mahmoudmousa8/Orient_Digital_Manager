@@ -243,7 +243,7 @@ function StatementsPage() {
               <div dir="ltr" className="text-right text-white font-medium">{client.phone || "—"}</div>
             </div>
             <div className="text-right">
-              <div className="text-muted-foreground mb-0.5">فودافون كاش</div>
+              <div className="text-muted-foreground mb-0.5">إنستاباي / محفظة</div>
               <div dir="ltr" className="text-right text-white font-medium">{client.vodafone_cash || "—"}</div>
             </div>
           </CardContent>

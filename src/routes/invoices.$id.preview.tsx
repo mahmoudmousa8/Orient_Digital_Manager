@@ -251,7 +251,7 @@ function PublicInvoicePreview() {
                 <h3 className="font-black text-purple-700 text-sm uppercase">تفاصيل الدفع والمستحقات / PAY TO:</h3>
                 <div className="text-xs space-y-1 text-slate-700">
                   <p>اسم الحساب: <strong className="text-black">KHALED MAHMOUD</strong></p>
-                  <p>رقم المحفظة (فودافون كاش): <strong className="text-black" dir="ltr">01125581125</strong></p>
+                  <p>إنستاباي / محفظة (فودافون كاش): <strong className="text-black" dir="ltr">01125581125</strong></p>
                   <p>العنوان: <span className="text-black">Apartment 1, 2nd Floor, Building 113, Abu Youssef, Alexandria, Egypt</span></p>
                   <p>البريد الإلكتروني للتحويل: <span className="text-purple-700 font-bold" dir="ltr">info@orientdigitals.com</span></p>
                 </div>

@@ -52,7 +52,18 @@ function ReportsDashboard() {
     queryKey: ["reports-dashboard-data", clientId, startMonth, endMonth, isStaff],
     queryFn: async () => {
       const start = startMonth + "-01";
-      const end = endMonth + "-01";
+      
+      // End of period (inclusive) - we want to include all of endMonth, so we get the first day of the next month and do .lt
+      const endYear = parseInt(endMonth.split("-")[0]);
+      const endMonthNum = parseInt(endMonth.split("-")[1]);
+      
+      let nextMonthYear = endYear;
+      let nextMonthNum = endMonthNum + 1;
+      if (nextMonthNum > 12) {
+        nextMonthNum = 1;
+        nextMonthYear += 1;
+      }
+      const nextMonthStr = `${nextMonthYear}-${String(nextMonthNum).padStart(2, "0")}-01`;
 
       // Query revenues
       let revQuery = supabase
@@ -63,14 +74,14 @@ function ReportsDashboard() {
           payments(status, amount_paid, remaining)
         `)
         .gte("period_month", start)
-        .lte("period_month", end);
+        .lt("period_month", nextMonthStr);
 
       // Query invoices
       let invQuery = supabase
         .from("invoices")
         .select("id, invoice_number, issue_date, due_date, status, grand_total, amount_paid, remaining_balance, client_id, clients(name)")
         .gte("issue_date", start)
-        .lte("issue_date", end + "-31");
+        .lt("issue_date", nextMonthStr);
 
       const [revRes, invRes] = await Promise.all([revQuery, invQuery]);
       if (revRes.error) throw revRes.error;
@@ -84,11 +95,12 @@ function ReportsDashboard() {
         revenues = revenues.filter((r) => r.channels?.client_id === clientId);
         invoices = invoices.filter((i) => i.client_id === clientId);
       } else if (!isStaff) {
-        // Find self client ID
-        const { data: selfClient } = await supabase.from("clients").select("id").eq("user_id", user?.id || "").single();
-        if (selfClient) {
-          revenues = revenues.filter((r) => r.channels?.client_id === selfClient.id);
-          invoices = invoices.filter((i) => i.client_id === selfClient.id);
+        // Find self client IDs (for multi-client access support)
+        const { data: selfClients } = await supabase.from("clients").select("id").eq("user_id", user?.id || "");
+        const clientIds = (selfClients ?? []).map((c) => c.id);
+        if (clientIds.length > 0) {
+          revenues = revenues.filter((r) => clientIds.includes(r.channels?.client_id));
+          invoices = invoices.filter((i) => clientIds.includes(i.client_id));
         } else {
           return { revenues: [], invoices: [] };
         }

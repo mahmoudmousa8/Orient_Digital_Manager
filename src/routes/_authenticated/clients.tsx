@@ -140,7 +140,7 @@ function ClientsPage() {
               <div className="space-y-2"><Label>الاسم *</Label><Input name="name" required defaultValue={editing?.name} /></div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2"><Label>رقم الهاتف</Label><Input name="phone" defaultValue={editing?.phone ?? ""} dir="ltr" /></div>
-                <div className="space-y-2"><Label>رقم فودافون كاش</Label><Input name="vodafone_cash" defaultValue={editing?.vodafone_cash ?? ""} dir="ltr" /></div>
+                <div className="space-y-2"><Label>إنستاباي / محفظة إلكترونية</Label><Input name="vodafone_cash" defaultValue={editing?.vodafone_cash ?? ""} placeholder="عنوان InstaPay أو رقم المحفظة..." dir="ltr" /></div>
               </div>
               <div className="space-y-2"><Label>البريد الإلكتروني</Label><Input name="email" type="email" defaultValue={editing?.email ?? ""} dir="ltr" /></div>
               <div className="space-y-2"><Label>ملاحظات</Label><Textarea name="notes" defaultValue={editing?.notes ?? ""} /></div>
@@ -164,7 +164,7 @@ function ClientsPage() {
               <TableRow>
                 <TableHead className="text-right">الاسم</TableHead>
                 <TableHead className="text-right">الهاتف</TableHead>
-                <TableHead className="text-right">فودافون كاش</TableHead>
+                <TableHead className="text-right">إنستاباي / محفظة</TableHead>
                 <TableHead className="text-right">البريد</TableHead>
                 <TableHead className="text-center">عدد القنوات</TableHead>
                 <TableHead className="text-left">إجمالي الإيرادات</TableHead>

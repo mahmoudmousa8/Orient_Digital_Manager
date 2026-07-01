@@ -176,53 +176,62 @@ function PaymentsPage() {
         <Card><CardContent className="p-4"><div className="text-xs text-slate-300 font-medium">إجمالي المتبقي</div><div className="text-xl font-bold text-white" dir="ltr">{money(totals.remaining)}</div></CardContent></Card>
       </div>
 
-      <div className="flex flex-wrap gap-3 items-center">
+      <div className="flex flex-wrap gap-3 items-end">
         <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input placeholder="بحث بالقناة أو العميل…" value={search} onChange={(e) => setSearch(e.target.value)} className="search-input-padding" />
         </div>
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">كل الحالات</SelectItem>
-            {["paid","partial","unpaid"].map(s => <SelectItem key={s} value={s}>{STATUS_AR[s]}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={filterYear} onValueChange={setFilterYear}>
-          <SelectTrigger className="w-32">
-            <SelectValue placeholder="السنة" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">كل السنوات</SelectItem>
-            {availableYears.map((y) => (
-              <SelectItem key={y} value={y}>{y}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="space-y-1.5">
+          <Label className="text-xs text-slate-300">حالة الدفع</Label>
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="w-40"><SelectValue placeholder="حالة الدفع" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">كل الحالات</SelectItem>
+              {["paid","partial","unpaid"].map(s => <SelectItem key={s} value={s}>{STATUS_AR[s]}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs text-slate-300">السنة</Label>
+          <Select value={filterYear} onValueChange={setFilterYear}>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="السنة" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">كل السنوات</SelectItem>
+              {availableYears.map((y) => (
+                <SelectItem key={y} value={y}>{y}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Select value={filterMonth} onValueChange={setFilterMonth}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="الشهر" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">كل الشهور</SelectItem>
-            <SelectItem value="01">يناير (01)</SelectItem>
-            <SelectItem value="02">فبراير (02)</SelectItem>
-            <SelectItem value="03">مارس (03)</SelectItem>
-            <SelectItem value="04">أبريل (04)</SelectItem>
-            <SelectItem value="05">مايو (05)</SelectItem>
-            <SelectItem value="06">يونيو (06)</SelectItem>
-            <SelectItem value="07">يوليو (07)</SelectItem>
-            <SelectItem value="08">أغسطس (08)</SelectItem>
-            <SelectItem value="09">سبتمبر (09)</SelectItem>
-            <SelectItem value="10">أكتوبر (10)</SelectItem>
-            <SelectItem value="11">نوفمبر (11)</SelectItem>
-            <SelectItem value="12">ديسمبر (12)</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="space-y-1.5">
+          <Label className="text-xs text-slate-300">الشهر</Label>
+          <Select value={filterMonth} onValueChange={setFilterMonth}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="الشهر" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">كل الشهور</SelectItem>
+              <SelectItem value="01">يناير (01)</SelectItem>
+              <SelectItem value="02">فبراير (02)</SelectItem>
+              <SelectItem value="03">مارس (03)</SelectItem>
+              <SelectItem value="04">أبريل (04)</SelectItem>
+              <SelectItem value="05">مايو (05)</SelectItem>
+              <SelectItem value="06">يونيو (06)</SelectItem>
+              <SelectItem value="07">يوليو (07)</SelectItem>
+              <SelectItem value="08">أغسطس (08)</SelectItem>
+              <SelectItem value="09">سبتمبر (09)</SelectItem>
+              <SelectItem value="10">أكتوبر (10)</SelectItem>
+              <SelectItem value="11">نوفمبر (11)</SelectItem>
+              <SelectItem value="12">ديسمبر (12)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         {(filterYear !== "all" || filterMonth !== "all") && (
-          <Button variant="ghost" size="sm" onClick={() => { setFilterYear("all"); setFilterMonth("all"); }}>
+          <Button variant="ghost" size="sm" onClick={() => { setFilterYear("all"); setFilterMonth("all"); }} className="mb-1">
             مسح التصفية
           </Button>
         )}
@@ -285,7 +294,7 @@ function PaymentsPage() {
                   <span>المتبقي: <strong dir="ltr" className="text-destructive">{money(historyFor.remaining)}</strong></span>
                 </div>
                 {historyFor.monthly_revenues?.channels?.clients?.vodafone_cash && (
-                  <div>فودافون كاش العميل: <strong dir="ltr">{historyFor.monthly_revenues.channels.clients.vodafone_cash}</strong></div>
+                  <div>إنستاباي / محفظة العميل: <strong dir="ltr">{historyFor.monthly_revenues.channels.clients.vodafone_cash}</strong></div>
                 )}
               </div>
 
@@ -297,7 +306,7 @@ function PaymentsPage() {
                     <div className="space-y-1"><Label>التاريخ</Label><Input name="transaction_date" type="date" defaultValue={new Date().toISOString().slice(0, 10)} dir="ltr" /></div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1"><Label>رقم تحويل فودافون كاش</Label><Input name="vodafone_transfer_no" dir="ltr" /></div>
+                    <div className="space-y-1"><Label>رقم المعاملة / التحويل</Label><Input name="vodafone_transfer_no" placeholder="رقم المعاملة أو كود التحويل..." dir="ltr" /></div>
                     <div className="space-y-1"><Label>ملاحظات</Label><Input name="notes" /></div>
                   </div>
                   <Button type="submit" size="sm" disabled={addTx.isPending}>حفظ الدفعة</Button>

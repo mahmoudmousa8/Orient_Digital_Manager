@@ -333,7 +333,7 @@ function InvoiceDetailsPage() {
                   </h3>
                   <div className="text-xs space-y-1 text-slate-700">
                     <p>{lang === "ar" ? "اسم الحساب:" : "Account Name:"} <strong className="text-black">KHALED MAHMOUD</strong></p>
-                    <p>{lang === "ar" ? "رقم المحفظة (فودافون كاش):" : "Account Number (Vodafone Cash):"} <strong className="text-black" dir="ltr">01125581125</strong></p>
+                    <p>{lang === "ar" ? "إنستاباي / محفظة (فودافون كاش):" : "InstaPay / Wallet (Vodafone Cash):"} <strong className="text-black" dir="ltr">01125581125</strong></p>
                     <p>{lang === "ar" ? "العنوان:" : "Address:"} <span className="text-black">Apartment 1, 2nd Floor, Building 113, Abu Youssef, Alexandria, Egypt</span></p>
                     <p>{lang === "ar" ? "البريد الإلكتروني للتحويل:" : "Email:"} <a href="mailto:info@orientdigitals.com" className="text-purple-700 font-bold" dir="ltr">info@orientdigitals.com</a></p>
                   </div>
