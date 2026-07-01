@@ -347,7 +347,7 @@ function PublishingPage() {
                     return (
                       <TableRow key={t.channelId} className={isAssignedToMe ? "bg-primary/5" : ""}>
                         {/* Channel Name */}
-                        <TableCell className="font-bold text-center text-slate-200 text-[10px] py-1.5">
+                        <TableCell className="font-bold text-right text-slate-200 text-[10px] py-1.5">
                           {t.channelName}
                         </TableCell>
 
@@ -385,7 +385,7 @@ function PublishingPage() {
                         </TableCell>
 
                         {/* Client Name */}
-                        <TableCell className="text-center text-[10px] text-slate-300 py-1.5">
+                        <TableCell className="text-right text-[10px] text-slate-300 py-1.5">
                           {t.clientName}
                         </TableCell>
 
@@ -633,7 +633,7 @@ function PublishingPage() {
                         </TableCell>
 
                         {/* Notes */}
-                        <TableCell className="text-center">
+                        <TableCell className="text-right">
                           <Input
                             defaultValue={t.notes}
                             disabled={!canEdit}
@@ -651,7 +651,7 @@ function PublishingPage() {
                               }
                             }}
                             placeholder="ملاحظات..."
-                            className="h-8 bg-slate-900 border-slate-700 text-xs w-full text-slate-100 text-center"
+                            className="h-8 bg-slate-900 border-slate-700 text-xs w-full text-slate-100 text-right"
                           />
                         </TableCell>
 
@@ -664,13 +664,13 @@ function PublishingPage() {
                         </TableCell>
 
                         {/* External Link */}
-                        <TableCell className="text-center">
+                        <TableCell className="text-right">
                           {t.link ? (
                             <a
                               href={t.link}
                               target="_blank"
                               rel="noreferrer"
-                              className="text-slate-300 hover:text-white inline-flex items-center gap-1 text-xs justify-center w-full"
+                              className="text-slate-300 hover:text-white inline-flex items-center gap-1 text-xs justify-end w-full"
                             >
                               <ExternalLink className="w-3 h-3" />
                               فتح
