@@ -58,7 +58,7 @@ function PublishingPage() {
       month11?: boolean;
       month12?: boolean;
       notes?: string;
-    }) => updateFn(variables),
+    }) => updateFn({ data: variables }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["publishing-tasks"] });
     },
