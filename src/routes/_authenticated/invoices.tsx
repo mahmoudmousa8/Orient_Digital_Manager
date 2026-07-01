@@ -142,12 +142,28 @@ function InvoicesPage() {
     setBusy(true);
     try {
       const start = formMonth + "-01";
+      
+      // Get all channels belonging to this client
+      const { data: clientChannels, error: chErr } = await supabase
+        .from("channels")
+        .select("id")
+        .eq("client_id", formClientId);
+        
+      if (chErr) throw chErr;
+      
+      const channelIds = (clientChannels ?? []).map((c) => c.id);
+      if (channelIds.length === 0) {
+        toast.info("لا توجد قنوات مسجلة لهذا العميل");
+        setBusy(false);
+        return;
+      }
+
       const { data: revenues, error } = await supabase
         .from("monthly_revenues")
         .select("*, channels(name)")
         .eq("period_month", start)
         .is("invoice_id", null)
-        .eq("channels.client_id", formClientId);
+        .in("channel_id", channelIds);
 
       if (error) throw error;
       if (!revenues || revenues.length === 0) {
