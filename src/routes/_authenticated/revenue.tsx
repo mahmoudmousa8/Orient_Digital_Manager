@@ -278,24 +278,24 @@ function RevenuePage() {
                 <TableHead className="text-right">القناة</TableHead>
                 <TableHead className="text-right">العميل</TableHead>
                 <TableHead className="text-right">إجمالي الإيراد</TableHead>
-                <TableHead className="text-right">النسبة</TableHead>
+                {isStaff && <TableHead className="text-right">النسبة</TableHead>}
                 <TableHead className="text-right">حصة العميل</TableHead>
-                <TableHead className="text-right">حصة الشركة</TableHead>
+                {isStaff && <TableHead className="text-right">حصة الشركة</TableHead>}
                 {isStaff && <TableHead className="text-left">إجراءات</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading && <TableRow><TableCell colSpan={8} className="text-center">جاري التحميل…</TableCell></TableRow>}
-              {!isLoading && filtered.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">لا توجد إيرادات</TableCell></TableRow>}
+              {isLoading && <TableRow><TableCell colSpan={isStaff ? 8 : 5} className="text-center">جاري التحميل…</TableCell></TableRow>}
+              {!isLoading && filtered.length === 0 && <TableRow><TableCell colSpan={isStaff ? 8 : 5} className="text-center text-muted-foreground py-8">لا توجد إيرادات</TableCell></TableRow>}
               {filtered.map((r) => (
                 <TableRow key={r.id}>
                   <TableCell className="text-right">{monthLabel(r.period_month)}</TableCell>
                   <TableCell className="font-medium text-right">{r.channels?.name}</TableCell>
                   <TableCell className="text-right">{r.channels?.clients?.name}</TableCell>
                   <TableCell dir="ltr" className="text-white text-right">{money(r.total_revenue)}</TableCell>
-                  <TableCell dir="ltr" className="text-white text-right">{r.client_percentage}%</TableCell>
+                  {isStaff && <TableCell dir="ltr" className="text-white text-right">{r.client_percentage}%</TableCell>}
                   <TableCell dir="ltr" className="text-white font-medium text-right">{money(r.client_share)}</TableCell>
-                  <TableCell dir="ltr" className="text-white font-medium text-right">{money(r.company_share)}</TableCell>
+                  {isStaff && <TableCell dir="ltr" className="text-white font-medium text-right">{money(r.company_share)}</TableCell>}
                   {isStaff && <TableCell className="text-left">
                     <div className="flex gap-1 justify-end">
                       <Button size="icon" variant="ghost" onClick={() => openEdit(r)}><Pencil className="w-4 h-4" /></Button>

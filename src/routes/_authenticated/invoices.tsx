@@ -112,9 +112,10 @@ function InvoicesPage() {
       
       if (!isStaff) {
         // RLS will restrict, but let's filter client-side too
-        const { data: clientRec } = await supabase.from("clients").select("id").eq("user_id", user?.id || "").single();
-        if (clientRec) {
-          q = q.eq("client_id", clientRec.id);
+        const { data: clientRecs } = await supabase.from("clients").select("id").eq("user_id", user?.id || "");
+        const clientIds = (clientRecs ?? []).map((c) => c.id);
+        if (clientIds.length > 0) {
+          q = q.in("client_id", clientIds);
         } else {
           return [];
         }

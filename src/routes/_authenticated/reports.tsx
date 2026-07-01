@@ -180,12 +180,13 @@ function ReportsDashboard() {
     ];
 
     // Revenue Trend by Month
-    const monthTrendMap: Record<string, { month: string; revenue: number; profit: number }> = {};
+    const monthTrendMap: Record<string, { month: string; revenue: number; profit: number; clientShare: number }> = {};
     revenues.forEach((r) => {
       const label = monthLabel(r.period_month);
-      if (!monthTrendMap[label]) monthTrendMap[label] = { month: label, revenue: 0, profit: 0 };
+      if (!monthTrendMap[label]) monthTrendMap[label] = { month: label, revenue: 0, profit: 0, clientShare: 0 };
       monthTrendMap[label].revenue += Number(r.total_revenue || 0);
       monthTrendMap[label].profit += Number(r.company_share || 0);
+      monthTrendMap[label].clientShare += Number(r.client_share || 0);
     });
     const revenueTrend = Object.values(monthTrendMap);
 
@@ -211,6 +212,17 @@ function ReportsDashboard() {
   const handleExportExcel = () => {
     const rows = revenues.map((r) => {
       const p = Array.isArray(r.payments) ? r.payments[0] : r.payments;
+      if (!isStaff) {
+        return {
+          channel: r.channels?.name ?? "",
+          link: r.channels?.link ?? "",
+          month: monthLabel(r.period_month),
+          clientShare: Number(r.client_share),
+          paymentStatus: p?.status ? STATUS_AR[p.status] : "غير محدد",
+          amountPaid: Number(p?.amount_paid ?? 0),
+          remaining: Number(p?.remaining ?? r.client_share),
+        };
+      }
       return {
         channel: r.channels?.name ?? "",
         link: r.channels?.link ?? "",
@@ -224,13 +236,24 @@ function ReportsDashboard() {
         remaining: Number(p?.remaining ?? r.client_share),
       };
     });
-    const name = clientId === "all" ? "All Clients" : clients.find((c) => c.id === clientId)?.name ?? "Report";
+    const name = !isStaff ? (user?.email ?? "Client") : (clientId === "all" ? "All Clients" : clients.find((c) => c.id === clientId)?.name ?? "Report");
     exportExcel(`financial-report-${startMonth}_to_${endMonth}.xlsx`, name, rows);
   };
 
   const handleExportPDF = () => {
     const rows = revenues.map((r) => {
       const p = Array.isArray(r.payments) ? r.payments[0] : r.payments;
+      if (!isStaff) {
+        return {
+          channel: r.channels?.name ?? "",
+          link: r.channels?.link ?? "",
+          month: monthLabel(r.period_month),
+          clientShare: Number(r.client_share),
+          paymentStatus: p?.status ? STATUS_AR[p.status] : "غير محدد",
+          amountPaid: Number(p?.amount_paid ?? 0),
+          remaining: Number(p?.remaining ?? r.client_share),
+        };
+      }
       return {
         channel: r.channels?.name ?? "",
         link: r.channels?.link ?? "",
@@ -244,7 +267,7 @@ function ReportsDashboard() {
         remaining: Number(p?.remaining ?? r.client_share),
       };
     });
-    const name = clientId === "all" ? "All Clients" : clients.find((c) => c.id === clientId)?.name ?? "Report";
+    const name = !isStaff ? (user?.email ?? "Client") : (clientId === "all" ? "All Clients" : clients.find((c) => c.id === clientId)?.name ?? "Report");
     exportPDF(`financial-report-${startMonth}_to_${endMonth}.pdf`, name, `${startMonth} to ${endMonth}`, rows);
   };
 
@@ -304,32 +327,49 @@ function ReportsDashboard() {
       </Card>
 
       {/* Dashboard KPI cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border shadow-sm p-1">
-          <CardHeader className="pb-3 pt-5 px-5">
-            <CardTitle className="text-sm sm:text-base font-bold text-slate-300 flex items-center justify-between">
-              <span>إجمالي الإيرادات</span>
-              <DollarSign className="w-5 h-5 text-purple-600" />
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pb-5 px-5">
-            <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-white" dir="ltr">{money(stats.totalGross)}</div>
-            <p className="text-xs sm:text-sm text-slate-300 mt-2 font-medium">الربح الإجمالي لكافة القنوات قبل التقسيم</p>
-          </CardContent>
-        </Card>
+      <div className={`grid grid-cols-1 sm:grid-cols-2 ${isStaff ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-6`}>
+        {isStaff && (
+          <Card className="border shadow-sm p-1">
+            <CardHeader className="pb-3 pt-5 px-5">
+              <CardTitle className="text-sm sm:text-base font-bold text-slate-300 flex items-center justify-between">
+                <span>إجمالي الإيرادات</span>
+                <DollarSign className="w-5 h-5 text-purple-600" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pb-5 px-5">
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-white" dir="ltr">{money(stats.totalGross)}</div>
+              <p className="text-xs sm:text-sm text-slate-300 mt-2 font-medium">الربح الإجمالي لكافة القنوات قبل التقسيم</p>
+            </CardContent>
+          </Card>
+        )}
 
-        <Card className="border shadow-sm p-1">
-          <CardHeader className="pb-3 pt-5 px-5">
-            <CardTitle className="text-sm sm:text-base font-bold text-slate-300 flex items-center justify-between">
-              <span>أرباح الشركة الصافية</span>
-              <TrendingUp className="w-5 h-5 text-primary" />
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pb-5 px-5">
-            <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-primary" dir="ltr">{money(stats.totalCompanyShare)}</div>
-            <p className="text-xs sm:text-sm text-slate-300 mt-2 font-medium">إجمالي حصة الشركة من الإيرادات</p>
-          </CardContent>
-        </Card>
+        {isStaff ? (
+          <Card className="border shadow-sm p-1">
+            <CardHeader className="pb-3 pt-5 px-5">
+              <CardTitle className="text-sm sm:text-base font-bold text-slate-300 flex items-center justify-between">
+                <span>أرباح الشركة الصافية</span>
+                <TrendingUp className="w-5 h-5 text-primary" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pb-5 px-5">
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-primary" dir="ltr">{money(stats.totalCompanyShare)}</div>
+              <p className="text-xs sm:text-sm text-slate-300 mt-2 font-medium">إجمالي حصة الشركة من الإيرادات</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="border shadow-sm p-1">
+            <CardHeader className="pb-3 pt-5 px-5">
+              <CardTitle className="text-sm sm:text-base font-bold text-slate-300 flex items-center justify-between">
+                <span>إجمالي الأرباح المستحقة</span>
+                <TrendingUp className="w-5 h-5 text-primary" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pb-5 px-5">
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-primary" dir="ltr">{money(stats.totalClientShare)}</div>
+              <p className="text-xs sm:text-sm text-slate-300 mt-2 font-medium">إجمالي مستحقاتك من إيرادات القنوات</p>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="border shadow-sm p-1">
           <CardHeader className="pb-3 pt-5 px-5">
@@ -361,9 +401,11 @@ function ReportsDashboard() {
       {/* Visual Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Revenue Trend Chart */}
-        <Card className="lg:col-span-2">
+        <Card className={isStaff ? "lg:col-span-2" : "lg:col-span-3"}>
           <CardHeader>
-            <CardTitle className="text-sm font-bold">منحنى نمو الأرباح والإيرادات</CardTitle>
+            <CardTitle className="text-sm font-bold">
+              {isStaff ? "منحنى نمو الأرباح والإيرادات" : "منحنى نمو الأرباح المستحقة"}
+            </CardTitle>
           </CardHeader>
           <CardContent className="h-80">
             {stats.revenueTrend.length === 0 ? (
@@ -379,8 +421,14 @@ function ReportsDashboard() {
                     contentStyle={{ backgroundColor: '#17151a', borderRadius: '12px', border: '1px solid #25222b', color: '#fff' }}
                     cursor={{ fill: 'rgba(255, 255, 255, 0.03)' }}
                   />
-                  <Bar dataKey="revenue" name="إجمالي الإيرادات" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="profit" name="أرباح الشركة" fill="#a21caf" radius={[4, 4, 0, 0]} />
+                  {isStaff ? (
+                    <>
+                      <Bar dataKey="revenue" name="إجمالي الإيرادات" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="profit" name="أرباح الشركة" fill="#a21caf" radius={[4, 4, 0, 0]} />
+                    </>
+                  ) : (
+                    <Bar dataKey="clientShare" name="الأرباح المستحقة" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                  )}
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -388,52 +436,54 @@ function ReportsDashboard() {
         </Card>
 
         {/* Earning Share Pie Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-bold">توزيع الإيرادات والأرباح</CardTitle>
-          </CardHeader>
-          <CardContent className="h-80 flex flex-col justify-between">
-            {stats.totalGross === 0 ? (
-              <div className="h-full flex items-center justify-center text-muted-foreground text-xs">لا توجد بيانات</div>
-            ) : (
-              <>
-                <div className="h-60 relative">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={stats.pieData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={80}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {stats.pieData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        formatter={(value) => [money(value as any)]} 
-                        contentStyle={{ backgroundColor: '#17151a', borderRadius: '12px', border: '1px solid #25222b', color: '#fff' }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="space-y-2.5 text-sm sm:text-base mt-4 border-t pt-4">
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-2"><span className="w-3.5 h-3.5 rounded-full bg-violet-500"></span>حصة العملاء</span>
-                    <span className="font-extrabold text-white" dir="ltr">{money(stats.totalClientShare)}</span>
+        {isStaff && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-bold">توزيع الإيرادات والأرباح</CardTitle>
+            </CardHeader>
+            <CardContent className="h-80 flex flex-col justify-between">
+              {stats.totalGross === 0 ? (
+                <div className="h-full flex items-center justify-center text-muted-foreground text-xs">لا توجد بيانات</div>
+              ) : (
+                <>
+                  <div className="h-60 relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={stats.pieData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={80}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          {stats.pieData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          formatter={(value) => [money(value as any)]} 
+                          contentStyle={{ backgroundColor: '#17151a', borderRadius: '12px', border: '1px solid #25222b', color: '#fff' }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-2"><span className="w-3.5 h-3.5 rounded-full bg-fuchsia-600"></span>أرباح الشركة</span>
-                    <span className="font-extrabold text-primary" dir="ltr">{money(stats.totalCompanyShare)}</span>
+                  <div className="space-y-2.5 text-sm sm:text-base mt-4 border-t pt-4">
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-2"><span className="w-3.5 h-3.5 rounded-full bg-violet-500"></span>حصة العملاء</span>
+                      <span className="font-extrabold text-white" dir="ltr">{money(stats.totalClientShare)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-2"><span className="w-3.5 h-3.5 rounded-full bg-fuchsia-600"></span>أرباح الشركة</span>
+                      <span className="font-extrabold text-primary" dir="ltr">{money(stats.totalCompanyShare)}</span>
+                    </div>
                   </div>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Tabs list for detailed tables */}
@@ -451,17 +501,19 @@ function ReportsDashboard() {
               <TableRow>
                 <TableHead className="text-right text-sm sm:text-base font-bold py-4 px-4">القناة</TableHead>
                 <TableHead className="text-right text-sm sm:text-base font-bold py-4 px-4">الشهر</TableHead>
-                <TableHead className="text-left text-sm sm:text-base font-bold py-4 px-4">الإيراد</TableHead>
-                <TableHead className="text-center text-sm sm:text-base font-bold py-4 px-4">النسبة</TableHead>
-                <TableHead className="text-left text-sm sm:text-base font-bold py-4 px-4 text-success">حصة العميل</TableHead>
-                <TableHead className="text-left text-sm sm:text-base font-bold py-4 px-4 text-primary">حصة الشركة</TableHead>
+                {isStaff && <TableHead className="text-left text-sm sm:text-base font-bold py-4 px-4">الإيراد</TableHead>}
+                {isStaff && <TableHead className="text-center text-sm sm:text-base font-bold py-4 px-4">النسبة</TableHead>}
+                <TableHead className="text-left text-sm sm:text-base font-bold py-4 px-4 text-success">
+                  {isStaff ? "حصة العميل" : "الأرباح المستحقة"}
+                </TableHead>
+                {isStaff && <TableHead className="text-left text-sm sm:text-base font-bold py-4 px-4 text-primary">حصة الشركة</TableHead>}
                 <TableHead className="text-right text-sm sm:text-base font-bold py-4 px-4">حالة الدفع</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {revenues.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-sm sm:text-base text-muted-foreground">لا توجد إيرادات في هذه الفترة</TableCell>
+                  <TableCell colSpan={isStaff ? 7 : 4} className="text-center py-8 text-sm sm:text-base text-muted-foreground">لا توجد إيرادات في هذه الفترة</TableCell>
                 </TableRow>
               )}
               {revenues.map((r, i) => {
@@ -470,10 +522,10 @@ function ReportsDashboard() {
                   <TableRow key={r.id || i} className="hover:bg-muted/10 transition-colors">
                     <TableCell className="font-bold text-sm sm:text-base py-4.5 px-4">{r.channels?.name}</TableCell>
                     <TableCell dir="ltr" className="text-right text-sm sm:text-base py-4.5 px-4">{monthLabel(r.period_month)}</TableCell>
-                    <TableCell dir="ltr" className="text-left text-sm sm:text-base font-semibold py-4.5 px-4">{money(r.total_revenue)}</TableCell>
-                    <TableCell dir="ltr" className="text-center text-sm sm:text-base py-4.5 px-4">{r.client_percentage}%</TableCell>
+                    {isStaff && <TableCell dir="ltr" className="text-left text-sm sm:text-base font-semibold py-4.5 px-4">{money(r.total_revenue)}</TableCell>}
+                    {isStaff && <TableCell dir="ltr" className="text-center text-sm sm:text-base py-4.5 px-4">{r.client_percentage}%</TableCell>}
                     <TableCell dir="ltr" className="text-left text-success font-extrabold text-sm sm:text-base py-4.5 px-4">{money(r.client_share)}</TableCell>
-                    <TableCell dir="ltr" className="text-left text-primary font-extrabold text-sm sm:text-base py-4.5 px-4">{money(r.company_share)}</TableCell>
+                    {isStaff && <TableCell dir="ltr" className="text-left text-primary font-extrabold text-sm sm:text-base py-4.5 px-4">{money(r.company_share)}</TableCell>}
                     <TableCell className="text-right py-4.5 px-4">
                       {p?.status ? (
                         <Badge variant={p.status === "paid" ? "outline" : "destructive"} className="text-xs sm:text-sm px-2.5 py-1 font-bold">
