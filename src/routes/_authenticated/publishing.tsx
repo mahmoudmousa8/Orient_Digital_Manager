@@ -291,25 +291,25 @@ function PublishingPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-center min-w-[130px] text-xs">القناة</TableHead>
-                  <TableHead className="text-center text-xs">الموظف المسؤول</TableHead>
-                  <TableHead className="text-center text-xs">العميل</TableHead>
-                  <TableHead className="text-center min-w-[90px] text-xs">تفعيل الأرباح</TableHead>
-                  <TableHead className="text-center p-0.5 sm:p-1 text-[11px] sm:text-xs font-black min-w-[24px] sm:min-w-[32px] text-slate-300">1</TableHead>
-                  <TableHead className="text-center p-0.5 sm:p-1 text-[11px] sm:text-xs font-black min-w-[24px] sm:min-w-[32px] text-slate-300">2</TableHead>
-                  <TableHead className="text-center p-0.5 sm:p-1 text-[11px] sm:text-xs font-black min-w-[24px] sm:min-w-[32px] text-slate-300">3</TableHead>
-                  <TableHead className="text-center p-0.5 sm:p-1 text-[11px] sm:text-xs font-black min-w-[24px] sm:min-w-[32px] text-slate-300">4</TableHead>
-                  <TableHead className="text-center p-0.5 sm:p-1 text-[11px] sm:text-xs font-black min-w-[24px] sm:min-w-[32px] text-slate-300">5</TableHead>
-                  <TableHead className="text-center p-0.5 sm:p-1 text-[11px] sm:text-xs font-black min-w-[24px] sm:min-w-[32px] text-slate-300">6</TableHead>
-                  <TableHead className="text-center p-0.5 sm:p-1 text-[11px] sm:text-xs font-black min-w-[24px] sm:min-w-[32px] text-slate-300">7</TableHead>
-                  <TableHead className="text-center p-0.5 sm:p-1 text-[11px] sm:text-xs font-black min-w-[24px] sm:min-w-[32px] text-slate-300">8</TableHead>
-                  <TableHead className="text-center p-0.5 sm:p-1 text-[11px] sm:text-xs font-black min-w-[24px] sm:min-w-[32px] text-slate-300">9</TableHead>
-                  <TableHead className="text-center p-0.5 sm:p-1 text-[11px] sm:text-xs font-black min-w-[24px] sm:min-w-[32px] text-slate-300">10</TableHead>
-                  <TableHead className="text-center p-0.5 sm:p-1 text-[11px] sm:text-xs font-black min-w-[24px] sm:min-w-[32px] text-slate-300">11</TableHead>
-                  <TableHead className="text-center p-0.5 sm:p-1 text-[11px] sm:text-xs font-black min-w-[24px] sm:min-w-[32px] text-slate-300">12</TableHead>
-                  <TableHead className="text-center min-w-[200px] text-xs">ملاحظات</TableHead>
-                  <TableHead className="text-center min-w-[120px] text-xs">التقدم</TableHead>
-                  <TableHead className="text-center text-xs">الرابط</TableHead>
+                  <TableHead className="text-center min-w-[130px] text-[10px]">القناة</TableHead>
+                  <TableHead className="text-center text-[10px]">الموظف المسؤول</TableHead>
+                  <TableHead className="text-center text-[10px]">العميل</TableHead>
+                  <TableHead className="text-center min-w-[90px] text-[10px]">تفعيل الأرباح</TableHead>
+                  <TableHead className="text-center p-0.5 sm:p-1 text-[10px] font-black min-w-[24px] sm:min-w-[32px] text-slate-300">1</TableHead>
+                  <TableHead className="text-center p-0.5 sm:p-1 text-[10px] font-black min-w-[24px] sm:min-w-[32px] text-slate-300">2</TableHead>
+                  <TableHead className="text-center p-0.5 sm:p-1 text-[10px] font-black min-w-[24px] sm:min-w-[32px] text-slate-300">3</TableHead>
+                  <TableHead className="text-center p-0.5 sm:p-1 text-[10px] font-black min-w-[24px] sm:min-w-[32px] text-slate-300">4</TableHead>
+                  <TableHead className="text-center p-0.5 sm:p-1 text-[10px] font-black min-w-[24px] sm:min-w-[32px] text-slate-300">5</TableHead>
+                  <TableHead className="text-center p-0.5 sm:p-1 text-[10px] font-black min-w-[24px] sm:min-w-[32px] text-slate-300">6</TableHead>
+                  <TableHead className="text-center p-0.5 sm:p-1 text-[10px] font-black min-w-[24px] sm:min-w-[32px] text-slate-300">7</TableHead>
+                  <TableHead className="text-center p-0.5 sm:p-1 text-[10px] font-black min-w-[24px] sm:min-w-[32px] text-slate-300">8</TableHead>
+                  <TableHead className="text-center p-0.5 sm:p-1 text-[10px] font-black min-w-[24px] sm:min-w-[32px] text-slate-300">9</TableHead>
+                  <TableHead className="text-center p-0.5 sm:p-1 text-[10px] font-black min-w-[24px] sm:min-w-[32px] text-slate-300">10</TableHead>
+                  <TableHead className="text-center p-0.5 sm:p-1 text-[10px] font-black min-w-[24px] sm:min-w-[32px] text-slate-300">11</TableHead>
+                  <TableHead className="text-center p-0.5 sm:p-1 text-[10px] font-black min-w-[24px] sm:min-w-[32px] text-slate-300">12</TableHead>
+                  <TableHead className="text-center min-w-[200px] text-[10px]">ملاحظات</TableHead>
+                  <TableHead className="text-center min-w-[120px] text-[10px]">التقدم</TableHead>
+                  <TableHead className="text-center text-[10px]">الرابط</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -347,7 +347,7 @@ function PublishingPage() {
                     return (
                       <TableRow key={t.channelId} className={isAssignedToMe ? "bg-primary/5" : ""}>
                         {/* Channel Name */}
-                        <TableCell className="font-bold text-center text-slate-200 text-xs py-1.5">
+                        <TableCell className="font-bold text-center text-slate-200 text-[10px] py-1.5">
                           {t.channelName}
                         </TableCell>
 
@@ -364,7 +364,7 @@ function PublishingPage() {
                                   })
                                 }
                               >
-                                <SelectTrigger className="w-36 h-7 bg-slate-900 border-slate-700 text-xs mx-auto">
+                                <SelectTrigger className="w-36 h-7 bg-slate-900 border-slate-700 text-[10px] mx-auto">
                                   <SelectValue placeholder="اختر موظف" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -378,25 +378,25 @@ function PublishingPage() {
                               </Select>
                             </div>
                           ) : (
-                            <span className="text-xs text-slate-300">
+                            <span className="text-[10px] text-slate-300">
                               {staff.find((s) => s.id === t.assignedTo)?.fullName ?? "غير معين"}
                             </span>
                           )}
                         </TableCell>
 
                         {/* Client Name */}
-                        <TableCell className="text-center text-xs text-slate-300 py-1.5">
+                        <TableCell className="text-center text-[10px] text-slate-300 py-1.5">
                           {t.clientName}
                         </TableCell>
 
                         {/* Monetization Status Badge */}
                         <TableCell className="text-center py-1.5">
                           {t.isMonetized !== false ? (
-                            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#9b51e0] text-white shadow-sm border border-purple-500/20">
+                            <span className="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold bg-[#9b51e0] text-white shadow-sm border border-purple-500/20">
                               مفعلة
                             </span>
                           ) : (
-                            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#334155] text-slate-300 border border-slate-600">
+                            <span className="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold bg-[#334155] text-slate-300 border border-slate-600">
                               غير مفعلة
                             </span>
                           )}
