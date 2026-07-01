@@ -97,7 +97,15 @@ html {
     font-family: var(--font-sans);
     zoom: 1;
   }
-  html { direction: rtl; }
+  html {
+    direction: rtl;
+    scrollbar-gutter: stable;
+  }
+  body[data-scroll-locked], 
+  body[data-radix-scroll-locked],
+  [data-radix-scroll-locked] {
+    padding-right: 0px !important;
+  }
 }
 
 @keyframes fadeInUp {
