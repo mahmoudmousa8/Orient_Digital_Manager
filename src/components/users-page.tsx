@@ -33,10 +33,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   listUserPermissions,
-  unlinkUserFromClient,
+  unlinkUserFromClients,
   toggleUserActive,
 } from "@/lib/permissions.functions";
 import { createAppUser, resetClientPassword, updateAppUser } from "@/lib/admin.functions";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const roleLabels: Record<string, string> = {
   admin: "مسؤول",
@@ -59,7 +60,7 @@ export function UsersPage() {
   
   // Server functions
   const listFn = useServerFn(listUserPermissions);
-  const unlinkFn = useServerFn(unlinkUserFromClient);
+  const unlinkFn = useServerFn(unlinkUserFromClients);
   const createUserFn = useServerFn(createAppUser);
   const updateUserFn = useServerFn(updateAppUser);
   const toggleActiveFn = useServerFn(toggleUserActive);
@@ -93,7 +94,7 @@ export function UsersPage() {
     password: "",
     fullName: "",
     role: "employee" as "admin" | "employee" | "client",
-    clientId: "",
+    clientIds: [] as string[],
   });
   const [createSubmitting, setCreateSubmitting] = useState(false);
   const [createShowNewClientInput, setCreateShowNewClientInput] = useState(false);
@@ -106,7 +107,7 @@ export function UsersPage() {
     email: "",
     fullName: "",
     role: "employee" as "admin" | "employee" | "client",
-    clientId: "",
+    clientIds: [] as string[],
   });
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editShowNewClientInput, setEditShowNewClientInput] = useState(false);
@@ -135,13 +136,13 @@ export function UsersPage() {
           password: createForm.password,
           fullName: createForm.fullName || undefined,
           role: createForm.role,
-          clientId: createForm.role === "client" && !createShowNewClientInput ? createForm.clientId || null : null,
+          clientIds: createForm.role === "client" && !createShowNewClientInput ? createForm.clientIds : [],
           newClientName: createForm.role === "client" && createShowNewClientInput ? createNewClientName : null,
         },
       });
       toast.success("تم إنشاء المستخدم بنجاح");
       setCreateOpen(false);
-      setCreateForm({ email: "", password: "", fullName: "", role: "employee", clientId: "" });
+      setCreateForm({ email: "", password: "", fullName: "", role: "employee", clientIds: [] });
       setCreateNewClientName("");
       setCreateShowNewClientInput(false);
       qc.invalidateQueries({ queryKey: ["user-permissions"] });
@@ -159,7 +160,7 @@ export function UsersPage() {
       email: u.email,
       fullName: u.fullName || "",
       role: primaryRole,
-      clientId: u.client?.id ?? "",
+      clientIds: (u.clients ?? []).map((c: any) => c.id),
     });
     setEditNewClientName("");
     setEditShowNewClientInput(false);
@@ -175,7 +176,7 @@ export function UsersPage() {
           email: editForm.email,
           fullName: editForm.fullName,
           role: editForm.role,
-          clientId: editForm.role === "client" && !editShowNewClientInput ? editForm.clientId || "none" : "none",
+          clientIds: editForm.role === "client" && !editShowNewClientInput ? editForm.clientIds : [],
           newClientName: editForm.role === "client" && editShowNewClientInput ? editNewClientName : null,
         },
       });
@@ -216,10 +217,10 @@ export function UsersPage() {
     }
   }
 
-  async function unlink(clientId: string) {
+  async function unlink(userId: string) {
     try {
-      await unlinkFn({ data: { clientId } });
-      toast.success("تم فك الارتباط");
+      await unlinkFn({ data: { userId } });
+      toast.success("تم فك ارتباط العملاء بنجاح");
       qc.invalidateQueries({ queryKey: ["user-permissions"] });
     } catch (e: any) {
       toast.error(e.message ?? "فشل فك الارتباط");
@@ -343,18 +344,27 @@ export function UsersPage() {
 
                   {!createShowNewClientInput ? (
                     <div>
-                      <Label>العميل المرتبط *</Label>
-                      <Select
-                        value={createForm.clientId}
-                        onValueChange={(v) => setCreateForm({ ...createForm, clientId: v })}
-                      >
-                        <SelectTrigger><SelectValue placeholder="اختر العميل" /></SelectTrigger>
-                        <SelectContent>
-                          {clients.map((c) => (
-                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Label className="text-white mb-2 block">العملاء المرتبطين *</Label>
+                      <div className="h-44 overflow-y-auto border border-slate-800 bg-slate-950 rounded-md p-2.5 space-y-2">
+                        {clients.map((c) => {
+                          const isChecked = createForm.clientIds.includes(c.id);
+                          return (
+                            <label key={c.id} className="flex items-center gap-2.5 text-sm text-slate-300 hover:text-white cursor-pointer select-none">
+                              <Checkbox
+                                id={`create-client-${c.id}`}
+                                checked={isChecked}
+                                onCheckedChange={(checked) => {
+                                  const newIds = checked
+                                    ? [...createForm.clientIds, c.id]
+                                    : createForm.clientIds.filter((id) => id !== c.id);
+                                  setCreateForm({ ...createForm, clientIds: newIds });
+                                }}
+                              />
+                              <span>{c.name}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
                     </div>
                   ) : (
                     <div>
@@ -454,8 +464,10 @@ export function UsersPage() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          {u.client ? (
-                            <span className="text-sm font-semibold text-white">{u.client.name}</span>
+                          {u.clients && u.clients.length > 0 ? (
+                            <span className="text-sm font-semibold text-white">
+                              {u.clients.map((c: any) => c.name).join("، ")}
+                            </span>
                           ) : (
                             <span className="text-xs text-muted-foreground">—</span>
                           )}
@@ -493,12 +505,12 @@ export function UsersPage() {
                             >
                               <Lock className="w-4 h-4" />
                             </Button>
-                            {u.client && (
+                            {u.clients && u.clients.length > 0 && (
                               <Button
                                 size="icon"
                                 variant="ghost"
-                                title="فك ربط العميل"
-                                onClick={() => setUnlinkTarget(u.client!.id)}
+                                title="فك ربط العملاء"
+                                onClick={() => setUnlinkTarget(u.userId)}
                                 className="text-slate-400 hover:text-red-400 hover:bg-slate-800"
                               >
                                 <Unlink className="w-4 h-4" />
@@ -610,19 +622,27 @@ export function UsersPage() {
 
                 {!editShowNewClientInput ? (
                   <div>
-                    <Label>العميل المرتبط *</Label>
-                    <Select
-                      value={editForm.clientId || "none"}
-                      onValueChange={(v) => setEditForm({ ...editForm, clientId: v })}
-                    >
-                      <SelectTrigger><SelectValue placeholder="ربط العميل" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">غير مرتبط</SelectItem>
-                        {clients.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label className="text-white mb-2 block">العملاء المرتبطين *</Label>
+                    <div className="h-44 overflow-y-auto border border-slate-800 bg-slate-950 rounded-md p-2.5 space-y-2">
+                      {clients.map((c) => {
+                        const isChecked = editForm.clientIds.includes(c.id);
+                        return (
+                          <label key={c.id} className="flex items-center gap-2.5 text-sm text-slate-300 hover:text-white cursor-pointer select-none">
+                            <Checkbox
+                              id={`edit-client-${c.id}`}
+                              checked={isChecked}
+                              onCheckedChange={(checked) => {
+                                const newIds = checked
+                                  ? [...editForm.clientIds, c.id]
+                                  : editForm.clientIds.filter((id) => id !== c.id);
+                                setEditForm({ ...editForm, clientIds: newIds });
+                              }}
+                            />
+                            <span>{c.name}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
                   </div>
                 ) : (
                   <div>
@@ -682,9 +702,9 @@ export function UsersPage() {
       <AlertDialog open={!!unlinkTarget} onOpenChange={(o) => !o && setUnlinkTarget(null)}>
         <AlertDialogContent dir="rtl">
           <AlertDialogHeader>
-            <AlertDialogTitle>هل تريد فك الربط بين هذا المستخدم والعميل؟</AlertDialogTitle>
+            <AlertDialogTitle>هل تريد فك ربط كافة العملاء عن هذا المستخدم؟</AlertDialogTitle>
             <AlertDialogDescription>
-              هذا الإجراء سيقوم بإزالة ارتباط العميل بهذا الحساب، ولن يتمكن هذا الحساب من رؤية أي قنوات أو تقارير تخص هذا العميل.
+              هذا الإجراء سيقوم بإزالة ارتباط كافة العملاء بهذا الحساب، ولن يتمكن هذا الحساب من رؤية أي قنوات أو تقارير تخص هؤلاء العملاء.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

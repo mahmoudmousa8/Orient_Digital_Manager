@@ -91,15 +91,15 @@ export const createAppUser = createServerFn({ method: "POST" })
     const password = String(input?.password ?? "");
     const role = String(input?.role ?? "");
     const fullName = typeof input?.fullName === "string" ? input.fullName : undefined;
-    const clientId = typeof input?.clientId === "string" && input.clientId ? input.clientId : null;
+    const clientIds = Array.isArray(input?.clientIds) ? input.clientIds : [];
     const newClientName = typeof input?.newClientName === "string" && input.newClientName ? input.newClientName.trim() : null;
     if (!/^\S+@\S+\.\S+$/.test(email)) throw new Error("بريد إلكتروني غير صالح");
     if (password.length < 6) throw new Error("كلمة السر يجب 6 أحرف على الأقل");
     if (!["admin", "employee", "client"].includes(role)) throw new Error("دور غير صالح");
-    if (role === "client" && !clientId && !newClientName) {
+    if (role === "client" && clientIds.length === 0 && !newClientName) {
       throw new Error("اختر العميل المرتبط أو أدخل اسم عميل جديد");
     }
-    return { email, password, role: role as "admin" | "employee" | "client", fullName, clientId, newClientName };
+    return { email, password, role: role as "admin" | "employee" | "client", fullName, clientIds, newClientName };
   })
   .handler(async ({ data, context }) => {
     const { data: isAdmin } = await context.supabase.rpc("has_role", {
@@ -130,24 +130,25 @@ export const createAppUser = createServerFn({ method: "POST" })
       .insert({ user_id: newUserId, role: data.role });
     if (roleErr) throw new Error(roleErr.message);
 
-    if (data.role === "client" && data.newClientName) {
-      const { data: newClient, error: clientErr } = await supabaseAdmin
-        .from("clients")
-        .insert({
-          name: data.newClientName,
-          email: data.email,
-          user_id: newUserId,
-        })
-        .select("id")
-        .single();
-      if (clientErr || !newClient) throw new Error(clientErr?.message ?? "فشل إنشاء ملف العميل");
-    } else if (data.clientId) {
-      await supabaseAdmin.from("clients").update({ user_id: null }).eq("user_id", newUserId);
-      const { error: linkErr } = await supabaseAdmin
-        .from("clients")
-        .update({ user_id: newUserId })
-        .eq("id", data.clientId);
-      if (linkErr) throw new Error(linkErr.message);
+    if (data.role === "client") {
+      if (data.newClientName) {
+        const { data: newClient, error: clientErr } = await supabaseAdmin
+          .from("clients")
+          .insert({
+            name: data.newClientName,
+            email: data.email,
+            user_id: newUserId,
+          })
+          .select("id")
+          .single();
+        if (clientErr || !newClient) throw new Error(clientErr?.message ?? "فشل إنشاء ملف العميل");
+      } else if (data.clientIds && data.clientIds.length > 0) {
+        const { error: linkErr } = await supabaseAdmin
+          .from("clients")
+          .update({ user_id: newUserId })
+          .in("id", data.clientIds);
+        if (linkErr) throw new Error(linkErr.message);
+      }
     }
     return { userId: newUserId };
   });
@@ -201,16 +202,16 @@ export const updateAppUser = createServerFn({ method: "POST" })
     const email = String(input?.email ?? "").trim().toLowerCase();
     const role = String(input?.role ?? "");
     const fullName = String(input?.fullName ?? "").trim();
-    const clientId = typeof input?.clientId === "string" && input.clientId ? input.clientId : null;
+    const clientIds = Array.isArray(input?.clientIds) ? input.clientIds : [];
     const newClientName = typeof input?.newClientName === "string" && input.newClientName ? input.newClientName.trim() : null;
 
     if (!userId) throw new Error("المستخدم مطلوب");
     if (!/^\S+@\S+\.\S+$/.test(email)) throw new Error("بريد إلكتروني غير صالح");
     if (!["admin", "employee", "client"].includes(role)) throw new Error("دور غير صالح");
-    if (role === "client" && !clientId && !newClientName) {
+    if (role === "client" && clientIds.length === 0 && !newClientName) {
       throw new Error("اختر العميل المرتبط أو أدخل اسم عميل جديد");
     }
-    return { userId, email, role: role as "admin" | "employee" | "client", fullName, clientId, newClientName };
+    return { userId, email, role: role as "admin" | "employee" | "client", fullName, clientIds, newClientName };
   })
   .handler(async ({ data, context }) => {
     const { data: isAdmin } = await context.supabase.rpc("has_role", {
@@ -261,11 +262,11 @@ export const updateAppUser = createServerFn({ method: "POST" })
           .select("id")
           .single();
         if (clientErr || !newClient) throw new Error(clientErr?.message ?? "فشل إنشاء ملف العميل");
-      } else if (data.clientId && data.clientId !== "none") {
+      } else if (data.clientIds && data.clientIds.length > 0) {
         const { error: linkErr } = await supabaseAdmin
           .from("clients")
           .update({ user_id: data.userId })
-          .eq("id", data.clientId);
+          .in("id", data.clientIds);
         if (linkErr) throw new Error(linkErr.message);
       }
     }

@@ -30,9 +30,13 @@ export const listUserPermissions = createServerFn({ method: "GET" })
       rolesByUser.set(r.user_id, arr);
     });
 
-    const clientByUser = new Map<string, { id: string; name: string }>();
+    const clientsByUser = new Map<string, { id: string; name: string }[]>();
     (clients ?? []).forEach((c: any) => {
-      if (c.user_id) clientByUser.set(c.user_id, { id: c.id, name: c.name });
+      if (c.user_id) {
+        const arr = clientsByUser.get(c.user_id) ?? [];
+        arr.push({ id: c.id, name: c.name });
+        clientsByUser.set(c.user_id, arr);
+      }
     });
 
     return (profiles ?? []).map((p: any) => ({
@@ -41,7 +45,7 @@ export const listUserPermissions = createServerFn({ method: "GET" })
       fullName: p.full_name,
       isActive: p.is_active !== false,
       roles: rolesByUser.get(p.id) ?? [],
-      client: clientByUser.get(p.id) ?? null,
+      clients: clientsByUser.get(p.id) ?? [],
     }));
   });
 
@@ -72,11 +76,11 @@ export const setUserRole = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const unlinkUserFromClient = createServerFn({ method: "POST" })
+export const unlinkUserFromClients = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: any) => {
-    if (!input?.clientId) throw new Error("العميل مطلوب");
-    return { clientId: String(input.clientId) };
+    if (!input?.userId) throw new Error("المستخدم مطلوب");
+    return { userId: String(input.userId) };
   })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
@@ -84,7 +88,7 @@ export const unlinkUserFromClient = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin
       .from("clients")
       .update({ user_id: null })
-      .eq("id", data.clientId);
+      .eq("user_id", data.userId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
