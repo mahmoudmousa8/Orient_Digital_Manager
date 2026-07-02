@@ -99,31 +99,26 @@ export function AppShell({ children, roles, email }: { children: ReactNode; role
           })}
         </nav>
         <div className="p-3 border-t border-sidebar-border space-y-3">
-          <div className="px-3 py-1">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full justify-center border-slate-800 hover:bg-slate-900 text-slate-200"
+            onClick={() => setLang(lang === "ar" ? "en" : "ar")}
+          >
+            🌐 {lang === "ar" ? "English" : "العربية"}
+          </Button>
+          <div className="px-3 py-1 text-center flex flex-col items-center justify-center">
             <div className="text-xs text-muted-foreground">{roleLabel}</div>
-            <div className="text-sm font-medium truncate" dir="ltr">{email}</div>
+            <div className="text-sm font-medium truncate w-full text-center mt-0.5" dir="ltr">{email}</div>
           </div>
           <Button variant="outline" size="sm" className="w-full" onClick={signOut}>
-            <LogOut className={cn("w-4 h-4", lang === "ar" ? "ml-2" : "mr-2")} />
+            <LogOut className="w-4 h-4 ml-2" />
             {t("logout")}
           </Button>
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0 print:p-0 relative">
-        {/* Desktop Language Switcher - Floating far left */}
-        <div className="absolute top-6 left-6 z-30 hidden lg:block print:hidden">
-          <Button
-            variant="outline"
-            size="icon"
-            className="w-10 h-10 rounded-full bg-slate-950/40 border-slate-800 hover:bg-slate-900 hover:text-white transition-all text-sm font-bold text-slate-300 shadow-lg shadow-black/20"
-            onClick={() => setLang(lang === "ar" ? "en" : "ar")}
-            title={lang === "ar" ? "Switch to English" : "التحويل للعربية"}
-          >
-            {lang === "ar" ? "EN" : "AR"}
-          </Button>
-        </div>
-
+      <div className="flex-1 flex flex-col min-w-0 print:p-0">
         <header className="lg:hidden flex items-center justify-between p-4 border-b bg-card print:hidden">
           <Button size="icon" variant="ghost" onClick={() => setOpen(!open)}><Menu /></Button>
           <span className="font-extrabold text-white text-base">{t("brandName")}</span>
