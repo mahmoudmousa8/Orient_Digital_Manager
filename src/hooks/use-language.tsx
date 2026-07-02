@@ -249,21 +249,16 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("orient_lang", newLang);
   };
 
-  const dir = lang === "ar" ? "rtl" : "ltr";
+  const dir = "rtl";
 
   useEffect(() => {
     if (typeof document !== "undefined") {
       document.documentElement.lang = lang;
-      document.documentElement.dir = dir;
-      if (lang === "ar") {
-        document.documentElement.classList.add("rtl");
-        document.documentElement.classList.remove("ltr");
-      } else {
-        document.documentElement.classList.add("ltr");
-        document.documentElement.classList.remove("rtl");
-      }
+      document.documentElement.dir = "rtl";
+      document.documentElement.classList.add("rtl");
+      document.documentElement.classList.remove("ltr");
     }
-  }, [lang, dir]);
+  }, [lang]);
 
   const t = (key: string): string => {
     return translations[lang][key] || key;

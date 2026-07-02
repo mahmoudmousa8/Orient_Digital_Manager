@@ -72,10 +72,8 @@ export function AppShell({ children, roles, email }: { children: ReactNode; role
 
       <aside className={cn(
         "fixed lg:static inset-y-0 z-40 w-64 bg-sidebar flex flex-col transition-transform print:hidden",
-        lang === "ar" ? "right-0 border-l border-sidebar-border" : "left-0 border-r border-sidebar-border",
-        open 
-          ? "translate-x-0" 
-          : (lang === "ar" ? "translate-x-full lg:translate-x-0" : "-translate-x-full lg:translate-x-0")
+        "right-0 border-l border-sidebar-border",
+        open ? "translate-x-0" : "translate-x-full lg:translate-x-0"
       )}>
         <div className="p-5 border-b border-sidebar-border">
           <Brand size="lg" />
@@ -138,10 +136,7 @@ export function AppShell({ children, roles, email }: { children: ReactNode; role
             {lang === "ar" ? "EN" : "عربي"}
           </Button>
         </header>
-        <main className={cn(
-          "flex-1 p-4 sm:p-6 lg:p-8 overflow-x-auto print:p-0",
-          lang === "en" && "lg:pl-20"
-        )}>
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-auto print:p-0">
           {children}
         </main>
       </div>
