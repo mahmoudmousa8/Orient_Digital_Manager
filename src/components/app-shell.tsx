@@ -71,7 +71,7 @@ export function AppShell({ children, roles, email }: { children: ReactNode; role
       )}
 
       <aside className={cn(
-        "fixed lg:static inset-y-0 z-40 w-64 bg-sidebar flex flex-col transition-transform print:hidden",
+        "fixed lg:sticky top-0 inset-y-0 z-40 w-64 h-screen bg-sidebar flex flex-col transition-transform print:hidden",
         "right-0 border-l border-sidebar-border",
         open ? "translate-x-0" : "translate-x-full lg:translate-x-0"
       )}>
