@@ -21,12 +21,15 @@ import {
   importExcelPublishingData,
 } from "@/lib/publishing.functions";
 
+import { useLanguage } from "@/hooks/use-language";
+
 export const Route = createFileRoute("/_authenticated/publishing")({
   component: PublishingPage,
 });
 
 function PublishingPage() {
   const { user, isAdmin, isStaff, isEmployee } = useAuth();
+  const { t, lang } = useLanguage();
   const qc = useQueryClient();
 
   const listFn = useServerFn(listPublishingTasks);
@@ -188,7 +191,7 @@ function PublishingPage() {
   if (!isStaff) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-muted-foreground">صلاحيات غير كافية للوصول لهذه الصفحة.</p>
+        <p className="text-muted-foreground">{lang === "ar" ? "صلاحيات غير كافية للوصول لهذه الصفحة." : "Insufficient permissions to access this page."}</p>
       </div>
     );
   }
@@ -200,10 +203,10 @@ function PublishingPage() {
         <div className="space-y-1">
           <h1 className="text-2xl sm:text-3xl font-black flex items-center gap-2.5 text-white">
             <ClipboardCheck className="w-8 h-8 text-primary" />
-            نشر القنوات
+            {t("publishingTrackerTitle")}
           </h1>
           <p className="text-sm text-muted-foreground mt-1.5">
-            تتبع مهام النشر الشهرية للقنوات وإسنادها للموظفين
+            {t("publishingTrackerDesc")}
           </p>
         </div>
 
@@ -220,7 +223,7 @@ function PublishingPage() {
               ) : (
                 <FileSpreadsheet className="w-4 h-4 ml-1" />
               )}
-              استيراد من Excel
+              {t("importExcel")}
             </Button>
           )}
 
@@ -229,7 +232,7 @@ function PublishingPage() {
             onClick={handleExport}
             className="border-primary/20 hover:bg-primary/10 text-white flex items-center gap-1.5"
           >
-            <Download className="w-4 h-4 ml-1" /> تصدير Excel
+            <Download className="w-4 h-4 ml-1" /> {t("exportExcel")}
           </Button>
         </div>
       </div>
@@ -239,7 +242,7 @@ function PublishingPage() {
         <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="بحث باسم القناة أو الموظف أو العميل…"
+            placeholder={t("searchPublishingPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="search-input-padding"
@@ -253,7 +256,7 @@ function PublishingPage() {
           <SelectContent>
             {[2026, 2027, 2028, 2029, 2030].map((y) => (
               <SelectItem key={y} value={String(y)}>
-                السنة {y}
+                {t("yearLabel")} {y}
               </SelectItem>
             ))}
           </SelectContent>
@@ -261,13 +264,13 @@ function PublishingPage() {
 
         {!isEmployee && (
           <Select value={filterAssignee} onValueChange={setFilterAssignee}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="الموظف المسؤول" />
+            <SelectTrigger className="w-40 bg-slate-900 border-slate-700">
+              <SelectValue placeholder={t("assignedStaff")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">كل الموظفين</SelectItem>
-              <SelectItem value="me">قنواتي فقط</SelectItem>
-              <SelectItem value="unassigned">غير معينة لموظف</SelectItem>
+              <SelectItem value="all">{t("allStaff")}</SelectItem>
+              <SelectItem value="me">{t("myChannelsOnly")}</SelectItem>
+              <SelectItem value="unassigned">{t("unassignedOnly")}</SelectItem>
               {staff.map((s) => (
                 <SelectItem key={s.id} value={s.id}>
                   {s.fullName || s.email}
@@ -278,14 +281,14 @@ function PublishingPage() {
         )}
 
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="حالة القناة" />
+          <SelectTrigger className="w-40 bg-slate-900 border-slate-700">
+            <SelectValue placeholder={t("status")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">كل الحالات</SelectItem>
+            <SelectItem value="all">{t("allStatus")}</SelectItem>
             {["active", "paused", "suspended", "closed"].map((s) => (
               <SelectItem key={s} value={s}>
-                {STATUS_AR[s]}
+                {lang === "ar" ? STATUS_AR[s] : s.charAt(0).toUpperCase() + s.slice(1)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -293,12 +296,12 @@ function PublishingPage() {
 
         <Select value={filterMonetized} onValueChange={setFilterMonetized}>
           <SelectTrigger className="w-40 bg-slate-900 border-slate-700">
-            <SelectValue placeholder="حالة الأرباح" />
+            <SelectValue placeholder={t("monetization")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">كل قنوات الأرباح</SelectItem>
-            <SelectItem value="monetized">مفعلة فقط</SelectItem>
-            <SelectItem value="not_monetized">غير مفعلة فقط</SelectItem>
+            <SelectItem value="all">{t("allMonetized")}</SelectItem>
+            <SelectItem value="monetized">{lang === "ar" ? "مفعلة فقط" : "Monetized only"}</SelectItem>
+            <SelectItem value="not_monetized">{lang === "ar" ? "غير مفعلة فقط" : "Not monetized only"}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -311,10 +314,10 @@ function PublishingPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-right w-12 text-[10px]">#</TableHead>
-                  <TableHead className="text-center min-w-[130px] text-[10px]">القناة</TableHead>
-                  <TableHead className="text-center text-[10px] min-w-[100px]">الموظف</TableHead>
-                  <TableHead className="text-center text-[10px] min-w-[220px]">العميل</TableHead>
-                  <TableHead className="text-center min-w-[90px] text-[10px]">تفعيل الأرباح</TableHead>
+                  <TableHead className="text-center min-w-[130px] text-[10px]">{t("channelName")}</TableHead>
+                  <TableHead className="text-center text-[10px] min-w-[100px]">{t("assignedStaff")}</TableHead>
+                  <TableHead className="text-center text-[10px] min-w-[220px]">{t("clientName")}</TableHead>
+                  <TableHead className="text-center min-w-[90px] text-[10px]">{t("monetization")}</TableHead>
                   <TableHead className="text-center p-0.5 text-[10px] font-black min-w-[18px] sm:min-w-[22px] text-slate-300">1</TableHead>
                   <TableHead className="text-center p-0.5 text-[10px] font-black min-w-[18px] sm:min-w-[22px] text-slate-300">2</TableHead>
                   <TableHead className="text-center p-0.5 text-[10px] font-black min-w-[18px] sm:min-w-[22px] text-slate-300">3</TableHead>
@@ -327,8 +330,8 @@ function PublishingPage() {
                   <TableHead className="text-center p-0.5 text-[10px] font-black min-w-[18px] sm:min-w-[22px] text-slate-300">10</TableHead>
                   <TableHead className="text-center p-0.5 text-[10px] font-black min-w-[18px] sm:min-w-[22px] text-slate-300">11</TableHead>
                   <TableHead className="text-center p-0.5 text-[10px] font-black min-w-[18px] sm:min-w-[22px] text-slate-300">12</TableHead>
-                  <TableHead className="text-center min-w-[200px] text-[10px]">ملاحظات</TableHead>
-                  <TableHead className="text-center text-[10px]">الرابط</TableHead>
+                  <TableHead className="text-center min-w-[200px] text-[10px]">{t("notes")}</TableHead>
+                  <TableHead className="text-center text-[10px]">{t("link")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -337,7 +340,7 @@ function PublishingPage() {
                     <TableCell colSpan={19} className="text-center py-8">
                       <div className="flex items-center justify-center gap-2">
                         <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                        <span>جاري تحميل قنوات التتبع…</span>
+                        <span>{t("loading")}</span>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -345,7 +348,7 @@ function PublishingPage() {
                 {!isLoading && filteredTasks.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={19} className="text-center text-muted-foreground py-8">
-                      لا توجد نتائج مطابقة للفلاتر الحالية.
+                      {lang === "ar" ? "لا توجد نتائج مطابقة للفلاتر الحالية." : "No results matching the current filters."}
                     </TableCell>
                   </TableRow>
                 )}
@@ -388,10 +391,10 @@ function PublishingPage() {
                                 }
                               >
                                 <SelectTrigger className="w-28 h-7 bg-slate-900 border-slate-700 text-[10px] mx-auto">
-                                  <SelectValue placeholder="اختر موظف" />
+                                  <SelectValue placeholder={lang === "ar" ? "اختر موظف" : "Select staff"} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="none">غير معين</SelectItem>
+                                  <SelectItem value="none">{lang === "ar" ? "غير معين" : "Unassigned"}</SelectItem>
                                   {staff.map((s) => (
                                     <SelectItem key={s.id} value={s.id} className="text-xs">
                                       {s.fullName || s.email}
@@ -402,7 +405,7 @@ function PublishingPage() {
                             </div>
                           ) : (
                             <span className="text-[10px] text-slate-300">
-                              {staff.find((s) => s.id === t.assignedTo)?.fullName ?? "غير معين"}
+                              {staff.find((s) => s.id === t.assignedTo)?.fullName ?? (lang === "ar" ? "غير معين" : "Unassigned")}
                             </span>
                           )}
                         </TableCell>
@@ -416,11 +419,11 @@ function PublishingPage() {
                         <TableCell className="text-center py-1.5">
                           {t.isMonetized !== false ? (
                             <span className="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold bg-[#9b51e0] text-white shadow-sm border border-purple-500/20">
-                              مفعلة
+                              {lang === "ar" ? "مفعلة" : "Monetized"}
                             </span>
                           ) : (
                             <span className="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold bg-[#334155] text-slate-300 border border-slate-600">
-                              غير مفعلة
+                              {lang === "ar" ? "غير مفعلة" : "Not Monetized"}
                             </span>
                           )}
                         </TableCell>
@@ -673,7 +676,7 @@ function PublishingPage() {
                                 e.currentTarget.blur();
                               }
                             }}
-                            placeholder="ملاحظات..."
+                            placeholder={lang === "ar" ? "ملاحظات..." : "Notes..."}
                             className="h-8 bg-slate-900 border-slate-700 text-xs w-full text-slate-100 text-center"
                           />
                         </TableCell>
@@ -688,7 +691,7 @@ function PublishingPage() {
                               className="text-slate-300 hover:text-white inline-flex items-center gap-1 text-xs justify-center w-full"
                             >
                               <ExternalLink className="w-3 h-3" />
-                              فتح
+                              {lang === "ar" ? "فتح" : "Open"}
                             </a>
                           ) : (
                             "—"

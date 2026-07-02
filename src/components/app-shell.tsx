@@ -6,43 +6,45 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Brand } from "@/components/brand";
 import type { AppRole } from "@/hooks/use-auth";
+import { useLanguage } from "@/hooks/use-language";
 
 const staffNav = [
-  { to: "/dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
-  { to: "/clients", label: "العملاء", icon: Users },
-  { to: "/channels", label: "القنوات", icon: Youtube },
-  { to: "/publishing", label: "نشر القنوات", icon: ClipboardCheck },
-  { to: "/revenue", label: "الإيرادات الشهرية", icon: DollarSign },
-  { to: "/invoices", label: "الفواتير", icon: FileText },
-  { to: "/payments", label: "المدفوعات", icon: CreditCard },
-  { to: "/statements", label: "كشوف الحساب", icon: FileSpreadsheet },
-  { to: "/reports", label: "التقارير", icon: FileText },
+  { to: "/dashboard", label: "لوحة التحكم", key: "dashboard", icon: LayoutDashboard },
+  { to: "/clients", label: "العملاء", key: "clients", icon: Users },
+  { to: "/channels", label: "القنوات", key: "channels", icon: Youtube },
+  { to: "/publishing", label: "نشر القنوات", key: "publishing", icon: ClipboardCheck },
+  { to: "/revenue", label: "الإيرادات الشهرية", key: "revenue", icon: DollarSign },
+  { to: "/invoices", label: "الفواتير", key: "invoices", icon: FileText },
+  { to: "/payments", label: "المدفوعات", key: "payments", icon: CreditCard },
+  { to: "/statements", label: "كشوف الحساب", key: "statements", icon: FileSpreadsheet },
+  { to: "/reports", label: "التقارير", key: "reports", icon: FileText },
 ];
 
 const adminExtras = [
-  { to: "/users", label: "المستخدمون", icon: Users },
-  { to: "/settings", label: "الإعدادات", icon: Settings },
+  { to: "/users", label: "المستخدمون", key: "users", icon: Users },
+  { to: "/settings", label: "الإعدادات", key: "settings", icon: Settings },
 ];
 
 const clientNav = [
-  { to: "/dashboard", label: "لوحتي", icon: LayoutDashboard },
-  { to: "/channels", label: "قنواتي", icon: Youtube },
-  { to: "/revenue", label: "إيراداتي", icon: DollarSign },
-  { to: "/invoices", label: "فواتيري", icon: FileText },
-  { to: "/payments", label: "مدفوعاتي", icon: CreditCard },
-  { to: "/statements", label: "كشف الحساب", icon: FileSpreadsheet },
-  { to: "/reports", label: "تقاريري", icon: FileText },
+  { to: "/dashboard", label: "لوحتي", key: "dashboard", icon: LayoutDashboard },
+  { to: "/channels", label: "قنواتي", key: "channels", icon: Youtube },
+  { to: "/revenue", label: "إيراداتي", key: "revenue", icon: DollarSign },
+  { to: "/invoices", label: "فواتيري", key: "invoices", icon: FileText },
+  { to: "/payments", label: "مدفوعاتي", key: "payments", icon: CreditCard },
+  { to: "/statements", label: "كشف الحساب", key: "statements", icon: FileSpreadsheet },
+  { to: "/reports", label: "تقاريري", key: "reports", icon: FileText },
 ];
 
 export function AppShell({ children, roles, email }: { children: ReactNode; roles: AppRole[]; email?: string | null }) {
+  const { lang, setLang, t } = useLanguage();
   const isAdmin = roles.includes("admin");
   const isEmployee = roles.includes("employee") && !isAdmin;
   const nav = isAdmin
     ? [...staffNav, ...adminExtras]
     : isEmployee
     ? [
-        { to: "/channels", label: "القنوات", icon: Youtube },
-        { to: "/publishing", label: "نشر القنوات", icon: ClipboardCheck },
+        { to: "/channels", label: "القنوات", key: "channels", icon: Youtube },
+        { to: "/publishing", label: "نشر القنوات", key: "publishing", icon: ClipboardCheck },
       ]
     : clientNav;
   const navigate = useNavigate();
@@ -54,7 +56,9 @@ export function AppShell({ children, roles, email }: { children: ReactNode; role
     navigate({ to: "/auth", replace: true });
   }
 
-  const roleLabel = isAdmin ? "مسؤول" : roles.includes("employee") ? "موظف" : "عميل";
+  const roleLabel = lang === "ar" 
+    ? (isAdmin ? "مسؤول" : roles.includes("employee") ? "موظف" : "عميل") 
+    : (isAdmin ? "Admin" : roles.includes("employee") ? "Employee" : "Client");
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -67,8 +71,11 @@ export function AppShell({ children, roles, email }: { children: ReactNode; role
       )}
 
       <aside className={cn(
-        "fixed lg:static inset-y-0 right-0 z-40 w-64 bg-sidebar border-l border-sidebar-border flex flex-col transition-transform print:hidden",
-        open ? "translate-x-0" : "translate-x-full lg:translate-x-0"
+        "fixed lg:static inset-y-0 z-40 w-64 bg-sidebar flex flex-col transition-transform print:hidden",
+        lang === "ar" ? "right-0 border-l border-sidebar-border" : "left-0 border-r border-sidebar-border",
+        open 
+          ? "translate-x-0" 
+          : (lang === "ar" ? "translate-x-full lg:translate-x-0" : "-translate-x-full lg:translate-x-0")
       )}>
         <div className="p-5 border-b border-sidebar-border">
           <Brand size="lg" />
@@ -88,19 +95,27 @@ export function AppShell({ children, roles, email }: { children: ReactNode; role
                 )}
               >
                 <Icon className="w-[18px] h-[18px] shrink-0" />
-                {item.label}
+                {item.key ? t(item.key) : item.label}
               </Link>
             );
           })}
         </nav>
-        <div className="p-3 border-t border-sidebar-border">
-          <div className="px-3 py-2 mb-2">
+        <div className="p-3 border-t border-sidebar-border space-y-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full justify-center border-slate-800 hover:bg-slate-900 text-slate-200"
+            onClick={() => setLang(lang === "ar" ? "en" : "ar")}
+          >
+            🌐 {lang === "ar" ? "English" : "العربية"}
+          </Button>
+          <div className="px-3 py-1">
             <div className="text-xs text-muted-foreground">{roleLabel}</div>
             <div className="text-sm font-medium truncate" dir="ltr">{email}</div>
           </div>
           <Button variant="outline" size="sm" className="w-full" onClick={signOut}>
-            <LogOut className="w-4 h-4 ml-2" />
-            تسجيل الخروج
+            <LogOut className={cn("w-4 h-4", lang === "ar" ? "ml-2" : "mr-2")} />
+            {t("logout")}
           </Button>
         </div>
       </aside>
@@ -108,8 +123,15 @@ export function AppShell({ children, roles, email }: { children: ReactNode; role
       <div className="flex-1 flex flex-col min-w-0 print:p-0">
         <header className="lg:hidden flex items-center justify-between p-4 border-b bg-card print:hidden">
           <Button size="icon" variant="ghost" onClick={() => setOpen(!open)}><Menu /></Button>
-          <span className="font-extrabold text-white text-base">Orient Digital</span>
-          <div className="w-10" />
+          <span className="font-extrabold text-white text-base">{t("brandName")}</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs text-slate-300 hover:text-white"
+            onClick={() => setLang(lang === "ar" ? "en" : "ar")}
+          >
+            {lang === "ar" ? "EN" : "عربي"}
+          </Button>
         </header>
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-auto print:p-0">{children}</main>
       </div>

@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Pencil, Trash2, Youtube, ExternalLink, Search, Download } from "lucide-react";
 import { STATUS_AR } from "@/lib/format";
 import { exportChannelsToExcel } from "@/lib/exports";
+import { useLanguage } from "@/hooks/use-language";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,6 +56,7 @@ const statusVariant: Record<string, string> = {
 
 function ChannelsPage() {
   const { isStaff, isEmployee, isAdmin, user } = useAuth();
+  const { t, lang } = useLanguage();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Channel | null>(null);
@@ -256,10 +258,10 @@ function ChannelsPage() {
         <div className="space-y-1">
           <h1 className="text-2xl sm:text-3xl font-black flex items-center gap-2.5 text-white">
             <Youtube className="w-8 h-8 text-primary" />
-            القنوات
+            {t("channels")}
           </h1>
           <p className="text-sm text-muted-foreground mt-1.5">
-            {isStaff ? "إدارة قنوات اليوتيوب لكل عميل" : "قنواتك المسجلة"}
+            {isStaff ? (lang === "ar" ? "إدارة قنوات اليوتيوب لكل عميل" : "Manage YouTube channels for each client") : (lang === "ar" ? "قنواتك المسجلة" : "Your registered channels")}
           </p>
         </div>
         <div className="flex gap-2">
@@ -268,7 +270,7 @@ function ChannelsPage() {
             className="border-primary/20 hover:bg-primary/10 text-white flex items-center gap-1.5"
             onClick={() => exportChannelsToExcel("orient-channels-report.xlsx", filtered, isStaff)}
           >
-            <Download className="w-4 h-4 ml-1" /> تصدير Excel
+            <Download className="w-4 h-4 ml-1" /> {t("exportExcel")}
           </Button>
 
           {isAdmin && (
@@ -281,19 +283,19 @@ function ChannelsPage() {
             >
               <DialogTrigger asChild>
                 <Button onClick={openNew} className="btn-header-action">
-                  <Plus className="w-4 h-4 ml-1" /> قناة جديدة
+                  <Plus className="w-4 h-4 ml-1" /> {t("newChannel")}
                 </Button>
               </DialogTrigger>
-            <DialogContent dir="rtl">
+            <DialogContent className="bg-slate-950 border border-slate-800 text-slate-100" dir={lang === "ar" ? "rtl" : "ltr"}>
               <DialogHeader>
-                <DialogTitle>{editing ? "تعديل قناة" : "قناة جديدة"}</DialogTitle>
+                <DialogTitle className="text-white text-right font-bold">{editing ? t("editChannel") : t("newChannel")}</DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4 text-right">
                 <div className="space-y-2">
-                  <Label>العميل *</Label>
+                  <Label className="text-slate-300">{lang === "ar" ? "العميل *" : "Client *"}</Label>
                   <Select value={clientId} onValueChange={setClientId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر العميل" />
+                    <SelectTrigger className="bg-slate-900 border-slate-700">
+                      <SelectValue placeholder={lang === "ar" ? "اختر العميل" : "Select client"} />
                     </SelectTrigger>
                     <SelectContent>
                       {clients.map((c) => (
@@ -305,23 +307,24 @@ function ChannelsPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>اسم القناة *</Label>
-                  <Input name="name" required defaultValue={editing?.name} />
+                  <Label className="text-slate-300">{lang === "ar" ? "اسم القناة *" : "Channel Name *"}</Label>
+                  <Input name="name" required defaultValue={editing?.name} className="bg-slate-900 border-slate-700" />
                 </div>
                 <div className="space-y-2">
-                  <Label>رابط القناة</Label>
+                  <Label className="text-slate-300">{lang === "ar" ? "رابط القناة" : "Channel Link"}</Label>
                   <Input
                     name="link"
                     type="url"
                     defaultValue={editing?.link ?? ""}
                     dir="ltr"
                     placeholder="https://youtube.com/@channel"
+                    className="bg-slate-900 border-slate-700"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <Label>السيستم</Label>
+                    <Label className="text-slate-300">{lang === "ar" ? "السيستم" : "System"}</Label>
                     <Select
                       value={systemId}
                       onValueChange={(val) => {
@@ -329,29 +332,30 @@ function ChannelsPage() {
                         if (val === "none") setSystemPercentage(0);
                       }}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="اختر السيستم" />
+                      <SelectTrigger className="bg-slate-900 border-slate-700">
+                        <SelectValue placeholder={lang === "ar" ? "اختر السيستم" : "Select system"} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">بدون سيستم (مباشر)</SelectItem>
+                        <SelectItem value="none">{lang === "ar" ? "بدون سيستم (مباشر)" : "No system (Direct)"}</SelectItem>
                         {systems.map((s) => (
                           <SelectItem key={s.id} value={s.id}>
                             {s.name}
                           </SelectItem>
                         ))}
-                        <SelectItem value="new">+ إضافة سيستم جديد...</SelectItem>
+                        <SelectItem value="new">{lang === "ar" ? "+ إضافة سيستم جديد..." : "+ Add new system..."}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {systemId === "new" && (
                     <div className="space-y-2 animate-fade-in">
-                      <Label>اسم السيستم الجديد *</Label>
+                      <Label className="text-slate-300">{lang === "ar" ? "اسم السيستم الجديد *" : "New System Name *"}</Label>
                       <Input
                         required
-                        placeholder="أدخل اسم السيستم الجديد"
+                        placeholder={lang === "ar" ? "أدخل اسم السيستم الجديد" : "Enter new system name"}
                         value={newSystemName}
                         onChange={(e) => setNewSystemName(e.target.value)}
+                        className="bg-slate-900 border-slate-700"
                       />
                     </div>
                   )}
@@ -359,7 +363,7 @@ function ChannelsPage() {
 
                 <div className={`grid ${systemId !== "none" ? "grid-cols-3" : "grid-cols-2"} gap-3`}>
                   <div className="space-y-2">
-                    <Label>نسبة العميل % *</Label>
+                    <Label className="text-slate-300">{lang === "ar" ? "نسبة العميل % *" : "Client % *"}</Label>
                     <Input
                       name="client_percentage"
                       type="number"
@@ -370,12 +374,13 @@ function ChannelsPage() {
                       value={clientPercentage}
                       onChange={(e) => setClientPercentage(Number(e.target.value) || 0)}
                       dir="ltr"
+                      className="bg-slate-900 border-slate-700"
                     />
                   </div>
 
                   {systemId !== "none" && (
                     <div className="space-y-2">
-                      <Label>نسبة السيستم % *</Label>
+                      <Label className="text-slate-300">{lang === "ar" ? "نسبة السيستم % *" : "System % *"}</Label>
                       <Input
                         name="system_percentage"
                         type="number"
@@ -386,12 +391,13 @@ function ChannelsPage() {
                         value={systemPercentage}
                         onChange={(e) => setSystemPercentage(Number(e.target.value) || 0)}
                         dir="ltr"
+                        className="bg-slate-900 border-slate-700"
                       />
                     </div>
                   )}
 
                   <div className="space-y-2">
-                    <Label>نسبة الشركة %</Label>
+                    <Label className="text-slate-300">{lang === "ar" ? "نسبة الشركة %" : "Company %"}</Label>
                     <Input
                       type="number"
                       value={companyPercentage}
@@ -410,28 +416,28 @@ function ChannelsPage() {
                     onCheckedChange={(checked) => setIsMonetized(!!checked)}
                   />
                   <Label htmlFor="is_monetized" className="cursor-pointer text-sm font-medium">
-                    مفعلة أرباح
+                    {t("monetization")}
                   </Label>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>الحالة</Label>
+                  <Label className="text-slate-300">{t("status")}</Label>
                   <Select value={status} onValueChange={setStatus}>
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-slate-900 border-slate-700">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {["active", "paused", "suspended", "closed"].map((s) => (
                         <SelectItem key={s} value={s}>
-                          {STATUS_AR[s]}
+                          {lang === "ar" ? STATUS_AR[s] : s.charAt(0).toUpperCase() + s.slice(1)}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <DialogFooter>
+                <DialogFooter className="gap-2 pt-2">
                   <Button type="submit" disabled={save.isPending}>
-                    حفظ
+                    {save.isPending ? t("loading") : t("save")}
                   </Button>
                 </DialogFooter>
               </form>
@@ -445,7 +451,7 @@ function ChannelsPage() {
         <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="بحث باسم القناة أو العميل أو السيستم…"
+            placeholder={t("searchChannelPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="search-input-padding"
@@ -453,11 +459,11 @@ function ChannelsPage() {
         </div>
         {isStaff && (
           <Select value={filterClient} onValueChange={setFilterClient}>
-            <SelectTrigger className="w-48">
-              <SelectValue />
+            <SelectTrigger className="w-48 bg-slate-900 border-slate-700">
+              <SelectValue placeholder={lang === "ar" ? "كل العملاء" : "All clients"} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">كل العملاء</SelectItem>
+              <SelectItem value="all">{lang === "ar" ? "كل العملاء" : "All clients"}</SelectItem>
               {clients.map((c) => (
                 <SelectItem key={c.id} value={c.id}>
                   {c.name}
@@ -467,12 +473,12 @@ function ChannelsPage() {
           </Select>
         )}
         <Select value={filterSystem} onValueChange={setFilterSystem}>
-          <SelectTrigger className="w-44">
-            <SelectValue />
+          <SelectTrigger className="w-44 bg-slate-900 border-slate-700">
+            <SelectValue placeholder={lang === "ar" ? "كل السيستمز" : "All systems"} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">كل السيستمز</SelectItem>
-            <SelectItem value="none">مباشر (بدون سيستم)</SelectItem>
+            <SelectItem value="all">{lang === "ar" ? "كل السيستمز" : "All systems"}</SelectItem>
+            <SelectItem value="none">{lang === "ar" ? "مباشر (بدون سيستم)" : "Direct (No system)"}</SelectItem>
             {systems.map((s) => (
               <SelectItem key={s.id} value={s.id}>
                 {s.name}
@@ -481,26 +487,26 @@ function ChannelsPage() {
           </SelectContent>
         </Select>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-40">
-            <SelectValue />
+          <SelectTrigger className="w-40 bg-slate-900 border-slate-700">
+            <SelectValue placeholder={t("status")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">كل الحالات</SelectItem>
+            <SelectItem value="all">{lang === "ar" ? "كل الحالات" : "All statuses"}</SelectItem>
             {["active", "paused", "suspended", "closed"].map((s) => (
               <SelectItem key={s} value={s}>
-                {STATUS_AR[s]}
+                {lang === "ar" ? STATUS_AR[s] : s.charAt(0).toUpperCase() + s.slice(1)}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={filterMonetized} onValueChange={setFilterMonetized}>
-          <SelectTrigger className="w-40">
-            <SelectValue />
+          <SelectTrigger className="w-40 bg-slate-900 border-slate-700">
+            <SelectValue placeholder={t("monetization")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">تفعيل الأرباح</SelectItem>
-            <SelectItem value="yes">أرباح مفعلة</SelectItem>
-            <SelectItem value="no">أرباح غير مفعلة</SelectItem>
+            <SelectItem value="all">{lang === "ar" ? "كل قنوات الأرباح" : "All monetization statuses"}</SelectItem>
+            <SelectItem value="yes">{lang === "ar" ? "أرباح مفعلة" : "Monetized"}</SelectItem>
+            <SelectItem value="no">{lang === "ar" ? "أرباح غير مفعلة" : "Not monetized"}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -511,30 +517,30 @@ function ChannelsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead className="text-right w-12">#</TableHead>
-                <TableHead className="text-right">القناة</TableHead>
-                <TableHead className="text-right">العميل</TableHead>
-                {isAdmin && <TableHead className="text-right">السيستم</TableHead>}
-                {isAdmin && <TableHead className="text-center">نسبة العميل</TableHead>}
-                {isAdmin && <TableHead className="text-center">نسبة السيستم</TableHead>}
-                {isAdmin && <TableHead className="text-center">نسبة الشركة</TableHead>}
-                <TableHead className="text-center">تفعيل الأرباح</TableHead>
-                <TableHead className="text-right">الحالة</TableHead>
-                <TableHead className="text-right">الرابط</TableHead>
-                {isAdmin && <TableHead className="text-left">إجراءات</TableHead>}
+                <TableHead className="text-right">{t("channelName")}</TableHead>
+                <TableHead className="text-right">{t("clientName")}</TableHead>
+                {isAdmin && <TableHead className="text-right">{t("systemName")}</TableHead>}
+                {isAdmin && <TableHead className="text-center">{t("clientPercent")}</TableHead>}
+                {isAdmin && <TableHead className="text-center">{t("systemPercent")}</TableHead>}
+                {isAdmin && <TableHead className="text-center">{t("companyPercent")}</TableHead>}
+                <TableHead className="text-center">{t("monetization")}</TableHead>
+                <TableHead className="text-right">{t("status")}</TableHead>
+                <TableHead className="text-right">{t("link")}</TableHead>
+                {isAdmin && <TableHead className="text-left">{t("actions")}</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading && (
                 <TableRow>
                   <TableCell colSpan={isAdmin ? 11 : 6} className="text-center">
-                    جاري التحميل…
+                    {t("loading")}
                   </TableCell>
                 </TableRow>
               )}
               {!isLoading && filtered.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={isAdmin ? 11 : 6} className="text-center text-muted-foreground py-8">
-                    لا توجد قنوات
+                    {lang === "ar" ? "لا توجد قنوات" : "No channels found"}
                   </TableCell>
                 </TableRow>
               )}
@@ -543,7 +549,7 @@ function ChannelsPage() {
                   <TableCell className="font-semibold text-slate-400 text-right">{index + 1}</TableCell>
                   <TableCell className="font-medium text-right">{c.name}</TableCell>
                   <TableCell className="text-right">{c.clients?.name ?? "—"}</TableCell>
-                  {isAdmin && <TableCell className="text-right text-white">{c.systems?.name ?? "مباشر"}</TableCell>}
+                  {isAdmin && <TableCell className="text-right text-white">{c.systems?.name ?? (lang === "ar" ? "مباشر" : "Direct")}</TableCell>}
                   {isAdmin && (
                     <TableCell dir="ltr" className="text-center text-white">
                       {c.client_percentage}%
@@ -562,15 +568,17 @@ function ChannelsPage() {
                   <TableCell className="text-center">
                     {c.is_monetized !== false ? (
                       <Badge className="bg-primary text-primary-foreground font-bold rounded-full border-none px-2.5 py-0.5 hover:bg-primary">
-                        مفعلة
+                        {t("monetized")}
                       </Badge>
                     ) : (
                       <Badge className="bg-slate-600 text-slate-200 rounded-full border-none px-2.5 py-0.5 hover:bg-slate-600">
-                        غير مفعلة
+                        {t("notMonetized")}
                       </Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-right text-white font-medium">{STATUS_AR[c.status]}</TableCell>
+                  <TableCell className="text-right text-white font-medium">
+                    {lang === "ar" ? STATUS_AR[c.status] : c.status.charAt(0).toUpperCase() + c.status.slice(1)}
+                  </TableCell>
                   <TableCell className="text-right">
                     {c.link ? (
                       <a
@@ -580,7 +588,7 @@ function ChannelsPage() {
                         className="text-slate-100 hover:text-white inline-flex items-center gap-1"
                       >
                         <ExternalLink className="w-3 h-3" />
-                        فتح
+                        {lang === "ar" ? "فتح" : "Open"}
                       </a>
                     ) : (
                       "—"
@@ -606,14 +614,14 @@ function ChannelsPage() {
       </Card>
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir={lang === "ar" ? "rtl" : "ltr"} className="bg-slate-900 border border-slate-800 text-slate-100">
           <AlertDialogHeader>
-            <AlertDialogTitle>هل أنت متأكد تماماً من حذف هذه القناة؟</AlertDialogTitle>
-            <AlertDialogDescription>
-              هذا الإجراء سيقوم بحذف القناة نهائياً من النظام. سيتم الاحتفاظ بجميع السجلات المالية السابقة المرتبطة بها.
+            <AlertDialogTitle className="text-white text-right">{lang === "ar" ? "هل أنت متأكد تماماً من حذف هذه القناة؟" : "Are you absolutely sure you want to delete this channel?"}</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-400 text-right">
+              {lang === "ar" ? "هذا الإجراء سيقوم بحذف القناة نهائياً من النظام. سيتم الاحتفاظ بجميع السجلات المالية السابقة المرتبطة بها." : "This action will permanently delete this channel from the system. Past financial records associated with it will be preserved."}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="gap-2">
             <AlertDialogAction
               onClick={() => {
                 if (deleteTarget) {
@@ -623,9 +631,9 @@ function ChannelsPage() {
               }}
               className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
             >
-              نعم، احذف القناة
+              {lang === "ar" ? "نعم، احذف القناة" : "Yes, delete channel"}
             </AlertDialogAction>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogCancel className="bg-slate-800 text-white border-slate-700 hover:bg-slate-700">{t("cancel")}</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

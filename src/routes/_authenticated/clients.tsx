@@ -15,6 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Pencil, Trash2, Users, Search } from "lucide-react";
 import { money, parsePaymentMethod } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/hooks/use-language";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,6 +38,7 @@ type Client = {
 
 function ClientsPage() {
   const { isStaff } = useAuth();
+  const { t, lang } = useLanguage();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Client | null>(null);
@@ -158,7 +160,7 @@ function ClientsPage() {
     setOpen(true);
   };
 
-  if (!isStaff) return <div className="text-muted-foreground">هذه الصفحة متاحة للموظفين فقط.</div>;
+  if (!isStaff) return <div className="text-muted-foreground">{lang === "ar" ? "هذه الصفحة متاحة للموظفين فقط." : "This page is only available for staff."}</div>;
 
   return (
     <div className="space-y-6">
@@ -166,46 +168,48 @@ function ClientsPage() {
         <div className="space-y-1">
           <h1 className="text-2xl sm:text-3xl font-black flex items-center gap-2.5 text-white">
             <Users className="w-8 h-8 text-primary" />
-            العملاء
+            {t("clients")}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1.5">إدارة بيانات العملاء وقنواتهم</p>
+          <p className="text-sm text-muted-foreground mt-1.5">
+            {lang === "ar" ? "إدارة بيانات العملاء وقنواتهم" : "Manage clients data and their channels"}
+          </p>
         </div>
         <Dialog open={open} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
-            <Button className="btn-header-action"><Plus className="w-4 h-4 ml-1" /> عميل جديد</Button>
+            <Button className="btn-header-action"><Plus className="w-4 h-4 ml-1" /> {t("newClient")}</Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg" dir="rtl">
-            <DialogHeader><DialogTitle>{editing ? "تعديل عميل" : "عميل جديد"}</DialogTitle></DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2"><Label>الاسم *</Label><Input name="name" required defaultValue={editing?.name} /></div>
+          <DialogContent className="max-w-lg bg-slate-950 border-slate-800 text-slate-100" dir={lang === "ar" ? "rtl" : "ltr"}>
+            <DialogHeader><DialogTitle className="text-white text-right font-bold">{editing ? t("editClient") : t("newClient")}</DialogTitle></DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4 text-right">
+              <div className="space-y-2"><Label className="text-slate-300">{lang === "ar" ? "الاسم *" : "Name *"}</Label><Input name="name" required defaultValue={editing?.name} className="bg-slate-900 border-slate-700" /></div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2"><Label>رقم الهاتف</Label><Input name="phone" defaultValue={editing?.phone ?? ""} dir="ltr" /></div>
+                <div className="space-y-2"><Label className="text-slate-300">{t("clientPhone")}</Label><Input name="phone" defaultValue={editing?.phone ?? ""} dir="ltr" className="bg-slate-900 border-slate-700" /></div>
                 <div className="space-y-2">
-                  <Label>إنستاباي / محفظة إلكترونية</Label>
+                  <Label className="text-slate-300">{t("clientWalletInstapay")}</Label>
                   <div className="flex gap-2">
                     <Select value={paymentType} onValueChange={(val: any) => setPaymentType(val)} name="payment_type">
                       <SelectTrigger className="w-[100px] bg-slate-900 border-slate-700">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="wallet">محفظة</SelectItem>
-                        <SelectItem value="instapay">إنستاباي</SelectItem>
+                        <SelectItem value="wallet">{t("wallet")}</SelectItem>
+                        <SelectItem value="instapay">{t("instapay")}</SelectItem>
                       </SelectContent>
                     </Select>
                     <Input 
                       name="payment_value" 
                       defaultValue={parsePaymentMethod(editing?.vodafone_cash).value} 
-                      placeholder={paymentType === "instapay" ? "عنوان InstaPay..." : "رقم المحفظة..."}
+                      placeholder={paymentType === "instapay" ? (lang === "ar" ? "عنوان InstaPay..." : "InstaPay address...") : (lang === "ar" ? "رقم المحفظة..." : "Wallet number...")}
                       dir="ltr"
-                      className="flex-1"
+                      className="flex-1 bg-slate-900 border-slate-700"
                     />
                   </div>
                 </div>
               </div>
-              <div className="space-y-2"><Label>البريد الإلكتروني</Label><Input name="email" type="email" defaultValue={editing?.email ?? ""} dir="ltr" /></div>
-              <div className="space-y-2"><Label>ملاحظات</Label><Textarea name="notes" defaultValue={editing?.notes ?? ""} /></div>
-              <DialogFooter>
-                <Button type="submit" disabled={save.isPending}>{save.isPending ? "..." : "حفظ"}</Button>
+              <div className="space-y-2"><Label className="text-slate-300">{lang === "ar" ? "البريد الإلكتروني" : "Email"}</Label><Input name="email" type="email" defaultValue={editing?.email ?? ""} dir="ltr" className="bg-slate-900 border-slate-700" /></div>
+              <div className="space-y-2"><Label className="text-slate-300">{t("notes")}</Label><Textarea name="notes" defaultValue={editing?.notes ?? ""} className="bg-slate-900 border-slate-700" /></div>
+              <DialogFooter className="gap-2">
+                <Button type="submit" disabled={save.isPending}>{save.isPending ? t("loading") : t("save")}</Button>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -215,17 +219,17 @@ function ClientsPage() {
       <div className="flex flex-wrap gap-3 items-center justify-between">
         <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="بحث بالاسم أو البريد أو الهاتف…" value={search} onChange={(e) => setSearch(e.target.value)} className="search-input-padding" />
+          <Input placeholder={t("searchClientPlaceholder")} value={search} onChange={(e) => setSearch(e.target.value)} className="search-input-padding" />
         </div>
 
         <Select value={filterPayment} onValueChange={setFilterPayment}>
           <SelectTrigger className="w-48 bg-slate-900 border-slate-700">
-            <SelectValue placeholder="طريقة التحويل" />
+            <SelectValue placeholder={t("paymentType")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">كل طرق الدفع</SelectItem>
-            <SelectItem value="instapay">إنستاباي فقط</SelectItem>
-            <SelectItem value="wallet">محفظة إلكترونية فقط</SelectItem>
+            <SelectItem value="all">{lang === "ar" ? "كل طرق الدفع" : "All payment methods"}</SelectItem>
+            <SelectItem value="instapay">{lang === "ar" ? "إنستاباي فقط" : "InstaPay only"}</SelectItem>
+            <SelectItem value="wallet">{lang === "ar" ? "محفظة إلكترونية فقط" : "E-Wallet only"}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -236,19 +240,19 @@ function ClientsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead className="text-right w-12">#</TableHead>
-                <TableHead className="text-right">الاسم</TableHead>
-                <TableHead className="text-right">الهاتف</TableHead>
-                <TableHead className="text-right">إنستاباي / محفظة</TableHead>
-                <TableHead className="text-right">البريد</TableHead>
-                <TableHead className="text-center">عدد القنوات</TableHead>
-                <TableHead className="text-left">إجمالي الإيرادات</TableHead>
-                <TableHead className="text-left">إجمالي المستحقات</TableHead>
-                <TableHead className="text-left">إجراءات</TableHead>
+                <TableHead className="text-right">{lang === "ar" ? "الاسم" : "Name"}</TableHead>
+                <TableHead className="text-right">{t("clientPhone")}</TableHead>
+                <TableHead className="text-right">{t("clientWalletInstapay")}</TableHead>
+                <TableHead className="text-right">{t("clientEmail")}</TableHead>
+                <TableHead className="text-center">{t("channelsCount")}</TableHead>
+                <TableHead className="text-left">{t("totalRevenue")}</TableHead>
+                <TableHead className="text-left">{t("clientShare")}</TableHead>
+                <TableHead className="text-left">{t("actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading && <TableRow><TableCell colSpan={9} className="text-center">جاري التحميل…</TableCell></TableRow>}
-              {!isLoading && filtered.length === 0 && <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">لا يوجد عملاء</TableCell></TableRow>}
+              {isLoading && <TableRow><TableCell colSpan={9} className="text-center">{t("loading")}</TableCell></TableRow>}
+              {!isLoading && filtered.length === 0 && <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">{lang === "ar" ? "لا يوجد عملاء" : "No clients found"}</TableCell></TableRow>}
               {filtered.map((c, index) => {
                 const s = (stats as any)[c.id] ?? { channels: 0, revenue: 0, payout: 0 };
                 return (
@@ -267,11 +271,11 @@ function ClientsPage() {
                               </span>
                               {parsed.type === "instapay" ? (
                                 <span className="text-[9px] bg-purple-500/15 text-purple-300 font-extrabold px-1.5 py-0.5 rounded border border-purple-500/20">
-                                  إنستاباي
+                                  {t("instapay")}
                                 </span>
                               ) : (
                                 <span className="text-[9px] bg-sky-500/15 text-sky-300 font-extrabold px-1.5 py-0.5 rounded border border-sky-500/20">
-                                  محفظة
+                                  {t("wallet")}
                                 </span>
                               )}
                             </div>
@@ -300,14 +304,14 @@ function ClientsPage() {
       </Card>
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir={lang === "ar" ? "rtl" : "ltr"} className="bg-slate-900 border border-slate-800 text-slate-100">
           <AlertDialogHeader>
-            <AlertDialogTitle>هل أنت متأكد تماماً من حذف هذا العميل؟</AlertDialogTitle>
-            <AlertDialogDescription>
-              هذا الإجراء سيقوم بحذف العميل نهائياً وكافة القنوات التابعة له من قاعدة البيانات. يرجى توخي الحذر الشديد!
+            <AlertDialogTitle className="text-white text-right">{lang === "ar" ? "هل أنت متأكد تماماً من حذف هذا العميل؟" : "Are you absolutely sure you want to delete this client?"}</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-400 text-right">
+              {lang === "ar" ? "هذا الإجراء سيقوم بحذف العميل نهائياً وكافة القنوات التابعة له من قاعدة البيانات. يرجى توخي الحذر الشديد!" : "This action will permanently delete the client and all associated channels from the database. Please proceed with caution!"}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="gap-2">
             <AlertDialogAction
               onClick={() => {
                 if (deleteTarget) {
@@ -317,9 +321,9 @@ function ClientsPage() {
               }}
               className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
             >
-              نعم، احذف العميل
+              {lang === "ar" ? "نعم، احذف العميل" : "Yes, delete client"}
             </AlertDialogAction>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogCancel className="bg-slate-800 text-white border-slate-700 hover:bg-slate-700">{t("cancel")}</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

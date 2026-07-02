@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown, CreditCard, History, Plus, Search, Trash2 } from "lucide-react";
 import { money, monthLabel, STATUS_AR } from "@/lib/format";
+import { useLanguage } from "@/hooks/use-language";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -55,6 +56,7 @@ const statusVariant: Record<string, string> = {
 
 function PaymentsPage() {
   const { isStaff } = useAuth();
+  const { t, lang } = useLanguage();
   const qc = useQueryClient();
   const [historyFor, setHistoryFor] = useState<Pay | null>(null);
   const [payTarget, setPayTarget] = useState<Pay | null>(null);
@@ -174,33 +176,33 @@ function PaymentsPage() {
       <div className="space-y-1">
         <h1 className="text-2xl sm:text-3xl font-black flex items-center gap-2.5 text-white">
           <CreditCard className="w-8 h-8 text-primary" />
-          المدفوعات
+          {t("paymentsTitle")}
         </h1>
-        <p className="text-sm text-muted-foreground mt-1.5">سجل التحويلات والمدفوعات الجزئية وحساب الأرصدة تلقائياً</p>
+        <p className="text-sm text-muted-foreground mt-1.5">{t("paymentsDesc")}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <Card><CardContent className="p-4"><div className="text-xs text-slate-300 font-medium">إجمالي المستحق</div><div className="text-xl font-bold text-white" dir="ltr">{money(totals.due)}</div></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="text-xs text-slate-300 font-medium">إجمالي المدفوع</div><div className="text-xl font-bold text-white" dir="ltr">{money(totals.paid)}</div></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="text-xs text-slate-300 font-medium">إجمالي المتبقي</div><div className="text-xl font-bold text-white" dir="ltr">{money(totals.remaining)}</div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="text-xs text-slate-300 font-medium">{t("dueAmount")}</div><div className="text-xl font-bold text-white" dir="ltr">{money(totals.due)}</div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="text-xs text-slate-300 font-medium">{t("paidAmount")}</div><div className="text-xl font-bold text-white" dir="ltr">{money(totals.paid)}</div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="text-xs text-slate-300 font-medium">{t("remainingAmount")}</div><div className="text-xl font-bold text-white" dir="ltr">{money(totals.remaining)}</div></CardContent></Card>
       </div>
 
       <div className="flex flex-wrap gap-3 items-end">
         <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="بحث بالقناة أو العميل…" value={search} onChange={(e) => setSearch(e.target.value)} className="search-input-padding" />
+          <Input placeholder={t("searchPaymentsPlaceholder")} value={search} onChange={(e) => setSearch(e.target.value)} className="search-input-padding" />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs text-slate-300">حالة الدفع</Label>
+          <Label className="text-xs text-slate-300">{t("allPaymentsStatus")}</Label>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="w-48 bg-slate-900 border-slate-700 justify-between text-right text-xs rounded-xl h-9 hover:bg-slate-900 hover:text-white">
                 <span className="truncate">
                   {selectedStatuses.length === 3
-                    ? "كل الحالات"
+                    ? (lang === "ar" ? "كل الحالات" : "All statuses")
                     : selectedStatuses.length === 0
-                    ? "لم يتم تحديد أي حالة"
-                    : selectedStatuses.map((s) => STATUS_AR[s]).join("، ")}
+                    ? (lang === "ar" ? "لم يتم تحديد أي حالة" : "No status selected")
+                    : selectedStatuses.map((s) => lang === "ar" ? STATUS_AR[s] : s.charAt(0).toUpperCase() + s.slice(1)).join("، ")}
                 </span>
                 <ChevronDown className="w-4 h-4 opacity-50 shrink-0" />
               </Button>
@@ -217,7 +219,7 @@ function PaymentsPage() {
                 }}
                 className="text-right justify-start cursor-pointer hover:bg-primary/20"
               >
-                مدفوع
+                {lang === "ar" ? "مدفوع" : "Paid"}
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem
                 checked={selectedStatuses.includes("unpaid")}
@@ -230,7 +232,7 @@ function PaymentsPage() {
                 }}
                 className="text-right justify-start cursor-pointer hover:bg-primary/20"
               >
-                غير مدفوع
+                {lang === "ar" ? "غير مدفوع" : "Unpaid"}
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem
                 checked={selectedStatuses.includes("partial")}
@@ -243,19 +245,19 @@ function PaymentsPage() {
                 }}
                 className="text-right justify-start cursor-pointer hover:bg-primary/20"
               >
-                مدفوع جزئياً
+                {lang === "ar" ? "مدفوع جزئياً" : "Partially Paid"}
               </DropdownMenuCheckboxItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs text-slate-300">السنة</Label>
+          <Label className="text-xs text-slate-300">{t("yearLabel")}</Label>
           <Select value={filterYear} onValueChange={setFilterYear}>
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="السنة" />
+            <SelectTrigger className="w-32 bg-slate-900 border-slate-700">
+              <SelectValue placeholder={t("yearLabel")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">كل السنوات</SelectItem>
+              <SelectItem value="all">{lang === "ar" ? "كل السنوات" : "All years"}</SelectItem>
               {availableYears.map((y) => (
                 <SelectItem key={y} value={y}>{y}</SelectItem>
               ))}
@@ -264,32 +266,32 @@ function PaymentsPage() {
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-xs text-slate-300">الشهر</Label>
+          <Label className="text-xs text-slate-300">{lang === "ar" ? "الشهر" : "Month"}</Label>
           <Select value={filterMonth} onValueChange={setFilterMonth}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="الشهر" />
+            <SelectTrigger className="w-40 bg-slate-900 border-slate-700">
+              <SelectValue placeholder={lang === "ar" ? "الشهر" : "Month"} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">كل الشهور</SelectItem>
-              <SelectItem value="01">يناير (01)</SelectItem>
-              <SelectItem value="02">فبراير (02)</SelectItem>
-              <SelectItem value="03">مارس (03)</SelectItem>
-              <SelectItem value="04">أبريل (04)</SelectItem>
-              <SelectItem value="05">مايو (05)</SelectItem>
-              <SelectItem value="06">يونيو (06)</SelectItem>
-              <SelectItem value="07">يوليو (07)</SelectItem>
-              <SelectItem value="08">أغسطس (08)</SelectItem>
-              <SelectItem value="09">سبتمبر (09)</SelectItem>
-              <SelectItem value="10">أكتوبر (10)</SelectItem>
-              <SelectItem value="11">نوفمبر (11)</SelectItem>
-              <SelectItem value="12">ديسمبر (12)</SelectItem>
+              <SelectItem value="all">{lang === "ar" ? "كل الشهور" : "All months"}</SelectItem>
+              <SelectItem value="01">{lang === "ar" ? "يناير" : "January"} (01)</SelectItem>
+              <SelectItem value="02">{lang === "ar" ? "فبراير" : "February"} (02)</SelectItem>
+              <SelectItem value="03">{lang === "ar" ? "مارس" : "March"} (03)</SelectItem>
+              <SelectItem value="04">{lang === "ar" ? "أبريل" : "April"} (04)</SelectItem>
+              <SelectItem value="05">{lang === "ar" ? "مايو" : "May"} (05)</SelectItem>
+              <SelectItem value="06">{lang === "ar" ? "يونيو" : "June"} (06)</SelectItem>
+              <SelectItem value="07">{lang === "ar" ? "يوليو" : "July"} (07)</SelectItem>
+              <SelectItem value="08">{lang === "ar" ? "أغسطس" : "August"} (08)</SelectItem>
+              <SelectItem value="09">{lang === "ar" ? "سبتمبر" : "September"} (09)</SelectItem>
+              <SelectItem value="10">{lang === "ar" ? "أكتوبر" : "October"} (10)</SelectItem>
+              <SelectItem value="11">{lang === "ar" ? "نوفمبر" : "November"} (11)</SelectItem>
+              <SelectItem value="12">{lang === "ar" ? "ديسمبر" : "December"} (12)</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {(filterYear !== "all" || filterMonth !== "all" || selectedStatuses.length !== 3) && (
-          <Button variant="ghost" size="sm" onClick={() => { setFilterYear("all"); setFilterMonth("all"); setSelectedStatuses(["paid", "unpaid", "partial"]); }} className="mb-1">
-            مسح التصفية
+          <Button variant="ghost" size="sm" onClick={() => { setFilterYear("all"); setFilterMonth("all"); setSelectedStatuses(["paid", "unpaid", "partial"]); }} className="mb-1 text-slate-300 hover:text-white">
+            {t("clearFilters")}
           </Button>
         )}
       </div>
@@ -299,20 +301,20 @@ function PaymentsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-right">الشهر</TableHead>
-                <TableHead className="text-right">القناة</TableHead>
-                <TableHead className="text-right">العميل</TableHead>
-                <TableHead className="text-right">المستحق</TableHead>
-                <TableHead className="text-right">المدفوع</TableHead>
-                <TableHead className="text-right">المتبقي</TableHead>
-                <TableHead className="text-right">الحالة</TableHead>
-                <TableHead className="text-right">آخر تحويل</TableHead>
-                <TableHead className="text-left">إجراءات</TableHead>
+                <TableHead className="text-right">{lang === "ar" ? "الشهر" : "Month"}</TableHead>
+                <TableHead className="text-right">{t("channelName")}</TableHead>
+                <TableHead className="text-right">{t("clientName")}</TableHead>
+                <TableHead className="text-right">{t("dueAmount")}</TableHead>
+                <TableHead className="text-right">{t("paidAmount")}</TableHead>
+                <TableHead className="text-right">{t("remainingAmount")}</TableHead>
+                <TableHead className="text-right">{t("status")}</TableHead>
+                <TableHead className="text-right">{t("lastTransfer")}</TableHead>
+                <TableHead className="text-left">{t("actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading && <TableRow><TableCell colSpan={9} className="text-center">…</TableCell></TableRow>}
-              {!isLoading && filtered.length === 0 && <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">لا توجد مدفوعات</TableCell></TableRow>}
+              {isLoading && <TableRow><TableCell colSpan={9} className="text-center">{t("loading")}</TableCell></TableRow>}
+              {!isLoading && filtered.length === 0 && <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">{lang === "ar" ? "لا توجد مدفوعات" : "No payments found"}</TableCell></TableRow>}
               {filtered.map((p) => (
                 <TableRow key={p.id}>
                   <TableCell className="text-right">{p.monthly_revenues ? monthLabel(p.monthly_revenues.period_month) : "—"}</TableCell>
@@ -321,17 +323,17 @@ function PaymentsPage() {
                   <TableCell dir="ltr" className="text-right">{money(p.monthly_revenues?.client_share)}</TableCell>
                   <TableCell dir="ltr" className="text-white text-right">{money(p.amount_paid)}</TableCell>
                   <TableCell dir="ltr" className="text-white text-right">{money(p.remaining)}</TableCell>
-                  <TableCell className="text-right"><Badge className={statusVariant[p.status]}>{STATUS_AR[p.status]}</Badge></TableCell>
+                  <TableCell className="text-right"><Badge className={statusVariant[p.status]}>{lang === "ar" ? STATUS_AR[p.status] : p.status.charAt(0).toUpperCase() + p.status.slice(1)}</Badge></TableCell>
                   <TableCell dir="ltr" className="text-xs text-right">{p.vodafone_transfer_no || "—"}{p.payment_date ? ` · ${p.payment_date}` : ""}</TableCell>
                   <TableCell className="text-left">
                     <div className="flex gap-2 justify-end">
                       {isStaff && p.remaining > 0 && (
                         <Button size="sm" className="bg-primary hover:bg-primary/90 text-white font-bold h-8 rounded-xl px-3" onClick={() => setPayTarget(p)}>
-                          <CreditCard className="w-4 h-4 ml-1" /> تسجيل دفع
+                          <CreditCard className={cn("w-4 h-4", lang === "ar" ? "ml-1" : "mr-1")} /> {t("registerPay")}
                         </Button>
                       )}
-                      <Button size="sm" variant="outline" className="h-8 rounded-xl px-3" onClick={() => setHistoryFor(p)}>
-                        <History className="w-4 h-4 ml-1" /> السجل
+                      <Button size="sm" variant="outline" className="h-8 rounded-xl px-3 border-slate-700 hover:bg-slate-900 text-white" onClick={() => setHistoryFor(p)}>
+                        <History className={cn("w-4 h-4", lang === "ar" ? "ml-1" : "mr-1")} /> {t("history")}
                       </Button>
                     </div>
                   </TableCell>
@@ -343,50 +345,50 @@ function PaymentsPage() {
       </Card>
 
       <Dialog open={!!historyFor} onOpenChange={(v) => !v && setHistoryFor(null)}>
-        <DialogContent dir="rtl" className="max-w-2xl">
-          <DialogHeader><DialogTitle>سجل المدفوعات</DialogTitle></DialogHeader>
+        <DialogContent dir={lang === "ar" ? "rtl" : "ltr"} className="max-w-2xl bg-slate-950 border border-slate-800 text-slate-100">
+          <DialogHeader><DialogTitle className="text-white text-right font-bold">{t("paymentHistory")}</DialogTitle></DialogHeader>
           {historyFor && (
-            <div className="space-y-4">
-              <div className="bg-muted p-3 rounded-md text-sm space-y-1">
-                <div>القناة: <strong>{historyFor.monthly_revenues?.channels?.name}</strong> · العميل: <strong>{historyFor.monthly_revenues?.channels?.clients?.name}</strong></div>
-                <div>الشهر: <strong>{historyFor.monthly_revenues ? monthLabel(historyFor.monthly_revenues.period_month) : ""}</strong></div>
-                <div className="flex gap-4 flex-wrap pt-1">
-                  <span>المستحق: <strong dir="ltr">{money(historyFor.monthly_revenues?.client_share)}</strong></span>
-                  <span>المدفوع: <strong dir="ltr" className="text-success">{money(historyFor.amount_paid)}</strong></span>
-                  <span>المتبقي: <strong dir="ltr" className="text-destructive">{money(historyFor.remaining)}</strong></span>
+            <div className="space-y-4 text-right">
+              <div className="bg-slate-900 border border-slate-850 p-3 rounded-md text-sm space-y-1">
+                <div>{t("channelName")}: <strong>{historyFor.monthly_revenues?.channels?.name}</strong> · {t("clientName")}: <strong>{historyFor.monthly_revenues?.channels?.clients?.name}</strong></div>
+                <div>{lang === "ar" ? "الشهر" : "Month"}: <strong>{historyFor.monthly_revenues ? monthLabel(historyFor.monthly_revenues.period_month) : ""}</strong></div>
+                <div className="flex gap-4 flex-wrap pt-1 text-slate-300">
+                  <span>{t("dueAmount")}: <strong dir="ltr">{money(historyFor.monthly_revenues?.client_share)}</strong></span>
+                  <span>{t("paidAmount")}: <strong dir="ltr" className="text-green-400">{money(historyFor.amount_paid)}</strong></span>
+                  <span>{t("remainingAmount")}: <strong dir="ltr" className="text-red-400">{money(historyFor.remaining)}</strong></span>
                 </div>
                 {historyFor.monthly_revenues?.channels?.clients?.vodafone_cash && (
-                  <div>إنستاباي / محفظة العميل: <strong dir="ltr">{historyFor.monthly_revenues.channels.clients.vodafone_cash}</strong></div>
+                  <div>{lang === "ar" ? "إنستاباي / محفظة العميل" : "Client InstaPay / Wallet"}: <strong dir="ltr">{historyFor.monthly_revenues.channels.clients.vodafone_cash}</strong></div>
                 )}
               </div>
 
               {isStaff && historyFor.remaining > 0 && (
-                <form onSubmit={handleAddTx} className="border rounded-md p-3 space-y-3">
-                  <div className="font-semibold flex items-center gap-2"><Plus className="w-4 h-4" /> تسجيل دفعة جديدة</div>
+                <form onSubmit={handleAddTx} className="border border-slate-800 rounded-md p-3 space-y-3">
+                  <div className="font-semibold flex items-center gap-2 text-white"><Plus className="w-4 h-4" /> {lang === "ar" ? "تسجيل دفعة جديدة" : "Register new payment"}</div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1"><Label>المبلغ (USD)</Label><Input name="amount" type="number" step="0.01" min="0.01" max={historyFor.remaining} required dir="ltr" defaultValue={historyFor.remaining} /></div>
-                    <div className="space-y-1"><Label>التاريخ</Label><Input name="transaction_date" type="date" defaultValue={new Date().toISOString().slice(0, 10)} dir="ltr" /></div>
+                    <div className="space-y-1"><Label className="text-slate-300">{lang === "ar" ? "المبلغ (USD) *" : "Amount (USD) *"}</Label><Input name="amount" type="number" step="0.01" min="0.01" max={historyFor.remaining} required dir="ltr" defaultValue={historyFor.remaining} className="bg-slate-900 border-slate-700 text-white" /></div>
+                    <div className="space-y-1"><Label className="text-slate-300">{lang === "ar" ? "التاريخ" : "Date"}</Label><Input name="transaction_date" type="date" defaultValue={new Date().toISOString().slice(0, 10)} dir="ltr" className="bg-slate-900 border-slate-700 text-white" /></div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1"><Label>رقم المعاملة / التحويل</Label><Input name="vodafone_transfer_no" placeholder="رقم المعاملة أو كود التحويل..." dir="ltr" /></div>
-                    <div className="space-y-1"><Label>ملاحظات</Label><Input name="notes" /></div>
+                    <div className="space-y-1"><Label className="text-slate-300">{t("transferNo")}</Label><Input name="vodafone_transfer_no" placeholder={lang === "ar" ? "رقم المعاملة أو كود التحويل..." : "Transaction number or transfer code..."} dir="ltr" className="bg-slate-900 border-slate-700 text-white" /></div>
+                    <div className="space-y-1"><Label className="text-slate-300">{t("notes")}</Label><Input name="notes" className="bg-slate-900 border-slate-700 text-white" /></div>
                   </div>
-                  <Button type="submit" size="sm" disabled={addTx.isPending}>حفظ الدفعة</Button>
+                  <Button type="submit" size="sm" disabled={addTx.isPending}>{addTx.isPending ? t("loading") : (lang === "ar" ? "حفظ الدفعة" : "Save payment")}</Button>
                 </form>
               )}
 
               <div>
-                <div className="font-semibold mb-2">المعاملات السابقة</div>
+                <div className="font-semibold mb-2 text-white">{t("prevTransactions")}</div>
                 <Table>
                   <TableHeader><TableRow>
-                    <TableHead className="text-right">التاريخ</TableHead>
-                    <TableHead className="text-right">المبلغ</TableHead>
-                    <TableHead className="text-right">رقم التحويل</TableHead>
-                    <TableHead className="text-right">ملاحظات</TableHead>
+                    <TableHead className="text-right">{t("transactionDate")}</TableHead>
+                    <TableHead className="text-right">{lang === "ar" ? "المبلغ" : "Amount"}</TableHead>
+                    <TableHead className="text-right">{t("transferNo")}</TableHead>
+                    <TableHead className="text-right">{t("notes")}</TableHead>
                     {isStaff && <TableHead></TableHead>}
                   </TableRow></TableHeader>
                   <TableBody>
-                    {transactions.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-4">لا توجد معاملات</TableCell></TableRow>}
+                    {transactions.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-4">{t("noData")}</TableCell></TableRow>}
                     {transactions.map((t) => (
                       <TableRow key={t.id}>
                         <TableCell dir="ltr">{t.transaction_date}</TableCell>
@@ -401,20 +403,20 @@ function PaymentsPage() {
               </div>
             </div>
           )}
-          <DialogFooter><Button variant="outline" onClick={() => setHistoryFor(null)}>إغلاق</Button></DialogFooter>
+          <DialogFooter><Button variant="outline" className="border-slate-700 hover:bg-slate-900 text-white" onClick={() => setHistoryFor(null)}>{t("close")}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
       <Dialog open={!!payTarget} onOpenChange={(v) => !v && setPayTarget(null)}>
-        <DialogContent dir="rtl" className="max-w-md bg-slate-950 border-slate-800 text-slate-100">
+        <DialogContent dir={lang === "ar" ? "rtl" : "ltr"} className="max-w-md bg-slate-950 border-slate-800 text-slate-100">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-white text-right">تسجيل دفعة مالية جديدة</DialogTitle>
+            <DialogTitle className="text-lg font-bold text-white text-right">{t("quickPayTitle")}</DialogTitle>
           </DialogHeader>
           {payTarget && (
             <form onSubmit={(e) => {
               e.preventDefault();
               const fd = new FormData(e.currentTarget);
               const amount = Number(fd.get("amount"));
-              if (amount <= 0) { toast.error("المبلغ يجب أن يكون أكبر من صفر"); return; }
+              if (amount <= 0) { toast.error(lang === "ar" ? "المبلغ يجب أن يكون أكبر من صفر" : "Amount must be greater than zero"); return; }
               addTx.mutate({
                 payment_id: payTarget.id,
                 amount,
@@ -428,20 +430,20 @@ function PaymentsPage() {
               });
             }} className="space-y-4 pt-2">
               <div className="bg-slate-900 border border-slate-850 p-3 rounded-lg text-sm space-y-1 text-right">
-                <div>القناة: <strong>{payTarget.monthly_revenues?.channels?.name}</strong></div>
-                <div>العميل: <strong>{payTarget.monthly_revenues?.channels?.clients?.name}</strong></div>
+                <div>{t("channelName")}: <strong>{payTarget.monthly_revenues?.channels?.name}</strong></div>
+                <div>{t("clientName")}: <strong>{payTarget.monthly_revenues?.channels?.clients?.name}</strong></div>
                 {payTarget.monthly_revenues?.channels?.clients?.vodafone_cash && (
-                  <div className="text-primary font-semibold">محفظة/إنستاباي العميل: <span dir="ltr">{payTarget.monthly_revenues.channels.clients.vodafone_cash}</span></div>
+                  <div className="text-primary font-semibold">{lang === "ar" ? "محفظة/إنستاباي العميل" : "Client InstaPay/Wallet"}: <span dir="ltr">{payTarget.monthly_revenues.channels.clients.vodafone_cash}</span></div>
                 )}
                 <div className="flex gap-4 pt-1 text-slate-300">
-                  <span>المستحق: <strong dir="ltr">{money(payTarget.monthly_revenues?.client_share)}</strong></span>
-                  <span>المدفوع: <strong dir="ltr" className="text-green-400">{money(payTarget.amount_paid)}</strong></span>
-                  <span>المتبقي: <strong dir="ltr" className="text-red-400">{money(payTarget.remaining)}</strong></span>
+                  <span>{t("dueAmount")}: <strong dir="ltr">{money(payTarget.monthly_revenues?.client_share)}</strong></span>
+                  <span>{t("paidAmount")}: <strong dir="ltr" className="text-green-400">{money(payTarget.amount_paid)}</strong></span>
+                  <span>{t("remainingAmount")}: <strong dir="ltr" className="text-red-400">{money(payTarget.remaining)}</strong></span>
                 </div>
               </div>
 
               <div className="space-y-1 text-right">
-                <Label className="text-xs text-slate-300">المبلغ المدفوع (USD) *</Label>
+                <Label className="text-xs text-slate-300">{lang === "ar" ? "المبلغ المدفوع (USD) *" : "Amount Paid (USD) *"}</Label>
                 <Input
                   name="amount"
                   type="number"
@@ -453,12 +455,12 @@ function PaymentsPage() {
                   defaultValue={payTarget.remaining}
                   className="bg-slate-900 border-slate-700 h-9 text-white text-right"
                 />
-                <span className="text-xs text-slate-400 block mt-1">تلقائياً مكتوب فيه المتبقي بالكامل للدفع السريع. يمكنك كتابة جزء منه فقط للدفع الجزئي.</span>
+                <span className="text-xs text-slate-400 block mt-1">{t("quickPayDesc")}</span>
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-right">
                 <div className="space-y-1">
-                  <Label className="text-xs text-slate-300">تاريخ التحويل</Label>
+                  <Label className="text-xs text-slate-300">{t("transactionDate")}</Label>
                   <Input
                     name="transaction_date"
                     type="date"
@@ -468,10 +470,10 @@ function PaymentsPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs text-slate-300">رقم التحويل / المعاملة</Label>
+                  <Label className="text-xs text-slate-300">{t("transferNo")}</Label>
                   <Input
                     name="vodafone_transfer_no"
-                    placeholder="رقم المعاملة..."
+                    placeholder={lang === "ar" ? "رقم التحويل..." : "Transfer No..."}
                     dir="ltr"
                     className="bg-slate-900 border-slate-700 h-9 text-white"
                   />
@@ -479,29 +481,29 @@ function PaymentsPage() {
               </div>
 
               <div className="space-y-1 text-right">
-                <Label className="text-xs text-slate-300">ملاحظات</Label>
-                <Input name="notes" placeholder="ملاحظات اختيارية..." className="bg-slate-900 border-slate-700 h-9 text-white" />
+                <Label className="text-xs text-slate-300">{t("notes")}</Label>
+                <Input name="notes" placeholder={lang === "ar" ? "ملاحظات اختيارية..." : "Optional notes..."} className="bg-slate-900 border-slate-700 h-9 text-white" />
               </div>
 
               <DialogFooter className="gap-2 pt-2">
                 <Button type="submit" className="w-full bg-primary hover:bg-primary/95 text-white" disabled={addTx.isPending}>
-                  {addTx.isPending ? "جاري التسجيل..." : "تأكيد وتسجيل الدفع"}
+                  {addTx.isPending ? t("loading") : (lang === "ar" ? "تأكيد وتسجيل الدفع" : "Confirm and register payment")}
                 </Button>
-                <Button type="button" variant="outline" className="w-full border-slate-700 hover:bg-slate-900 text-white" onClick={() => setPayTarget(null)}>إلغاء</Button>
+                <Button type="button" variant="outline" className="w-full border-slate-700 hover:bg-slate-900 text-white" onClick={() => setPayTarget(null)}>{t("cancel")}</Button>
               </DialogFooter>
             </form>
           )}
         </DialogContent>
       </Dialog>
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir={lang === "ar" ? "rtl" : "ltr"} className="bg-slate-900 border border-slate-800 text-slate-100">
           <AlertDialogHeader>
-            <AlertDialogTitle>هل أنت متأكد تماماً من حذف هذه المعاملة؟</AlertDialogTitle>
-            <AlertDialogDescription>
-              هذا الإجراء سيقوم بحذف سجل الدفعة المالية وإلغاء الإيصال التلقائي وتحديث أرصدة الفواتير المتبقية.
+            <AlertDialogTitle className="text-white text-right">{t("deleteTxConfirm")}</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-400 text-right">
+              {t("deleteTxDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="gap-2">
             <AlertDialogAction
               onClick={() => {
                 if (deleteTarget) {
@@ -511,9 +513,9 @@ function PaymentsPage() {
               }}
               className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
             >
-              نعم، احذف الدفعة
+              {lang === "ar" ? "نعم، احذف الدفعة" : "Yes, delete payment"}
             </AlertDialogAction>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogCancel className="bg-slate-800 text-white border-slate-700 hover:bg-slate-700">{t("cancel")}</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
