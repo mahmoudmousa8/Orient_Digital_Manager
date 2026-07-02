@@ -54,10 +54,23 @@ const statusVariant: Record<string, string> = {
 };
 
 function ChannelsPage() {
-  const { isStaff } = useAuth();
+  const { isStaff, isEmployee, user } = useAuth();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Channel | null>(null);
+
+  const { data: assignedChannelIds = new Set<string>() } = useQuery({
+    queryKey: ["assigned-channel-ids", user?.id],
+    enabled: !!user?.id && isEmployee,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("channel_publishing_tracker")
+        .select("channel_id")
+        .eq("assigned_to", user!.id);
+      if (error) throw error;
+      return new Set(data.map((d) => d.channel_id));
+    },
+  });
   const [clientId, setClientId] = useState<string>("");
   const [status, setStatus] = useState<string>("active");
   const [search, setSearch] = useState("");
@@ -209,8 +222,12 @@ function ChannelsPage() {
   }
 
   const filtered = useMemo(() => {
+    let list = channels;
+    if (isEmployee) {
+      list = list.filter((c) => assignedChannelIds.has(c.id));
+    }
     const q = search.trim().toLowerCase();
-    return channels.filter((c) => {
+    return list.filter((c) => {
       if (filterStatus !== "all" && c.status !== filterStatus) return false;
       if (filterClient !== "all" && c.client_id !== filterClient) return false;
       if (filterSystem !== "all") {
@@ -231,7 +248,7 @@ function ChannelsPage() {
         return false;
       return true;
     });
-  }, [channels, search, filterStatus, filterClient, filterSystem, filterMonetized]);
+  }, [channels, search, filterStatus, filterClient, filterSystem, filterMonetized, isEmployee, assignedChannelIds]);
 
   return (
     <div className="space-y-6 animate-fade-in-up">

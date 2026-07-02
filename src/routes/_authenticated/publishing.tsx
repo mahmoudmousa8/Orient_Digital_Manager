@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/publishing")({
 });
 
 function PublishingPage() {
-  const { user, isAdmin, isStaff } = useAuth();
+  const { user, isAdmin, isStaff, isEmployee } = useAuth();
   const qc = useQueryClient();
 
   const listFn = useServerFn(listPublishingTasks);
@@ -92,6 +92,11 @@ function PublishingPage() {
   const filteredTasks = useMemo(() => {
     const q = search.trim().toLowerCase();
     return tasks.filter((t) => {
+      // If the user is an employee, only show tasks assigned to them
+      if (isEmployee) {
+        if (t.assignedTo !== user?.id) return false;
+      }
+
       // 1. Search filter
       if (
         q &&
@@ -102,9 +107,16 @@ function PublishingPage() {
         return false;
       }
 
-      // 2. Assignee filter
-      if (filterAssignee === "me" && t.assignedTo !== user?.id) return false;
-      if (filterAssignee === "unassigned" && t.assignedTo !== null) return false;
+      // 2. Assignee filter (only applies to non-employee users since employee is already restricted above)
+      if (!isEmployee) {
+        if (filterAssignee === "me") {
+          if (t.assignedTo !== user?.id) return false;
+        } else if (filterAssignee === "unassigned") {
+          if (t.assignedTo !== null) return false;
+        } else if (filterAssignee !== "all") {
+          if (t.assignedTo !== filterAssignee) return false;
+        }
+      }
 
       // 3. Status filter
       if (filterStatus !== "all" && t.status !== filterStatus) return false;
@@ -115,7 +127,7 @@ function PublishingPage() {
 
       return true;
     });
-  }, [tasks, search, filterAssignee, filterStatus, filterMonetized, user?.id, staff]);
+  }, [tasks, search, filterAssignee, filterStatus, filterMonetized, user?.id, staff, isEmployee]);
 
   // Export current list to Excel
   function handleExport() {
@@ -247,16 +259,23 @@ function PublishingPage() {
           </SelectContent>
         </Select>
 
-        <Select value={filterAssignee} onValueChange={setFilterAssignee}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="الموظف المسؤول" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">كل الموظفين</SelectItem>
-            <SelectItem value="me">قنواتي فقط</SelectItem>
-            <SelectItem value="unassigned">غير معينة لموظف</SelectItem>
-          </SelectContent>
-        </Select>
+        {!isEmployee && (
+          <Select value={filterAssignee} onValueChange={setFilterAssignee}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="الموظف المسؤول" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">كل الموظفين</SelectItem>
+              <SelectItem value="me">قنواتي فقط</SelectItem>
+              <SelectItem value="unassigned">غير معينة لموظف</SelectItem>
+              {staff.map((s) => (
+                <SelectItem key={s.id} value={s.id}>
+                  {s.fullName || s.email}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
 
         <Select value={filterStatus} onValueChange={setFilterStatus}>
           <SelectTrigger className="w-40">

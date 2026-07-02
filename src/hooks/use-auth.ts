@@ -56,7 +56,8 @@ export function useAuth() {
 
   const isAdmin = roles.includes("admin");
   const isStaff = roles.includes("admin") || roles.includes("employee");
+  const isEmployee = roles.includes("employee") && !isAdmin;
   const isClient = roles.includes("client") && !isStaff;
 
-  return { session, user, roles, loading, isAdmin, isStaff, isClient };
+  return { session, user, roles, loading, isAdmin, isStaff, isEmployee, isClient };
 }

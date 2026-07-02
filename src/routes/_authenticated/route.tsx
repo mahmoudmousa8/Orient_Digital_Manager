@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate, useLocation } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { AppShell } from "@/components/app-shell";
@@ -12,10 +12,23 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthedLayout() {
   const { user, roles, loading } = useAuth();
   const navigate = useNavigate();
+  const loc = useLocation();
+
+  const isAdmin = roles.includes("admin");
+  const isEmployee = roles.includes("employee") && !isAdmin;
 
   useEffect(() => {
-    if (!loading && !user) navigate({ to: "/auth", replace: true });
-  }, [loading, user, navigate]);
+    if (!loading && !user) {
+      navigate({ to: "/auth", replace: true });
+      return;
+    }
+    if (!loading && user && isEmployee) {
+      const allowedPaths = ["/channels", "/publishing"];
+      if (!allowedPaths.includes(loc.pathname)) {
+        navigate({ to: "/channels", replace: true });
+      }
+    }
+  }, [loading, user, isEmployee, loc.pathname, navigate]);
 
   if (loading || !user) {
     return (

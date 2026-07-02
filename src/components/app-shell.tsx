@@ -36,8 +36,15 @@ const clientNav = [
 
 export function AppShell({ children, roles, email }: { children: ReactNode; roles: AppRole[]; email?: string | null }) {
   const isAdmin = roles.includes("admin");
-  const isStaff = isAdmin || roles.includes("employee");
-  const nav = isStaff ? (isAdmin ? [...staffNav, ...adminExtras] : staffNav) : clientNav;
+  const isEmployee = roles.includes("employee") && !isAdmin;
+  const nav = isAdmin
+    ? [...staffNav, ...adminExtras]
+    : isEmployee
+    ? [
+        { to: "/channels", label: "القنوات", icon: Youtube },
+        { to: "/publishing", label: "نشر القنوات", icon: ClipboardCheck },
+      ]
+    : clientNav;
   const navigate = useNavigate();
   const loc = useLocation();
   const [open, setOpen] = useState(false);
