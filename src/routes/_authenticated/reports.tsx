@@ -15,6 +15,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { FileSpreadsheet, FileDown, TrendingUp, DollarSign, Clock, Users, ArrowUpRight, BarChart2, ShieldAlert } from "lucide-react";
 import { money, monthLabel, STATUS_AR } from "@/lib/format";
 import { exportExcel, exportPDF } from "@/lib/exports";
+import { useLanguage } from "@/hooks/use-language";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   component: ReportsDashboard,
@@ -32,6 +33,16 @@ function currentMonthStr() {
 const COLORS = ["#8b5cf6", "#a21caf", "#3b82f6", "#10b981", "#d946ef", "#f59e0b"];
 
 function ReportsDashboard() {
+  const { t, lang } = useLanguage();
+  const STATUS_EN: Record<string, string> = {
+    draft: "Draft",
+    issued: "Issued",
+    paid: "Paid",
+    partial: "Partially Paid",
+    overdue: "Overdue",
+    cancelled: "Cancelled",
+    unpaid: "Unpaid"
+  };
   const { isStaff, user, loading: isAuthLoading } = useAuth();
   const [clientId, setClientId] = useState<string>("all");
   const [startMonth, setStartMonth] = useState<string>(firstOfCurrentYear());
@@ -178,8 +189,8 @@ function ReportsDashboard() {
 
     // Earning Share data for Pie Chart
     const pieData = [
-      { name: "حصة العميل (Earnings)", value: totalClientShare },
-      { name: "حصة الشركة (Profits)", value: totalCompanyShare },
+      { name: lang === "ar" ? "حصة العميل (Earnings)" : "Client Share (Earnings)", value: totalClientShare },
+      { name: lang === "ar" ? "حصة الشركة (Profits)" : "Company Share (Profits)", value: totalCompanyShare },
     ];
 
     // Revenue Trend by Month
@@ -221,7 +232,7 @@ function ReportsDashboard() {
           link: r.channels?.link ?? "",
           month: monthLabel(r.period_month),
           clientShare: Number(r.client_share),
-          paymentStatus: p?.status ? STATUS_AR[p.status] : "غير محدد",
+          paymentStatus: p?.status ? (lang === "ar" ? STATUS_AR[p.status] : (STATUS_EN[p.status] || p.status)) : (lang === "ar" ? "غير محدد" : "Not Specified"),
           amountPaid: Number(p?.amount_paid ?? 0),
           remaining: Number(p?.remaining ?? r.client_share),
         };
@@ -234,7 +245,7 @@ function ReportsDashboard() {
         percentage: Number(r.client_percentage),
         clientShare: Number(r.client_share),
         companyShare: Number(r.company_share),
-        paymentStatus: p?.status ? STATUS_AR[p.status] : "غير محدد",
+        paymentStatus: p?.status ? (lang === "ar" ? STATUS_AR[p.status] : (STATUS_EN[p.status] || p.status)) : (lang === "ar" ? "غير محدد" : "Not Specified"),
         amountPaid: Number(p?.amount_paid ?? 0),
         remaining: Number(p?.remaining ?? r.client_share),
       };
@@ -252,7 +263,7 @@ function ReportsDashboard() {
           link: r.channels?.link ?? "",
           month: monthLabel(r.period_month),
           clientShare: Number(r.client_share),
-          paymentStatus: p?.status ? STATUS_AR[p.status] : "غير محدد",
+          paymentStatus: p?.status ? (lang === "ar" ? STATUS_AR[p.status] : (STATUS_EN[p.status] || p.status)) : (lang === "ar" ? "غير محدد" : "Not Specified"),
           amountPaid: Number(p?.amount_paid ?? 0),
           remaining: Number(p?.remaining ?? r.client_share),
         };
@@ -265,7 +276,7 @@ function ReportsDashboard() {
         percentage: Number(r.client_percentage),
         clientShare: Number(r.client_share),
         companyShare: Number(r.company_share),
-        paymentStatus: p?.status ? STATUS_AR[p.status] : "غير محدد",
+        paymentStatus: p?.status ? (lang === "ar" ? STATUS_AR[p.status] : (STATUS_EN[p.status] || p.status)) : (lang === "ar" ? "غير محدد" : "Not Specified"),
         amountPaid: Number(p?.amount_paid ?? 0),
         remaining: Number(p?.remaining ?? r.client_share),
       };
@@ -281,35 +292,37 @@ function ReportsDashboard() {
         <div className="space-y-1">
           <h1 className="text-2xl sm:text-3xl font-black flex items-center gap-2.5 text-white">
             <BarChart2 className="w-8 h-8 text-primary" />
-            التقارير المالية والتحليلات
+            {lang === "ar" ? "التقارير المالية والتحليلات" : "Financial Reports & Analytics"}
           </h1>
           <p className="text-sm text-muted-foreground mt-1.5">
-            متابعة إيرادات القنوات، الأرباح الصافية للشركة، الفواتير المستحقة، وتحليلات أعمار الديون
+            {lang === "ar" 
+              ? "متابعة إيرادات القنوات، الأرباح الصافية للشركة، الفواتير المستحقة، وتحليلات أعمار الديون" 
+              : "Track channel revenues, net company profits, outstanding invoices, and debt aging analysis"}
           </p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" size="default" className="h-11 px-5 text-sm sm:text-base font-bold" onClick={handleExportExcel} disabled={isLoading || revenues.length === 0}>
-            <FileSpreadsheet className="w-4 h-4 ml-2" /> تصدير Excel
+          <Button variant="outline" size="default" className="h-11 px-5 text-sm sm:text-base font-bold bg-slate-900 border-slate-800 text-white hover:bg-slate-800" onClick={handleExportExcel} disabled={isLoading || revenues.length === 0}>
+            <FileSpreadsheet className="w-4 h-4 ml-2" /> {lang === "ar" ? "تصدير Excel" : "Export Excel"}
           </Button>
           <Button size="default" className="h-11 px-5 text-sm sm:text-base font-bold" onClick={handleExportPDF} disabled={isLoading || revenues.length === 0}>
-            <FileDown className="w-4 h-4 ml-2" /> تصدير PDF
+            <FileDown className="w-4 h-4 ml-2" /> {lang === "ar" ? "تصدير PDF" : "Export PDF"}
           </Button>
         </div>
       </div>
 
       {/* Filter Card */}
-      <Card className="border shadow-md">
+      <Card className="border border-slate-800 shadow-md">
         <CardContent className="p-6 sm:p-8">
-          <div className="flex flex-wrap gap-5 items-end">
+          <div className="flex flex-wrap gap-5 items-end text-right">
             {isStaff && (
               <div className="space-y-2.5 min-w-[240px] flex-1 sm:flex-initial">
-                <Label className="text-sm sm:text-base font-bold text-foreground">العميل</Label>
+                <Label className="text-sm sm:text-base font-bold text-slate-300">{lang === "ar" ? "العميل" : "Client"}</Label>
                 <Select value={clientId} onValueChange={setClientId}>
-                  <SelectTrigger className="h-11 text-sm sm:text-base">
+                  <SelectTrigger className="h-11 text-sm sm:text-base bg-slate-900 border-slate-700 text-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all" className="text-sm sm:text-base">جميع العملاء</SelectItem>
+                    <SelectItem value="all" className="text-sm sm:text-base">{lang === "ar" ? "جميع العملاء" : "All Clients"}</SelectItem>
                     {clients.map((c) => (
                       <SelectItem key={c.id} value={c.id} className="text-sm sm:text-base">{c.name}</SelectItem>
                     ))}
@@ -318,12 +331,12 @@ function ReportsDashboard() {
               </div>
             )}
             <div className="space-y-2.5 min-w-[160px] flex-1 sm:flex-initial">
-              <Label className="text-sm sm:text-base font-bold text-foreground">من شهر</Label>
-              <Input type="month" className="h-11 text-sm sm:text-base" value={startMonth} onChange={(e) => setStartMonth(e.target.value)} dir="ltr" />
+              <Label className="text-sm sm:text-base font-bold text-slate-300">{lang === "ar" ? "من شهر" : "From Month"}</Label>
+              <Input type="month" className="h-11 text-sm sm:text-base bg-slate-900 border-slate-700 text-white" value={startMonth} onChange={(e) => setStartMonth(e.target.value)} dir="ltr" />
             </div>
             <div className="space-y-2.5 min-w-[160px] flex-1 sm:flex-initial">
-              <Label className="text-sm sm:text-base font-bold text-foreground">إلى شهر</Label>
-              <Input type="month" className="h-11 text-sm sm:text-base" value={endMonth} onChange={(e) => setEndMonth(e.target.value)} dir="ltr" />
+              <Label className="text-sm sm:text-base font-bold text-slate-300">{lang === "ar" ? "إلى شهر" : "To Month"}</Label>
+              <Input type="month" className="h-11 text-sm sm:text-base bg-slate-900 border-slate-700 text-white" value={endMonth} onChange={(e) => setEndMonth(e.target.value)} dir="ltr" />
             </div>
           </div>
         </CardContent>
@@ -332,71 +345,81 @@ function ReportsDashboard() {
       {/* Dashboard KPI cards */}
       <div className={`grid grid-cols-1 sm:grid-cols-2 ${isStaff ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-6`}>
         {isStaff && (
-          <Card className="border shadow-sm p-1">
+          <Card className="border border-slate-800 shadow-sm p-1">
             <CardHeader className="pb-3 pt-5 px-5">
               <CardTitle className="text-sm sm:text-base font-bold text-slate-300 flex items-center justify-between">
-                <span>إجمالي الإيرادات</span>
+                <span>{lang === "ar" ? "إجمالي الإيرادات" : "Total Gross Revenue"}</span>
                 <DollarSign className="w-5 h-5 text-purple-600" />
               </CardTitle>
             </CardHeader>
             <CardContent className="pb-5 px-5">
               <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-white" dir="ltr">{money(stats.totalGross)}</div>
-              <p className="text-xs sm:text-sm text-slate-300 mt-2 font-medium">الربح الإجمالي لكافة القنوات قبل التقسيم</p>
+              <p className="text-xs sm:text-sm text-slate-400 mt-2 font-medium">
+                {lang === "ar" ? "الربح الإجمالي لكافة القنوات قبل التقسيم" : "Total gross earnings of all channels before split"}
+              </p>
             </CardContent>
           </Card>
         )}
 
         {isStaff ? (
-          <Card className="border shadow-sm p-1">
+          <Card className="border border-slate-800 shadow-sm p-1">
             <CardHeader className="pb-3 pt-5 px-5">
               <CardTitle className="text-sm sm:text-base font-bold text-slate-300 flex items-center justify-between">
-                <span>أرباح الشركة الصافية</span>
+                <span>{lang === "ar" ? "أرباح الشركة الصافية" : "Company Net Profit"}</span>
                 <TrendingUp className="w-5 h-5 text-primary" />
               </CardTitle>
             </CardHeader>
             <CardContent className="pb-5 px-5">
               <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-primary" dir="ltr">{money(stats.totalCompanyShare)}</div>
-              <p className="text-xs sm:text-sm text-slate-300 mt-2 font-medium">إجمالي حصة الشركة من الإيرادات</p>
+              <p className="text-xs sm:text-sm text-slate-400 mt-2 font-medium">
+                {lang === "ar" ? "إجمالي حصة الشركة من الإيرادات" : "Total net company share from earnings"}
+              </p>
             </CardContent>
           </Card>
         ) : (
-          <Card className="border shadow-sm p-1">
+          <Card className="border border-slate-800 shadow-sm p-1">
             <CardHeader className="pb-3 pt-5 px-5">
               <CardTitle className="text-sm sm:text-base font-bold text-slate-300 flex items-center justify-between">
-                <span>إجمالي الأرباح المستحقة</span>
+                <span>{lang === "ar" ? "إجمالي الأرباح المستحقة" : "Total Earned Revenue"}</span>
                 <TrendingUp className="w-5 h-5 text-primary" />
               </CardTitle>
             </CardHeader>
             <CardContent className="pb-5 px-5">
               <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-primary" dir="ltr">{money(stats.totalClientShare)}</div>
-              <p className="text-xs sm:text-sm text-slate-300 mt-2 font-medium">إجمالي مستحقاتك من إيرادات القنوات</p>
+              <p className="text-xs sm:text-sm text-slate-400 mt-2 font-medium">
+                {lang === "ar" ? "إجمالي مستحقاتك من إيرادات القنوات" : "Your total payouts outstanding from channels"}
+              </p>
             </CardContent>
           </Card>
         )}
 
-        <Card className="border shadow-sm p-1">
+        <Card className="border border-slate-800 shadow-sm p-1">
           <CardHeader className="pb-3 pt-5 px-5">
             <CardTitle className="text-sm sm:text-base font-bold text-slate-300 flex items-center justify-between">
-              <span>المدفوعات المحصلة</span>
+              <span>{lang === "ar" ? "المدفوعات المحصلة" : "Payments Collected"}</span>
               <ArrowUpRight className="w-5 h-5 text-success" />
             </CardTitle>
           </CardHeader>
           <CardContent className="pb-5 px-5">
             <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-success" dir="ltr">{money(stats.totalPaid)}</div>
-            <p className="text-xs sm:text-sm text-slate-300 mt-2 font-medium">المبالغ التي تم تحصيلها للفواتير</p>
+            <p className="text-xs sm:text-sm text-slate-400 mt-2 font-medium">
+              {lang === "ar" ? "المبالغ التي تم تحصيلها للفواتير" : "Amounts paid and settled for invoices"}
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="border-destructive/30 bg-destructive/5 shadow-sm p-1">
+        <Card className="border-destructive/30 bg-destructive/5 border shadow-sm p-1">
           <CardHeader className="pb-3 pt-5 px-5">
             <CardTitle className="text-sm sm:text-base font-bold text-destructive flex items-center justify-between">
-              <span>الديون المعلقة المستحقة</span>
+              <span>{lang === "ar" ? "الديون المعلقة المستحقة" : "Outstanding Balance"}</span>
               <ShieldAlert className="w-5 h-5 text-destructive" />
             </CardTitle>
           </CardHeader>
           <CardContent className="pb-5 px-5">
             <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-destructive" dir="ltr">{money(stats.totalOutstanding)}</div>
-            <p className="text-xs sm:text-sm text-destructive-foreground/90 mt-2 font-medium">المستحقات المتبقية تحت التحصيل</p>
+            <p className="text-xs sm:text-sm text-destructive-foreground/90 mt-2 font-medium">
+              {lang === "ar" ? "المستحقات المتبقية تحت التحصيل" : "Remaining balance pending collection"}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -404,21 +427,23 @@ function ReportsDashboard() {
       {/* Visual Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Revenue Trend Chart */}
-        <Card className={isStaff ? "lg:col-span-2" : "lg:col-span-3"}>
+        <Card className={isStaff ? "lg:col-span-2 border-slate-800" : "lg:col-span-3 border-slate-800"}>
           <CardHeader>
-            <CardTitle className="text-sm font-bold">
-              {isStaff ? "منحنى نمو الأرباح والإيرادات" : "منحنى نمو الأرباح المستحقة"}
+            <CardTitle className="text-sm font-bold text-white">
+              {isStaff 
+                ? (lang === "ar" ? "منحنى نمو الأرباح والإيرادات" : "Revenue & Profit Growth Trend") 
+                : (lang === "ar" ? "منحنى نمو الأرباح المستحقة" : "Earned Share Growth Trend")}
             </CardTitle>
           </CardHeader>
           <CardContent className="h-80">
             {stats.revenueTrend.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-muted-foreground text-xs">لا توجد بيانات كافية للرسم البياني</div>
+              <div className="h-full flex items-center justify-center text-muted-foreground text-xs">{lang === "ar" ? "لا توجد بيانات كافية للرسم البياني" : "Not enough data for the chart"}</div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stats.revenueTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 10 }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#25222b" vertical={false} />
+                  <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#94a3b8" }} />
+                  <YAxis tick={{ fontSize: 10, fill: "#94a3b8" }} />
                   <Tooltip 
                     formatter={(value) => [money(value as any)]} 
                     contentStyle={{ backgroundColor: '#17151a', borderRadius: '12px', border: '1px solid #25222b', color: '#fff' }}
@@ -426,11 +451,11 @@ function ReportsDashboard() {
                   />
                   {isStaff ? (
                     <>
-                      <Bar dataKey="revenue" name="إجمالي الإيرادات" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="profit" name="أرباح الشركة" fill="#a21caf" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="revenue" name={lang === "ar" ? "إجمالي الإيرادات" : "Gross Revenue"} fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="profit" name={lang === "ar" ? "أرباح الشركة" : "Company Profit"} fill="#a21caf" radius={[4, 4, 0, 0]} />
                     </>
                   ) : (
-                    <Bar dataKey="clientShare" name="الأرباح المستحقة" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="clientShare" name={lang === "ar" ? "الأرباح المستحقة" : "Earned Share"} fill="#8b5cf6" radius={[4, 4, 0, 0]} />
                   )}
                 </BarChart>
               </ResponsiveContainer>
@@ -440,13 +465,13 @@ function ReportsDashboard() {
 
         {/* Earning Share Pie Chart */}
         {isStaff && (
-          <Card>
+          <Card className="border-slate-800">
             <CardHeader>
-              <CardTitle className="text-sm font-bold">توزيع الإيرادات والأرباح</CardTitle>
+              <CardTitle className="text-sm font-bold text-white">{lang === "ar" ? "توزيع الإيرادات والأرباح" : "Revenue & Profit Distribution"}</CardTitle>
             </CardHeader>
             <CardContent className="h-80 flex flex-col justify-between">
               {stats.totalGross === 0 ? (
-                <div className="h-full flex items-center justify-center text-muted-foreground text-xs">لا توجد بيانات</div>
+                <div className="h-full flex items-center justify-center text-muted-foreground text-xs">{lang === "ar" ? "لا توجد بيانات" : "No data available"}</div>
               ) : (
                 <>
                   <div className="h-60 relative">
@@ -472,13 +497,13 @@ function ReportsDashboard() {
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
-                  <div className="space-y-2.5 text-sm sm:text-base mt-4 border-t pt-4">
+                  <div className="space-y-2.5 text-sm sm:text-base mt-4 border-t border-slate-800 pt-4 text-right">
                     <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-2"><span className="w-3.5 h-3.5 rounded-full bg-violet-500"></span>حصة العملاء</span>
+                      <span className="flex items-center gap-2"><span className="w-3.5 h-3.5 rounded-full bg-violet-500"></span>{lang === "ar" ? "حصة العملاء" : "Clients Share"}</span>
                       <span className="font-extrabold text-white" dir="ltr">{money(stats.totalClientShare)}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-2"><span className="w-3.5 h-3.5 rounded-full bg-fuchsia-600"></span>أرباح الشركة</span>
+                      <span className="flex items-center gap-2"><span className="w-3.5 h-3.5 rounded-full bg-fuchsia-600"></span>{lang === "ar" ? "أرباح الشركة" : "Company Profits"}</span>
                       <span className="font-extrabold text-primary" dir="ltr">{money(stats.totalCompanyShare)}</span>
                     </div>
                   </div>
@@ -491,39 +516,39 @@ function ReportsDashboard() {
 
       {/* Tabs list for detailed tables */}
       <Tabs defaultValue="revenues" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-12 bg-muted/60 p-1.5 rounded-xl border mb-6">
-          <TabsTrigger value="revenues" className="text-xs sm:text-sm md:text-base font-bold py-2">الأرباح الشهرية</TabsTrigger>
-          <TabsTrigger value="aging" className="text-xs sm:text-sm md:text-base font-bold py-2">أعمار الديون ({stats.agingList.length})</TabsTrigger>
-          {isStaff && <TabsTrigger value="channels" className="text-xs sm:text-sm md:text-base font-bold py-2">أهم القنوات</TabsTrigger>}
-          {isStaff && <TabsTrigger value="clients" className="text-xs sm:text-sm md:text-base font-bold py-2">أهم العملاء</TabsTrigger>}
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-12 bg-slate-900 border border-slate-800 p-1 rounded-xl mb-6">
+          <TabsTrigger value="revenues" className="text-xs sm:text-sm md:text-base font-bold py-2">{lang === "ar" ? "الأرباح الشهرية" : "Monthly Earnings"}</TabsTrigger>
+          <TabsTrigger value="aging" className="text-xs sm:text-sm md:text-base font-bold py-2">{lang === "ar" ? `أعمار الديون (${stats.agingList.length})` : `Aging of Debts (${stats.agingList.length})`}</TabsTrigger>
+          {isStaff && <TabsTrigger value="channels" className="text-xs sm:text-sm md:text-base font-bold py-2">{lang === "ar" ? "أهم القنوات" : "Top Channels"}</TabsTrigger>}
+          {isStaff && <TabsTrigger value="clients" className="text-xs sm:text-sm md:text-base font-bold py-2">{lang === "ar" ? "أهم العملاء" : "Top Clients"}</TabsTrigger>}
         </TabsList>
 
-        <TabsContent value="revenues" className="border rounded-xl bg-card shadow-sm overflow-hidden">
+        <TabsContent value="revenues" className="border border-slate-800 rounded-xl bg-card shadow-sm overflow-hidden">
           <Table>
             <TableHeader className="bg-muted/40">
               <TableRow>
-                <TableHead className="text-right text-sm sm:text-base font-bold py-4 px-4">القناة</TableHead>
-                <TableHead className="text-right text-sm sm:text-base font-bold py-4 px-4">الشهر</TableHead>
-                {isStaff && <TableHead className="text-left text-sm sm:text-base font-bold py-4 px-4">الإيراد</TableHead>}
-                {isStaff && <TableHead className="text-center text-sm sm:text-base font-bold py-4 px-4">النسبة</TableHead>}
+                <TableHead className="text-right text-sm sm:text-base font-bold py-4 px-4">{lang === "ar" ? "القناة" : "Channel"}</TableHead>
+                <TableHead className="text-right text-sm sm:text-base font-bold py-4 px-4">{lang === "ar" ? "الشهر" : "Month"}</TableHead>
+                {isStaff && <TableHead className="text-left text-sm sm:text-base font-bold py-4 px-4">{lang === "ar" ? "الإيراد" : "Revenue"}</TableHead>}
+                {isStaff && <TableHead className="text-center text-sm sm:text-base font-bold py-4 px-4">{lang === "ar" ? "النسبة" : "Percent"}</TableHead>}
                 <TableHead className="text-left text-sm sm:text-base font-bold py-4 px-4 text-success">
-                  {isStaff ? "حصة العميل" : "الأرباح المستحقة"}
+                  {isStaff ? (lang === "ar" ? "حصة العميل" : "Client Share") : (lang === "ar" ? "الأرباح المستحقة" : "Earned Share")}
                 </TableHead>
-                {isStaff && <TableHead className="text-left text-sm sm:text-base font-bold py-4 px-4 text-primary">حصة الشركة</TableHead>}
-                <TableHead className="text-right text-sm sm:text-base font-bold py-4 px-4">حالة الدفع</TableHead>
+                {isStaff && <TableHead className="text-left text-sm sm:text-base font-bold py-4 px-4 text-primary">{lang === "ar" ? "حصة الشركة" : "Company Share"}</TableHead>}
+                <TableHead className="text-right text-sm sm:text-base font-bold py-4 px-4">{lang === "ar" ? "حالة الدفع" : "Payment Status"}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {revenues.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={isStaff ? 7 : 4} className="text-center py-8 text-sm sm:text-base text-muted-foreground">لا توجد إيرادات في هذه الفترة</TableCell>
+                  <TableCell colSpan={isStaff ? 7 : 4} className="text-center py-8 text-sm sm:text-base text-muted-foreground">{lang === "ar" ? "لا توجد إيرادات في هذه الفترة" : "No revenues in this period"}</TableCell>
                 </TableRow>
               )}
               {revenues.map((r, i) => {
                 const p = Array.isArray(r.payments) ? r.payments[0] : r.payments;
                 return (
                   <TableRow key={r.id || i} className="hover:bg-muted/10 transition-colors">
-                    <TableCell className="font-bold text-sm sm:text-base py-4.5 px-4">{r.channels?.name}</TableCell>
+                    <TableCell className="font-bold text-sm sm:text-base py-4.5 px-4 text-right">{r.channels?.name}</TableCell>
                     <TableCell dir="ltr" className="text-right text-sm sm:text-base py-4.5 px-4">{monthLabel(r.period_month)}</TableCell>
                     {isStaff && <TableCell dir="ltr" className="text-left text-sm sm:text-base font-semibold py-4.5 px-4">{money(r.total_revenue)}</TableCell>}
                     {isStaff && <TableCell dir="ltr" className="text-center text-sm sm:text-base py-4.5 px-4">{r.client_percentage}%</TableCell>}
@@ -532,10 +557,10 @@ function ReportsDashboard() {
                     <TableCell className="text-right py-4.5 px-4">
                       {p?.status ? (
                         <Badge variant={p.status === "paid" ? "outline" : "destructive"} className="text-xs sm:text-sm px-2.5 py-1 font-bold">
-                          {STATUS_AR[p.status]}
+                          {lang === "ar" ? STATUS_AR[p.status] : (STATUS_EN[p.status] || p.status)}
                         </Badge>
                       ) : (
-                        <Badge variant="secondary" className="text-xs sm:text-sm px-2.5 py-1 font-bold">غير مسدد</Badge>
+                        <Badge variant="secondary" className="text-xs sm:text-sm px-2.5 py-1 font-bold bg-slate-800 text-slate-300">{lang === "ar" ? "غير مسدد" : "Unpaid"}</Badge>
                       )}
                     </TableCell>
                   </TableRow>
@@ -545,39 +570,41 @@ function ReportsDashboard() {
           </Table>
         </TabsContent>
 
-        <TabsContent value="aging" className="border rounded-xl bg-card shadow-sm overflow-hidden">
+        <TabsContent value="aging" className="border border-slate-800 rounded-xl bg-card shadow-sm overflow-hidden">
           <Table>
             <TableHeader className="bg-muted/40">
               <TableRow>
-                <TableHead className="text-right text-sm sm:text-base font-bold py-4 px-4">رقم الفاتورة</TableHead>
-                <TableHead className="text-right text-sm sm:text-base font-bold py-4 px-4">العميل</TableHead>
-                <TableHead className="text-right text-sm sm:text-base font-bold py-4 px-4">تاريخ الاستحقاق</TableHead>
-                <TableHead className="text-center text-sm sm:text-base font-bold py-4 px-4">أيام التأخير</TableHead>
-                <TableHead className="text-left text-sm sm:text-base font-bold py-4 px-4">الإجمالي</TableHead>
-                <TableHead className="text-left text-destructive text-sm sm:text-base font-black py-4 px-4">الرصيد المعلق</TableHead>
-                <TableHead className="text-right text-sm sm:text-base font-bold py-4 px-4">فئة التأخير</TableHead>
+                <TableHead className="text-right text-sm sm:text-base font-bold py-4 px-4">{lang === "ar" ? "رقم الفاتورة" : "Invoice No."}</TableHead>
+                <TableHead className="text-right text-sm sm:text-base font-bold py-4 px-4">{lang === "ar" ? "العميل" : "Client"}</TableHead>
+                <TableHead className="text-right text-sm sm:text-base font-bold py-4 px-4">{lang === "ar" ? "تاريخ الاستحقاق" : "Due Date"}</TableHead>
+                <TableHead className="text-center text-sm sm:text-base font-bold py-4 px-4">{lang === "ar" ? "أيام التأخير" : "Days Overdue"}</TableHead>
+                <TableHead className="text-left text-sm sm:text-base font-bold py-4 px-4">{lang === "ar" ? "الإجمالي" : "Total"}</TableHead>
+                <TableHead className="text-left text-destructive text-sm sm:text-base font-black py-4 px-4">{lang === "ar" ? "الرصيد المعلق" : "Unpaid Balance"}</TableHead>
+                <TableHead className="text-right text-sm sm:text-base font-bold py-4 px-4">{lang === "ar" ? "فئة التأخير" : "Aging Category"}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {stats.agingList.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-sm sm:text-base text-muted-foreground">ممتاز! لا توجد فواتير متأخرة الدفع حالياً</TableCell>
+                  <TableCell colSpan={7} className="text-center py-8 text-sm sm:text-base text-muted-foreground">
+                    {lang === "ar" ? "ممتاز! لا توجد فواتير متأخرة الدفع حالياً" : "Excellent! No overdue invoices currently"}
+                  </TableCell>
                 </TableRow>
               )}
               {stats.agingList.map((inv) => (
                 <TableRow key={inv.id} className="hover:bg-muted/10 transition-colors">
-                  <TableCell className="font-black text-sm sm:text-base py-4.5 px-4 text-white">{inv.invoice_number}</TableCell>
-                  <TableCell className="font-semibold text-sm sm:text-base py-4.5 px-4">{inv.clients?.name}</TableCell>
+                  <TableCell className="font-black text-sm sm:text-base py-4.5 px-4 text-white text-right">{inv.invoice_number}</TableCell>
+                  <TableCell className="font-semibold text-sm sm:text-base py-4.5 px-4 text-right">{inv.clients?.name}</TableCell>
                   <TableCell dir="ltr" className="text-right text-sm sm:text-base py-4.5 px-4">{inv.due_date}</TableCell>
                   <TableCell dir="ltr" className="text-center text-destructive font-black text-sm sm:text-base py-4.5 px-4">
-                    {inv.overdueDays} يوم
+                    {inv.overdueDays} {lang === "ar" ? "يوم" : "Days"}
                   </TableCell>
                   <TableCell dir="ltr" className="text-left text-sm sm:text-base font-semibold py-4.5 px-4">{money(inv.grand_total)}</TableCell>
                   <TableCell dir="ltr" className="text-left text-destructive font-black text-sm sm:text-base py-4.5 px-4">{money(inv.remaining_balance)}</TableCell>
                   <TableCell className="text-right py-4.5 px-4">
-                    {inv.overdueDays <= 30 && <Badge className="bg-orange-100 text-orange-800 text-xs sm:text-sm px-2.5 py-1 font-bold">1 - 30 يوم</Badge>}
-                    {inv.overdueDays > 30 && inv.overdueDays <= 60 && <Badge className="bg-amber-100 text-amber-800 text-xs sm:text-sm px-2.5 py-1 font-bold">31 - 60 يوم</Badge>}
-                    {inv.overdueDays > 60 && <Badge className="bg-destructive text-destructive-foreground text-xs sm:text-sm px-2.5 py-1 font-bold">60+ يوم حرجة</Badge>}
+                    {inv.overdueDays <= 30 && <Badge className="bg-orange-100 text-orange-800 text-xs sm:text-sm px-2.5 py-1 font-bold">{lang === "ar" ? "1 - 30 يوم" : "1 - 30 Days"}</Badge>}
+                    {inv.overdueDays > 30 && inv.overdueDays <= 60 && <Badge className="bg-amber-100 text-amber-800 text-xs sm:text-sm px-2.5 py-1 font-bold">{lang === "ar" ? "31 - 60 يوم" : "31 - 60 Days"}</Badge>}
+                    {inv.overdueDays > 60 && <Badge className="bg-destructive text-destructive-foreground text-xs sm:text-sm px-2.5 py-1 font-bold">{lang === "ar" ? "60+ يوم حرجة" : "60+ Days Critical"}</Badge>}
                   </TableCell>
                 </TableRow>
               ))}
@@ -585,25 +612,25 @@ function ReportsDashboard() {
           </Table>
         </TabsContent>
 
-        <TabsContent value="channels" className="border rounded-xl bg-card shadow-sm overflow-hidden">
+        <TabsContent value="channels" className="border border-slate-800 rounded-xl bg-card shadow-sm overflow-hidden">
           <Table>
             <TableHeader className="bg-muted/40">
               <TableRow>
-                <TableHead className="text-right text-sm sm:text-base font-bold py-4 px-4">الترتيب</TableHead>
-                <TableHead className="text-right text-sm sm:text-base font-bold py-4 px-4">اسم القناة</TableHead>
-                <TableHead className="text-left text-sm sm:text-base font-bold py-4 px-4 text-primary">الإيراد الإجمالي للحقبة</TableHead>
+                <TableHead className="text-right text-sm sm:text-base font-bold py-4 px-4">{lang === "ar" ? "الترتيب" : "Rank"}</TableHead>
+                <TableHead className="text-right text-sm sm:text-base font-bold py-4 px-4">{lang === "ar" ? "اسم القناة" : "Channel Name"}</TableHead>
+                <TableHead className="text-left text-sm sm:text-base font-bold py-4 px-4 text-primary">{lang === "ar" ? "الإيراد الإجمالي للحقبة" : "Gross Revenue for Period"}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {stats.topChannels.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center py-8 text-sm sm:text-base text-muted-foreground">لا توجد قنوات</TableCell>
+                  <TableCell colSpan={3} className="text-center py-8 text-sm sm:text-base text-muted-foreground">{lang === "ar" ? "لا توجد قنوات" : "No channels"}</TableCell>
                 </TableRow>
               )}
               {stats.topChannels.map((ch, idx) => (
                 <TableRow key={ch.name} className="hover:bg-muted/10 transition-colors">
-                  <TableCell className="font-black text-sm sm:text-base py-4.5 px-4">{idx + 1}</TableCell>
-                  <TableCell className="font-bold text-sm sm:text-base py-4.5 px-4 text-white">{ch.name}</TableCell>
+                  <TableCell className="font-black text-sm sm:text-base py-4.5 px-4 text-right">{idx + 1}</TableCell>
+                  <TableCell className="font-bold text-sm sm:text-base py-4.5 px-4 text-white text-right">{ch.name}</TableCell>
                   <TableCell dir="ltr" className="text-left text-primary font-black text-sm sm:text-base py-4.5 px-4">{money(ch.revenue)}</TableCell>
                 </TableRow>
               ))}
@@ -611,25 +638,25 @@ function ReportsDashboard() {
           </Table>
         </TabsContent>
 
-        <TabsContent value="clients" className="border rounded-xl bg-card shadow-sm overflow-hidden">
+        <TabsContent value="clients" className="border border-slate-800 rounded-xl bg-card shadow-sm overflow-hidden">
           <Table>
             <TableHeader className="bg-muted/40">
               <TableRow>
-                <TableHead className="text-right text-sm sm:text-base font-bold py-4 px-4">الترتيب</TableHead>
-                <TableHead className="text-right text-sm sm:text-base font-bold py-4 px-4">اسم العميل</TableHead>
-                <TableHead className="text-left text-sm sm:text-base font-bold py-4 px-4 text-success">إجمالي مساهمة أرباح الفترة</TableHead>
+                <TableHead className="text-right text-sm sm:text-base font-bold py-4 px-4">{lang === "ar" ? "الترتيب" : "Rank"}</TableHead>
+                <TableHead className="text-right text-sm sm:text-base font-bold py-4 px-4">{lang === "ar" ? "اسم العميل" : "Client Name"}</TableHead>
+                <TableHead className="text-left text-sm sm:text-base font-bold py-4 px-4 text-success">{lang === "ar" ? "إجمالي مساهمة أرباح الفترة" : "Total Period Contribution"}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {stats.topClients.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center py-8 text-sm sm:text-base text-muted-foreground">لا توجد بيانات</TableCell>
+                  <TableCell colSpan={3} className="text-center py-8 text-sm sm:text-base text-muted-foreground">{lang === "ar" ? "لا توجد بيانات" : "No data available"}</TableCell>
                 </TableRow>
               )}
               {stats.topClients.map((cl, idx) => (
                 <TableRow key={cl.name} className="hover:bg-muted/10 transition-colors">
-                  <TableCell className="font-black text-sm sm:text-base py-4.5 px-4">{idx + 1}</TableCell>
-                  <TableCell className="font-bold text-sm sm:text-base py-4.5 px-4 text-white">{cl.name}</TableCell>
+                  <TableCell className="font-black text-sm sm:text-base py-4.5 px-4 text-right">{idx + 1}</TableCell>
+                  <TableCell className="font-bold text-sm sm:text-base py-4.5 px-4 text-white text-right">{cl.name}</TableCell>
                   <TableCell dir="ltr" className="text-left text-success font-black text-sm sm:text-base py-4.5 px-4">{money(cl.revenue)}</TableCell>
                 </TableRow>
               ))}

@@ -32,6 +32,7 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, Plus, Search, Eye, Copy, Trash2, Printer, Calendar, RefreshCw, X } from "lucide-react";
 import { money, STATUS_AR } from "@/lib/format";
 import { createInvoice, duplicateInvoice, deleteInvoice } from "@/lib/invoices.functions";
+import { useLanguage } from "@/hooks/use-language";
 
 export const Route = createFileRoute("/_authenticated/invoices")({
   component: InvoicesPage,
@@ -62,10 +63,23 @@ const statusVariant: Record<string, string> = {
 };
 
 function InvoicesPage() {
+  const { t, lang } = useLanguage();
   const loc = useLocation();
   const isDetailsPage = loc.pathname !== "/invoices" && loc.pathname !== "/invoices/";
 
-  
+  const STATUS_EN: Record<string, string> = {
+    draft: "Draft",
+    issued: "Issued",
+    paid: "Paid",
+    partial: "Partially Paid",
+    overdue: "Overdue",
+    cancelled: "Cancelled",
+  };
+
+  const getStatusLabel = (status: string) => {
+    return lang === "ar" ? (STATUS_AR[status] || status) : (STATUS_EN[status] || status);
+  };
+
   const { isStaff, user } = useAuth();
   const qc = useQueryClient();
   const navigate = useNavigate();
@@ -137,7 +151,7 @@ function InvoicesPage() {
   // Load monthly revenues automatically
   async function loadMonthRevenues() {
     if (!formClientId || !formMonth) {
-      toast.error("يرجى اختيار العميل والشهر أولاً");
+      toast.error(lang === "ar" ? "يرجى اختيار العميل والشهر أولاً" : "Please select the client and month first");
       return;
     }
     setBusy(true);
@@ -160,7 +174,7 @@ function InvoicesPage() {
       
       const channelIds = (clientChannels ?? []).map((c) => c.id);
       if (channelIds.length === 0) {
-        toast.info("لا توجد قنوات مسجلة لهذا العميل");
+        toast.info(lang === "ar" ? "لا توجد قنوات مسجلة لهذا العميل" : "No channels registered for this client");
         setBusy(false);
         return;
       }
@@ -174,7 +188,11 @@ function InvoicesPage() {
 
       if (error) throw error;
       if (!revenues || revenues.length === 0) {
-        toast.info(`لا توجد إيرادات غير مفوترة لهذا العميل في شهر أرباحه المحدد (${priorMonthStr})`);
+        toast.info(
+          lang === "ar" 
+            ? `لا توجد إيرادات غير مفوترة لهذا العميل في شهر أرباحه المحدد (${priorMonthStr})` 
+            : `No unbilled revenues found for this client in the selected earnings month (${priorMonthStr})`
+        );
         setBusy(false);
         return;
       }
@@ -182,7 +200,7 @@ function InvoicesPage() {
       const mapped = revenues.map((r: any) => ({
         revenueId: r.id,
         channelId: r.channel_id,
-        description: `أرباح قناة (${r.channels?.name}) - شهر ${priorMonthStr}`,
+        description: lang === "ar" ? `أرباح قناة (${r.channels?.name}) - شهر ${priorMonthStr}` : `Earnings for channel (${r.channels?.name}) - Month ${priorMonthStr}`,
         views: Number(r.views || 0),
         amount: Number(r.client_share || 0),
         clientPercentage: Number(r.client_percentage || 50),
@@ -191,9 +209,13 @@ function InvoicesPage() {
       }));
 
       setFormItems([...formItems, ...mapped]);
-      toast.success(`تم تحميل ${revenues.length} من بنود أرباح القنوات`);
+      toast.success(
+        lang === "ar" 
+          ? `تم تحميل ${revenues.length} من بنود أرباح القنوات` 
+          : `Successfully loaded ${revenues.length} channel earnings items`
+      );
     } catch (err: any) {
-      toast.error(err.message || "فشل تحميل الإيرادات");
+      toast.error(err.message || (lang === "ar" ? "فشل تحميل الإيرادات" : "Failed to load revenues"));
     } finally {
       setBusy(false);
     }
@@ -205,7 +227,7 @@ function InvoicesPage() {
       {
         revenueId: null,
         channelId: null,
-        description: "رسوم إدارية / خدمات إضافية",
+        description: lang === "ar" ? "رسوم إدارية / خدمات إضافية" : "Admin Fees / Extra Services",
         views: "",
         amount: "",
         clientPercentage: null,
@@ -266,7 +288,7 @@ function InvoicesPage() {
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ["invoices"] });
       qc.invalidateQueries({ queryKey: ["payments"] });
-      toast.success("تم إنشاء الفاتورة بنجاح");
+      toast.success(lang === "ar" ? "تم إنشاء الفاتورة بنجاح" : "Invoice created successfully");
       setCreateOpen(false);
       resetForm();
       navigate({ to: "/invoices/$id", params: { id: res.id } });
@@ -278,7 +300,7 @@ function InvoicesPage() {
     mutationFn: async (id: string) => duplicateInvoiceFn({ data: id }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["invoices"] });
-      toast.success("تم نسخ الفاتورة كمسودة");
+      toast.success(lang === "ar" ? "تم نسخ الفاتورة كمسودة" : "Invoice duplicated as draft");
     },
     onError: (err: any) => toast.error(err.message),
   });
@@ -287,7 +309,7 @@ function InvoicesPage() {
     mutationFn: async (id: string) => deleteInvoiceFn({ data: id }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["invoices"] });
-      toast.success("تم حذف الفاتورة بنجاح");
+      toast.success(lang === "ar" ? "تم حذف الفاتورة بنجاح" : "Invoice deleted successfully");
       setDeleteTargetId(null);
     },
     onError: (err: any) => toast.error(err.message),
@@ -328,15 +350,17 @@ function InvoicesPage() {
         <div className="space-y-1">
           <h1 className="text-2xl sm:text-3xl font-black flex items-center gap-2.5 text-white">
             <FileText className="w-8 h-8 text-primary" />
-            الفواتير المالية
+            {lang === "ar" ? "الفواتير المالية" : "Financial Invoices"}
           </h1>
           <p className="text-sm text-muted-foreground mt-1.5">
-            {isStaff ? "إدارة فواتير العملاء وتوزيع الأرباح والمدفوعات" : "فواتيرك المستحقة وإيصالات السداد"}
+            {isStaff 
+              ? (lang === "ar" ? "إدارة فواتير العملاء وتوزيع الأرباح والمدفوعات" : "Manage client invoices, revenue splits, and payments") 
+              : (lang === "ar" ? "فواتيرك المستحقة وإيصالات السداد" : "Your outstanding invoices and payment receipts")}
           </p>
         </div>
         {isStaff && (
           <Button onClick={openCreateDialog} className="btn-header-action">
-            <Plus className="w-4 h-4 ml-1" /> فاتورة جديدة
+            <Plus className="w-4 h-4 ml-1" /> {lang === "ar" ? "فاتورة جديدة" : "New Invoice"}
           </Button>
         )}
       </div>
@@ -345,7 +369,7 @@ function InvoicesPage() {
         <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="بحث برقم الفاتورة أو العميل…"
+            placeholder={lang === "ar" ? "بحث برقم الفاتورة أو العميل…" : "Search by invoice number or client..."}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="search-input-padding"
@@ -353,11 +377,11 @@ function InvoicesPage() {
         </div>
         {isStaff && (
           <Select value={filterClient} onValueChange={setFilterClient}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="اختر العميل" />
+            <SelectTrigger className="w-48 bg-slate-900 border-slate-700">
+              <SelectValue placeholder={lang === "ar" ? "اختر العميل" : "Select client"} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">كل العملاء</SelectItem>
+              <SelectItem value="all">{lang === "ar" ? "كل العملاء" : "All clients"}</SelectItem>
               {clients.map((c) => (
                 <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
               ))}
@@ -365,13 +389,13 @@ function InvoicesPage() {
           </Select>
         )}
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="الحالة" />
+          <SelectTrigger className="w-40 bg-slate-900 border-slate-700">
+            <SelectValue placeholder={lang === "ar" ? "الحالة" : "Status"} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">كل الحالات</SelectItem>
+            <SelectItem value="all">{lang === "ar" ? "كل الحالات" : "All statuses"}</SelectItem>
             {["draft", "issued", "paid", "partial", "overdue", "cancelled"].map((s) => (
-              <SelectItem key={s} value={s}>{STATUS_AR[s]}</SelectItem>
+              <SelectItem key={s} value={s}>{getStatusLabel(s)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -382,15 +406,15 @@ function InvoicesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-right">رقم الفاتورة</TableHead>
-                {isStaff && <TableHead className="text-right">العميل</TableHead>}
-                <TableHead className="text-right">تاريخ الإصدار</TableHead>
-                <TableHead className="text-right">تاريخ الاستحقاق</TableHead>
-                <TableHead className="text-left">الإجمالي</TableHead>
-                <TableHead className="text-left">المدفوع</TableHead>
-                <TableHead className="text-left">المتبقي</TableHead>
-                <TableHead className="text-right">الحالة</TableHead>
-                <TableHead className="text-left">إجراءات</TableHead>
+                <TableHead className="text-right">{lang === "ar" ? "رقم الفاتورة" : "Invoice No."}</TableHead>
+                {isStaff && <TableHead className="text-right">{lang === "ar" ? "العميل" : "Client"}</TableHead>}
+                <TableHead className="text-right">{lang === "ar" ? "تاريخ الإصدار" : "Issue Date"}</TableHead>
+                <TableHead className="text-right">{lang === "ar" ? "تاريخ الاستحقاق" : "Due Date"}</TableHead>
+                <TableHead className="text-left">{lang === "ar" ? "الإجمالي" : "Total"}</TableHead>
+                <TableHead className="text-left">{lang === "ar" ? "المدفوع" : "Paid"}</TableHead>
+                <TableHead className="text-left">{lang === "ar" ? "المتبقي" : "Remaining"}</TableHead>
+                <TableHead className="text-right">{lang === "ar" ? "الحالة" : "Status"}</TableHead>
+                <TableHead className="text-left">{t("actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -399,7 +423,7 @@ function InvoicesPage() {
                   <TableCell colSpan={isStaff ? 9 : 8} className="text-center py-8">
                     <div className="flex items-center justify-center gap-2 text-muted-foreground">
                       <RefreshCw className="w-4 h-4 animate-spin" />
-                      جاري تحميل الفواتير…
+                      {lang === "ar" ? "جاري تحميل الفواتير…" : "Loading invoices..."}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -407,7 +431,7 @@ function InvoicesPage() {
               {!isLoading && filtered.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={isStaff ? 9 : 8} className="text-center text-muted-foreground py-12">
-                    لا توجد فواتير مطابقة
+                    {lang === "ar" ? "لا توجد فواتير مطابقة" : "No matching invoices found"}
                   </TableCell>
                 </TableRow>
               )}
@@ -421,7 +445,7 @@ function InvoicesPage() {
                   <TableCell dir="ltr" className="text-left text-white">{money(inv.amount_paid)}</TableCell>
                   <TableCell dir="ltr" className="text-left text-white font-bold">{money(inv.remaining_balance)}</TableCell>
                   <TableCell className="text-right text-white font-medium">
-                    {STATUS_AR[inv.status]}
+                    {getStatusLabel(inv.status)}
                   </TableCell>
                   <TableCell className="text-left">
                     <div className="flex items-center justify-end gap-1">
@@ -432,7 +456,7 @@ function InvoicesPage() {
                       </Button>
                       {isStaff && (
                         <>
-                          <Button size="icon" variant="ghost" onClick={() => dupMut.mutate(inv.id)} title="نسخ">
+                          <Button size="icon" variant="ghost" onClick={() => dupMut.mutate(inv.id)} title={lang === "ar" ? "نسخ" : "Duplicate"}>
                             <Copy className="w-4 h-4" />
                           </Button>
                           <Button size="icon" variant="ghost" onClick={() => setDeleteTargetId(inv.id)}>
@@ -451,17 +475,17 @@ function InvoicesPage() {
 
       {/* Create Dialog */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" dir="rtl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-slate-950 border border-slate-800 text-slate-100" dir={lang === "ar" ? "rtl" : "ltr"}>
           <DialogHeader>
-            <DialogTitle>فاتورة جديدة للعميل</DialogTitle>
+            <DialogTitle className="text-white text-right font-bold">{lang === "ar" ? "فاتورة جديدة للعميل" : "New Invoice for Client"}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2">
+          <div className="space-y-4 py-2 text-right">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1">
-                <Label htmlFor="create-client">العميل *</Label>
+                <Label htmlFor="create-client" className="text-slate-300">{lang === "ar" ? "العميل *" : "Client *"}</Label>
                 <Select value={formClientId} onValueChange={setFormClientId}>
-                  <SelectTrigger id="create-client">
-                    <SelectValue placeholder="اختر العميل" />
+                  <SelectTrigger id="create-client" className="bg-slate-900 border-slate-700 text-white">
+                    <SelectValue placeholder={lang === "ar" ? "اختر العميل" : "Select client"} />
                   </SelectTrigger>
                   <SelectContent>
                     {clients.map((c) => (
@@ -472,7 +496,7 @@ function InvoicesPage() {
               </div>
 
               <div className="space-y-1">
-                <Label htmlFor="create-invoice-no">رقم الفاتورة *</Label>
+                <Label htmlFor="create-invoice-no" className="text-slate-300">{lang === "ar" ? "رقم الفاتورة *" : "Invoice Number *"}</Label>
                 <div className="flex gap-1">
                   <Input
                     id="create-invoice-no"
@@ -480,15 +504,16 @@ function InvoicesPage() {
                     onChange={(e) => setFormInvoiceNo(e.target.value)}
                     required
                     dir="ltr"
+                    className="bg-slate-900 border-slate-700 text-white"
                   />
-                  <Button variant="outline" onClick={generateInvoiceNumber} size="icon" type="button" title="توليد رقم">
+                  <Button variant="outline" onClick={generateInvoiceNumber} size="icon" type="button" title={lang === "ar" ? "توليد رقم" : "Generate No."} className="bg-slate-900 border-slate-700 text-white">
                     <RefreshCw className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
 
               <div className="space-y-1">
-                <Label htmlFor="create-issue-date">تاريخ الإصدار *</Label>
+                <Label htmlFor="create-issue-date" className="text-slate-300">{lang === "ar" ? "تاريخ الإصدار *" : "Issue Date *"}</Label>
                 <Input
                   id="create-issue-date"
                   type="date"
@@ -496,13 +521,14 @@ function InvoicesPage() {
                   onChange={(e) => setFormIssueDate(e.target.value)}
                   required
                   dir="ltr"
+                  className="bg-slate-900 border-slate-700 text-white"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1">
-                <Label htmlFor="create-due-date">تاريخ الاستحقاق *</Label>
+                <Label htmlFor="create-due-date" className="text-slate-300">{lang === "ar" ? "تاريخ الاستحقاق *" : "Due Date *"}</Label>
                 <Input
                   id="create-due-date"
                   type="date"
@@ -510,48 +536,50 @@ function InvoicesPage() {
                   onChange={(e) => setFormDueDate(e.target.value)}
                   required
                   dir="ltr"
+                  className="bg-slate-900 border-slate-700 text-white"
                 />
               </div>
 
               <div className="space-y-1">
-                <Label htmlFor="load-month">جلب أرباح شهر معين تلقائياً</Label>
+                <Label htmlFor="load-month" className="text-slate-300">{lang === "ar" ? "جلب أرباح شهر معين تلقائياً" : "Fetch earnings for specific month"}</Label>
                 <Input
                   id="load-month"
                   type="month"
                   value={formMonth}
                   onChange={(e) => setFormMonth(e.target.value)}
                   dir="ltr"
+                  className="bg-slate-900 border-slate-700 text-white"
                 />
               </div>
 
               <div className="flex items-end">
                 <Button
                   variant="secondary"
-                  className="w-full"
+                  className="w-full bg-slate-800 text-white hover:bg-slate-700"
                   onClick={loadMonthRevenues}
                   disabled={busy}
                   type="button"
                 >
-                  تحميل الإيرادات
+                  {busy ? t("loading") : (lang === "ar" ? "تحميل الإيرادات" : "Load Revenues")}
                 </Button>
               </div>
             </div>
 
             {/* Items Table */}
-            <div className="border rounded-lg p-2 space-y-2">
+            <div className="border border-slate-800 rounded-lg p-3 bg-slate-900/50 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-sm">بنود الفاتورة</span>
-                <Button variant="outline" size="sm" onClick={addCustomItem} type="button">
-                  <Plus className="w-3.5 h-3.5 ml-1" /> إضافة بند يدوي
+                <span className="font-semibold text-sm text-slate-200">{lang === "ar" ? "بنود الفاتورة" : "Invoice Items"}</span>
+                <Button variant="outline" size="sm" onClick={addCustomItem} type="button" className="border-slate-700 text-white bg-slate-800 hover:bg-slate-700">
+                  <Plus className="w-3.5 h-3.5 ml-1" /> {lang === "ar" ? "إضافة بند يدوي" : "Add Custom Item"}
                 </Button>
               </div>
 
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-right">البند / الوصف</TableHead>
-                    <TableHead className="text-center w-24">المشاهدات</TableHead>
-                    <TableHead className="text-center w-28">المبلغ (USD)</TableHead>
+                    <TableHead className="text-right">{lang === "ar" ? "البند / الوصف" : "Item / Description"}</TableHead>
+                    <TableHead className="text-center w-24">{lang === "ar" ? "المشاهدات" : "Views"}</TableHead>
+                    <TableHead className="text-center w-28">{lang === "ar" ? "المبلغ (USD)" : "Amount (USD)"}</TableHead>
                     <TableHead className="text-center w-12"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -559,7 +587,7 @@ function InvoicesPage() {
                   {formItems.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={4} className="text-center text-muted-foreground py-6">
-                        لا توجد بنود حالياً. يرجى إضافة بند يدوي أو تحميل إيرادات الشهر.
+                        {lang === "ar" ? "لا توجد بنود حالياً. يرجى إضافة بند يدوي أو تحميل إيرادات الشهر." : "No items currently. Please add a custom item or load monthly revenues."}
                       </TableCell>
                     </TableRow>
                   )}
@@ -570,6 +598,7 @@ function InvoicesPage() {
                           value={it.description}
                           onChange={(e) => updateFormItem(idx, "description", e.target.value)}
                           required
+                          className="bg-slate-950 border-slate-800 text-white"
                         />
                       </TableCell>
                       <TableCell>
@@ -578,7 +607,7 @@ function InvoicesPage() {
                           value={it.views}
                           onChange={(e) => updateFormItem(idx, "views", e.target.value)}
                           dir="ltr"
-                          className="text-center"
+                          className="text-center bg-slate-950 border-slate-800 text-white"
                         />
                       </TableCell>
                       <TableCell>
@@ -589,7 +618,7 @@ function InvoicesPage() {
                           onChange={(e) => updateFormItem(idx, "amount", e.target.value)}
                           required
                           dir="ltr"
-                          className="text-center font-bold"
+                          className="text-center font-bold bg-slate-950 border-slate-800 text-white"
                         />
                       </TableCell>
                       <TableCell>
@@ -613,7 +642,7 @@ function InvoicesPage() {
               <div className="space-y-2">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label htmlFor="create-tax">الضريبة (%)</Label>
+                    <Label htmlFor="create-tax" className="text-slate-300">{lang === "ar" ? "الضريبة (%)" : "Tax (%)"}</Label>
                     <Input
                       id="create-tax"
                       type="number"
@@ -622,10 +651,11 @@ function InvoicesPage() {
                       value={formTax}
                       onChange={(e) => setFormTax(e.target.value)}
                       dir="ltr"
+                      className="bg-slate-900 border-slate-700 text-white"
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="create-discount">الخصم (%)</Label>
+                    <Label htmlFor="create-discount" className="text-slate-300">{lang === "ar" ? "الخصم (%)" : "Discount (%)"}</Label>
                     <Input
                       id="create-discount"
                       type="number"
@@ -634,46 +664,48 @@ function InvoicesPage() {
                       value={formDiscount}
                       onChange={(e) => setFormDiscount(e.target.value)}
                       dir="ltr"
+                      className="bg-slate-900 border-slate-700 text-white"
                     />
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="create-notes">ملاحظات الفاتورة</Label>
+                  <Label htmlFor="create-notes" className="text-slate-300">{lang === "ar" ? "ملاحظات الفاتورة" : "Invoice Notes"}</Label>
                   <Input
                     id="create-notes"
                     value={formNotes}
                     onChange={(e) => setFormNotes(e.target.value)}
-                    placeholder="شروط إضافية أو تعليمات الدفع"
+                    placeholder={lang === "ar" ? "شروط إضافية أو تعليمات الدفع" : "Additional terms or payment instructions"}
+                    className="bg-slate-900 border-slate-700 text-white"
                   />
                 </div>
               </div>
 
               {/* Totals Summary */}
-              <div className="bg-muted/40 p-4 rounded-lg space-y-2 text-sm">
-                <div className="flex justify-between border-b pb-1">
-                  <span>المجموع الفرعي:</span>
-                  <span className="font-bold" dir="ltr">{money(calculated.subtotal)}</span>
+              <div className="bg-muted/20 p-4 rounded-lg space-y-2 text-sm">
+                <div className="flex justify-between border-b border-slate-800 pb-1">
+                  <span>{lang === "ar" ? "المجموع الفرعي:" : "Subtotal:"}</span>
+                  <span className="font-bold text-white" dir="ltr">{money(calculated.subtotal)}</span>
                 </div>
-                <div className="flex justify-between border-b pb-1 text-muted-foreground">
-                  <span>الخصم ({formDiscount}%):</span>
+                <div className="flex justify-between border-b border-slate-800 pb-1 text-muted-foreground">
+                  <span>{lang === "ar" ? "الخصم" : "Discount"} ({formDiscount}%):</span>
                   <span dir="ltr">-{money(calculated.discountAmount)}</span>
                 </div>
-                <div className="flex justify-between border-b pb-1 text-muted-foreground">
-                  <span>الضريبة ({formTax}%):</span>
+                <div className="flex justify-between border-b border-slate-800 pb-1 text-muted-foreground">
+                  <span>{lang === "ar" ? "الضريبة" : "Tax"} ({formTax}%):</span>
                   <span dir="ltr">+{money(calculated.taxAmount)}</span>
                 </div>
                 <div className="flex justify-between text-base font-bold pt-1 text-primary">
-                  <span>الإجمالي النهائي (USD):</span>
+                  <span>{lang === "ar" ? "الإجمالي النهائي (USD):" : "Grand Total (USD):"}</span>
                   <span dir="ltr">{money(calculated.total)}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setCreateOpen(false)} type="button">إلغاء</Button>
+          <DialogFooter className="mt-4 gap-2">
+            <Button variant="outline" onClick={() => setCreateOpen(false)} type="button" className="border-slate-700 text-white hover:bg-slate-900 bg-slate-950">{t("cancel")}</Button>
             <Button onClick={() => createMut.mutate()} disabled={createMut.isPending || formItems.length === 0}>
-              {createMut.isPending ? "جاري الحفظ..." : "حفظ الفاتورة"}
+              {createMut.isPending ? (lang === "ar" ? "جاري الحفظ..." : "Saving...") : (lang === "ar" ? "حفظ الفاتورة" : "Save Invoice")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -681,21 +713,21 @@ function InvoicesPage() {
 
       {/* AlertDialog for Delete Confirmation */}
       <AlertDialog open={!!deleteTargetId} onOpenChange={(o) => !o && setDeleteTargetId(null)}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir={lang === "ar" ? "rtl" : "ltr"} className="bg-slate-900 border border-slate-800 text-slate-100">
           <AlertDialogHeader>
-            <AlertDialogTitle>هل أنت متأكد تماماً من حذف هذه الفاتورة؟</AlertDialogTitle>
-            <AlertDialogDescription>
-              هذا الإجراء سيقوم بحذف الفاتورة نهائياً وإلغاء ارتباط كافة بنود أرباح القنوات المرتبطة بها لتصبح قابلة للفوترة من جديد.
+            <AlertDialogTitle className="text-white text-right font-bold">{lang === "ar" ? "هل أنت متأكد تماماً من حذف هذه الفاتورة؟" : "Are you absolutely sure you want to delete this invoice?"}</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-400 text-right">
+              {lang === "ar" ? "هذا الإجراء سيقوم بحذف الفاتورة نهائياً وإلغاء ارتباط كافة بنود أرباح القنوات المرتبطة بها لتصبح قابلة للفوترة من جديد." : "This action will permanently delete the invoice and release all associated channel revenue items to be billed again."}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="gap-2">
             <AlertDialogAction
               onClick={() => deleteTargetId && delMut.mutate(deleteTargetId)}
               className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
             >
-              نعم، احذف الفاتورة
+              {lang === "ar" ? "نعم، احذف الفاتورة" : "Yes, delete invoice"}
             </AlertDialogAction>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogCancel className="bg-slate-800 text-white border-slate-700 hover:bg-slate-700">{t("cancel")}</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

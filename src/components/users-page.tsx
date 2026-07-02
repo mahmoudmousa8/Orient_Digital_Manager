@@ -38,12 +38,7 @@ import {
 } from "@/lib/permissions.functions";
 import { createAppUser, resetClientPassword, updateAppUser } from "@/lib/admin.functions";
 import { Checkbox } from "@/components/ui/checkbox";
-
-const roleLabels: Record<string, string> = {
-  admin: "مسؤول",
-  employee: "موظف",
-  client: "عميل",
-};
+import { useLanguage } from "@/hooks/use-language";
 
 const roleVariants: Record<string, "default" | "secondary" | "outline"> = {
   admin: "default",
@@ -54,9 +49,16 @@ const roleVariants: Record<string, "default" | "secondary" | "outline"> = {
 type ClientOption = { id: string; name: string };
 
 export function UsersPage() {
+  const { t, lang } = useLanguage();
   const { isAdmin, loading, user } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
+
+  const roleLabels: Record<string, string> = {
+    admin: lang === "ar" ? "مسؤول" : "Admin",
+    employee: lang === "ar" ? "موظف" : "Employee",
+    client: lang === "ar" ? "عميل" : "Client",
+  };
   
   // Server functions
   const listFn = useServerFn(listUserPermissions);
@@ -140,14 +142,14 @@ export function UsersPage() {
           newClientName: createForm.role === "client" && createShowNewClientInput ? createNewClientName : null,
         },
       });
-      toast.success("تم إنشاء المستخدم بنجاح");
+      toast.success(lang === "ar" ? "تم إنشاء المستخدم بنجاح" : "User created successfully");
       setCreateOpen(false);
       setCreateForm({ email: "", password: "", fullName: "", role: "employee", clientIds: [] });
       setCreateNewClientName("");
       setCreateShowNewClientInput(false);
       qc.invalidateQueries({ queryKey: ["user-permissions"] });
     } catch (e: any) {
-      toast.error(e.message ?? "فشل إنشاء المستخدم");
+      toast.error(e.message ?? (lang === "ar" ? "فشل إنشاء المستخدم" : "Failed to create user"));
     } finally {
       setCreateSubmitting(false);
     }
@@ -180,11 +182,11 @@ export function UsersPage() {
           newClientName: editForm.role === "client" && editShowNewClientInput ? editNewClientName : null,
         },
       });
-      toast.success("تم تحديث بيانات المستخدم بنجاح");
+      toast.success(lang === "ar" ? "تم تحديث بيانات المستخدم بنجاح" : "User details updated successfully");
       setEditOpen(false);
       qc.invalidateQueries({ queryKey: ["user-permissions"] });
     } catch (e: any) {
-      toast.error(e.message ?? "فشل تحديث البيانات");
+      toast.error(e.message ?? (lang === "ar" ? "فشل تحديث البيانات" : "Failed to update user details"));
     } finally {
       setEditSubmitting(false);
     }
@@ -193,10 +195,12 @@ export function UsersPage() {
   async function toggleActive(userId: string, currentStatus: boolean) {
     try {
       await toggleActiveFn({ data: { userId, isActive: !currentStatus } });
-      toast.success(!currentStatus ? "تم تفعيل الحساب بنجاح" : "تم إيقاف الحساب بنجاح");
+      toast.success(!currentStatus 
+        ? (lang === "ar" ? "تم تفعيل الحساب بنجاح" : "Account activated successfully") 
+        : (lang === "ar" ? "تم إيقاف الحساب بنجاح" : "Account deactivated successfully"));
       qc.invalidateQueries({ queryKey: ["user-permissions"] });
     } catch (e: any) {
-      toast.error(e.message ?? "فشل تعديل حالة الحساب");
+      toast.error(e.message ?? (lang === "ar" ? "فشل تعديل حالة الحساب" : "Failed to modify account status"));
     }
   }
 
@@ -206,12 +210,12 @@ export function UsersPage() {
     setResetting(true);
     try {
       await resetPasswordFn({ data: { userId: resetTarget.userId, password: newPassword } });
-      toast.success("تم تغيير كلمة المرور بنجاح");
+      toast.success(lang === "ar" ? "تم تغيير كلمة المرور بنجاح" : "Password changed successfully");
       setResetOpen(false);
       setNewPassword("");
       setResetTarget(null);
     } catch (e: any) {
-      toast.error(e.message ?? "فشل تغيير كلمة المرور");
+      toast.error(e.message ?? (lang === "ar" ? "فشل تغيير كلمة المرور" : "Failed to change password"));
     } finally {
       setResetting(false);
     }
@@ -220,10 +224,10 @@ export function UsersPage() {
   async function unlink(userId: string) {
     try {
       await unlinkFn({ data: { userId } });
-      toast.success("تم فك ارتباط العملاء بنجاح");
+      toast.success(lang === "ar" ? "تم فك ارتباط العملاء بنجاح" : "Successfully unlinked clients");
       qc.invalidateQueries({ queryKey: ["user-permissions"] });
     } catch (e: any) {
-      toast.error(e.message ?? "فشل فك الارتباط");
+      toast.error(e.message ?? (lang === "ar" ? "فشل فك الارتباط" : "Failed to unlink"));
     }
   }
 
@@ -248,35 +252,40 @@ export function UsersPage() {
         <div className="space-y-1">
           <h1 className="text-2xl sm:text-3xl font-black flex items-center gap-2.5 text-white">
             <Users className="w-8 h-8 text-primary" />
-            المستخدمون
+            {lang === "ar" ? "المستخدمون" : "Users"}
           </h1>
           <p className="text-sm text-muted-foreground mt-1.5">
-            إدارة حسابات المسؤولين، الموظفين، والعملاء وتعديل الصلاحيات وتفعيل الدخول
+            {lang === "ar" 
+              ? "إدارة حسابات المسؤولين، الموظفين، والعملاء وتعديل الصلاحيات وتفعيل الدخول" 
+              : "Manage admin, employee, and client accounts, modify permissions and toggle access"}
           </p>
         </div>
 
         <Dialog open={createOpen} onOpenChange={(v) => { setCreateOpen(v); if (!v) { setCreateNewClientName(""); setCreateShowNewClientInput(false); } }}>
           <DialogTrigger asChild>
-            <Button className="btn-header-action">
+            <Button className="btn-header-action bg-primary text-white hover:bg-primary/95">
               <UserPlus className="h-4 w-4 ml-2" />
-              إضافة مستخدم جديد
+              {lang === "ar" ? "إضافة مستخدم جديد" : "Add New User"}
             </Button>
           </DialogTrigger>
-          <DialogContent dir="rtl">
+          <DialogContent dir={lang === "ar" ? "rtl" : "ltr"} className="text-right">
             <DialogHeader>
-              <DialogTitle>إنشاء حساب مستخدم جديد</DialogTitle>
+              <DialogTitle className={lang === "en" ? "text-left text-white font-bold" : "text-white font-bold"}>
+                {lang === "ar" ? "إنشاء حساب مستخدم جديد" : "Create New User Account"}
+              </DialogTitle>
             </DialogHeader>
-            <div className="grid gap-3">
+            <div className="grid gap-3 text-right">
               <div>
-                <Label>الاسم الكامل</Label>
+                <Label className="text-slate-300">{lang === "ar" ? "الاسم الكامل" : "Full Name"}</Label>
                 <Input
                   value={createForm.fullName}
                   onChange={(e) => setCreateForm({ ...createForm, fullName: e.target.value })}
-                  placeholder="اسم الشخص أو الموظف (اختياري)"
+                  placeholder={lang === "ar" ? "اسم الشخص أو الموظف (اختياري)" : "Person or employee name (optional)"}
+                  className="bg-slate-900 border-slate-700 text-white"
                 />
               </div>
               <div>
-                <Label>البريد الإلكتروني *</Label>
+                <Label className="text-slate-300">{lang === "ar" ? "البريد الإلكتروني *" : "Email Address *"}</Label>
                 <Input
                   type="email"
                   required
@@ -284,21 +293,23 @@ export function UsersPage() {
                   onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
                   placeholder="example@domain.com"
                   dir="ltr"
+                  className="bg-slate-900 border-slate-700 text-white"
                 />
               </div>
               <div>
-                <Label>كلمة السر المؤقتة *</Label>
+                <Label className="text-slate-300">{lang === "ar" ? "كلمة السر المؤقتة *" : "Temporary Password *"}</Label>
                 <Input
                   type="text"
                   required
                   value={createForm.password}
                   onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
-                  placeholder="6 أحرف على الأقل"
+                  placeholder={lang === "ar" ? "6 أحرف على الأقل" : "At least 6 characters"}
                   dir="ltr"
+                  className="bg-slate-900 border-slate-700 text-white"
                 />
               </div>
               <div>
-                <Label>الدور *</Label>
+                <Label className="text-slate-300">{lang === "ar" ? "الدور *" : "Role *"}</Label>
                 <Select
                   value={createForm.role}
                   onValueChange={(v: any) => {
@@ -308,11 +319,11 @@ export function UsersPage() {
                     }
                   }}
                 >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="bg-slate-900 border-slate-700 text-white"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">مسؤول (صلاحيات كاملة)</SelectItem>
-                    <SelectItem value="employee">موظف</SelectItem>
-                    <SelectItem value="client">عميل (يرى قنواته فقط)</SelectItem>
+                    <SelectItem value="admin">{lang === "ar" ? "مسؤول (صلاحيات كاملة)" : "Admin (Full Access)"}</SelectItem>
+                    <SelectItem value="employee">{lang === "ar" ? "موظف" : "Employee"}</SelectItem>
+                    <SelectItem value="client">{lang === "ar" ? "عميل (يرى قنواته فقط)" : "Client (View own channels only)"}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -328,7 +339,7 @@ export function UsersPage() {
                         onChange={() => setCreateShowNewClientInput(false)}
                         className="accent-primary h-4 w-4"
                       />
-                      عميل مسجل حالياً
+                      {lang === "ar" ? "عميل مسجل حالياً" : "Currently Registered Client"}
                     </label>
                     <label className="flex items-center gap-2 text-sm cursor-pointer text-white">
                       <input
@@ -338,13 +349,13 @@ export function UsersPage() {
                         onChange={() => setCreateShowNewClientInput(true)}
                         className="accent-primary h-4 w-4"
                       />
-                      إنشاء عميل جديد تلقائياً
+                      {lang === "ar" ? "إنشاء عميل جديد تلقائياً" : "Auto-create New Client"}
                     </label>
                   </div>
 
                   {!createShowNewClientInput ? (
                     <div>
-                      <Label className="text-white mb-2 block">العملاء المرتبطين *</Label>
+                      <Label className="text-white mb-2 block">{lang === "ar" ? "العملاء المرتبطين *" : "Linked Clients *"}</Label>
                       <div className="h-44 overflow-y-auto border border-slate-800 bg-slate-950 rounded-md p-2.5 space-y-2">
                         {clients.map((c) => {
                           const isChecked = createForm.clientIds.includes(c.id);
@@ -368,11 +379,12 @@ export function UsersPage() {
                     </div>
                   ) : (
                     <div>
-                      <Label>اسم العميل الجديد *</Label>
+                      <Label className="text-slate-300">{lang === "ar" ? "اسم العميل الجديد *" : "New Client Name *"}</Label>
                       <Input
                         value={createNewClientName}
                         onChange={(e) => setCreateNewClientName(e.target.value)}
-                        placeholder="اسم العميل أو الشركة لتسجيلها..."
+                        placeholder={lang === "ar" ? "اسم العميل أو الشركة لتسجيلها..." : "Name of the client or company to register..."}
+                        className="bg-slate-900 border-slate-700 text-white"
                       />
                     </div>
                   )}
@@ -380,9 +392,9 @@ export function UsersPage() {
               )}
             </div>
             <DialogFooter className="gap-2 mt-2">
-              <Button variant="outline" onClick={() => setCreateOpen(false)}>إلغاء</Button>
+              <Button variant="outline" onClick={() => setCreateOpen(false)} className="bg-slate-900 border-slate-800 text-white hover:bg-slate-800">{lang === "ar" ? "إلغاء" : "Cancel"}</Button>
               <Button onClick={submitCreate} disabled={createSubmitting}>
-                {createSubmitting ? "جارٍ الإنشاء..." : "إنشاء الحساب"}
+                {createSubmitting ? (lang === "ar" ? "جارٍ الإنشاء..." : "Creating...") : (lang === "ar" ? "إنشاء الحساب" : "Create Account")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -393,47 +405,47 @@ export function UsersPage() {
         <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
-            placeholder="بحث بالاسم أو البريد الإلكتروني…" 
+            placeholder={lang === "ar" ? "بحث بالاسم أو البريد الإلكتروني…" : "Search by name or email..."} 
             value={search} 
             onChange={(e) => setSearch(e.target.value)} 
-            className="pr-10 search-input-padding" 
+            className="pr-10 search-input-padding bg-slate-900 border-slate-800 text-white" 
           />
         </div>
         
         <Select value={filterRole} onValueChange={setFilterRole}>
-          <SelectTrigger className="w-44">
-            <SelectValue placeholder="تصفية حسب الدور" />
+          <SelectTrigger className="w-44 bg-slate-900 border-slate-800 text-white">
+            <SelectValue placeholder={lang === "ar" ? "تصفية حسب الدور" : "Filter by Role"} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">كل الأدوار</SelectItem>
-            <SelectItem value="admin">مسؤولين</SelectItem>
-            <SelectItem value="employee">موظفين</SelectItem>
-            <SelectItem value="client">عملاء</SelectItem>
+            <SelectItem value="all">{lang === "ar" ? "كل الأدوار" : "All Roles"}</SelectItem>
+            <SelectItem value="admin">{lang === "ar" ? "مسؤولين" : "Admins"}</SelectItem>
+            <SelectItem value="employee">{lang === "ar" ? "موظفين" : "Employees"}</SelectItem>
+            <SelectItem value="client">{lang === "ar" ? "عملاء" : "Clients"}</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      <Card>
+      <Card className="border border-slate-800">
         <CardHeader>
-          <CardTitle>قائمة الحسابات</CardTitle>
+          <CardTitle className="text-white text-right font-bold">{lang === "ar" ? "قائمة الحسابات" : "Account List"}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12 space-y-3">
               <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-muted-foreground text-sm">جارٍ تحميل قائمة المستخدمين والصلاحيات...</p>
+              <p className="text-muted-foreground text-sm">{lang === "ar" ? "جارٍ تحميل قائمة المستخدمين والصلاحيات..." : "Loading user list and permissions..."}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-right">الاسم الكامل</TableHead>
-                    <TableHead className="text-right">البريد الإلكتروني</TableHead>
-                    <TableHead className="text-right">الدور</TableHead>
-                    <TableHead className="text-right">حالة الحساب</TableHead>
-                    <TableHead className="text-right">العميل المرتبط</TableHead>
-                    <TableHead className="text-left">إجراءات التحكم</TableHead>
+                    <TableHead className="text-right">{lang === "ar" ? "الاسم الكامل" : "Full Name"}</TableHead>
+                    <TableHead className="text-right">{lang === "ar" ? "البريد الإلكتروني" : "Email Address"}</TableHead>
+                    <TableHead className="text-right">{lang === "ar" ? "الدور" : "Role"}</TableHead>
+                    <TableHead className="text-right">{lang === "ar" ? "حالة الحساب" : "Account Status"}</TableHead>
+                    <TableHead className="text-right">{lang === "ar" ? "العميل المرتبط" : "Linked Client"}</TableHead>
+                    <TableHead className={lang === "ar" ? "text-left" : "text-right"}>{lang === "ar" ? "إجراءات التحكم" : "Actions"}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -447,7 +459,7 @@ export function UsersPage() {
                         <TableCell className="text-right">
                           <div className="flex flex-wrap gap-1 justify-start">
                             {u.roles.length === 0 ? (
-                              <Badge variant="outline">بدون دور</Badge>
+                              <Badge variant="outline">{lang === "ar" ? "بدون دور" : "No Role"}</Badge>
                             ) : (
                               u.roles.map((r) => (
                                 <Badge key={r} variant={roleVariants[r] ?? "outline"}>
@@ -455,29 +467,29 @@ export function UsersPage() {
                                 </Badge>
                               ))
                             )}
-                            {isSelf && <Badge variant="outline">أنت</Badge>}
+                            {isSelf && <Badge variant="outline" className="bg-slate-800 text-slate-300">{lang === "ar" ? "أنت" : "You"}</Badge>}
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
                           <Badge variant={u.isActive ? "default" : "destructive"}>
-                            {u.isActive ? "نشط" : "معطل"}
+                            {u.isActive ? (lang === "ar" ? "نشط" : "Active") : (lang === "ar" ? "معطل" : "Disabled")}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
                           {u.clients && u.clients.length > 0 ? (
                             <span className="text-sm font-semibold text-white">
-                              {u.clients.map((c: any) => c.name).join("، ")}
+                              {u.clients.map((c: any) => c.name).join(lang === "ar" ? "، " : ", ")}
                             </span>
                           ) : (
                             <span className="text-xs text-muted-foreground">—</span>
                           )}
                         </TableCell>
-                        <TableCell className="text-left">
-                          <div className="flex gap-1 justify-end">
+                        <TableCell className={lang === "ar" ? "text-left" : "text-right"}>
+                          <div className={`flex gap-1 ${lang === "ar" ? "justify-end" : "justify-start"}`}>
                             <Button
                               size="icon"
                               variant="ghost"
-                              title="تعديل بيانات الحساب"
+                              title={lang === "ar" ? "تعديل بيانات الحساب" : "Edit Account Details"}
                               onClick={() => openEdit(u)}
                               className="text-slate-400 hover:text-primary hover:bg-slate-800"
                             >
@@ -486,7 +498,9 @@ export function UsersPage() {
                             <Button
                               size="icon"
                               variant="ghost"
-                              title={u.isActive ? "تعطيل الحساب" : "تفعيل الحساب"}
+                              title={u.isActive 
+                                ? (lang === "ar" ? "تعطيل الحساب" : "Disable Account") 
+                                : (lang === "ar" ? "تفعيل الحساب" : "Enable Account")}
                               onClick={() => toggleActive(u.userId, u.isActive)}
                               disabled={isSelf}
                               className={u.isActive ? "text-slate-400 hover:text-red-400 hover:bg-slate-800" : "text-slate-500 hover:text-green-400 hover:bg-slate-800"}
@@ -496,7 +510,7 @@ export function UsersPage() {
                             <Button
                               size="icon"
                               variant="ghost"
-                              title="تغيير كلمة المرور"
+                              title={lang === "ar" ? "تغيير كلمة المرور" : "Change Password"}
                               onClick={() => {
                                 setResetTarget({ userId: u.userId, email: u.email });
                                 setResetOpen(true);
@@ -509,7 +523,7 @@ export function UsersPage() {
                               <Button
                                 size="icon"
                                 variant="ghost"
-                                title="فك ربط العملاء"
+                                title={lang === "ar" ? "فك ربط العملاء" : "Unlink Clients"}
                                 onClick={() => setUnlinkTarget(u.userId)}
                                 className="text-slate-400 hover:text-red-400 hover:bg-slate-800"
                               >
@@ -524,7 +538,7 @@ export function UsersPage() {
                   {filteredUsers.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                        لا يوجد مستخدمون يطابقون خيارات البحث.
+                        {lang === "ar" ? "لا يوجد مستخدمون يطابقون خيارات البحث." : "No users match the search criteria."}
                       </TableCell>
                     </TableRow>
                   )}
@@ -535,36 +549,62 @@ export function UsersPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="border border-slate-800 bg-slate-950/20">
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2"><ShieldAlert className="w-5 h-5 text-amber-500" /> ملاحظات الأمان والتحكم</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2 text-white font-bold">
+            <ShieldAlert className="w-5 h-5 text-amber-500" /> 
+            {lang === "ar" ? "ملاحظات الأمان والتحكم" : "Security & Control Notes"}
+          </CardTitle>
         </CardHeader>
-        <CardContent className="text-sm text-muted-foreground space-y-1.5">
-          <p>• فقط المسؤول (Admin) يستطيع الوصول لهذه الصفحة وإدارة صلاحيات المستخدمين والتحكم بحالة حساباتهم.</p>
-          <p>• المسؤول والموظف يمتلكان صلاحيات تشغيلية لرؤية وإدارة كافة العملاء والقنوات والإيرادات.</p>
-          <p>• العميل النشط يتم ربطه بملفه الشخصي لرؤية قنواته وإيراداته الفردية فقط بموجب سياسات حماية قاعدة البيانات (RLS).</p>
-          <p>• إذا قمت بتعطيل حساب مستخدم، فسيتم إخراجه فوراً وسحب جميع صلاحيات قراءة أو تعديل البيانات منه على السيرفر وقاعدة البيانات.</p>
-          <p>• لا يمكنك تعطيل حسابك الشخصي أو إزالة دور المسؤول عن نفسك لتجنب قفل لوحة التحكم بالخطأ.</p>
+        <CardContent className="text-sm text-muted-foreground space-y-1.5 text-right">
+          <p>
+            {lang === "ar" 
+              ? "• فقط المسؤول (Admin) يستطيع الوصول لهذه الصفحة وإدارة صلاحيات المستخدمين والتحكم بحالة حساباتهم." 
+              : "• Only Admins can access this page to manage user permissions and access status."}
+          </p>
+          <p>
+            {lang === "ar" 
+              ? "• المسؤول والموظف يمتلكان صلاحيات تشغيلية لرؤية وإدارة كافة العملاء والقنوات والإيرادات." 
+              : "• Admins and Employees have operational permissions to view and manage all clients, channels, and revenues."}
+          </p>
+          <p>
+            {lang === "ar" 
+              ? "• العميل النشط يتم ربطه بملفه الشخصي لرؤية قنواته وإيراداته الفردية فقط بموجب سياسات حماية قاعدة البيانات (RLS)." 
+              : "• Active Clients are linked to their profiles to view only their individual channels and revenues via Row Level Security (RLS) policies."}
+          </p>
+          <p>
+            {lang === "ar" 
+              ? "• إذا قمت بتعطيل حساب مستخدم، فسيتم إخراجه فوراً وسحب جميع صلاحيات قراءة أو تعديل البيانات منه على السيرفر وقاعدة البيانات." 
+              : "• Disabling a user account signs them out immediately and revokes all read/write permissions on the server and database."}
+          </p>
+          <p>
+            {lang === "ar" 
+              ? "• لا يمكنك تعطيل حسابك الشخصي أو إزالة دور المسؤول عن نفسك لتجنب قفل لوحة التحكم بالخطأ." 
+              : "• You cannot disable your own account or remove your admin role to prevent accidentally locking yourself out of the dashboard."}
+          </p>
         </CardContent>
       </Card>
 
       {/* Edit User Dialog */}
       <Dialog open={editOpen} onOpenChange={(v) => { setEditOpen(v); if (!v) { setEditNewClientName(""); setEditShowNewClientInput(false); } }}>
-        <DialogContent dir="rtl">
+        <DialogContent dir={lang === "ar" ? "rtl" : "ltr"} className="text-right">
           <DialogHeader>
-            <DialogTitle>تعديل بيانات حساب المستخدم</DialogTitle>
+            <DialogTitle className={lang === "en" ? "text-left text-white font-bold" : "text-white font-bold"}>
+              {lang === "ar" ? "تعديل بيانات حساب المستخدم" : "Edit User Account Details"}
+            </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-3">
+          <div className="grid gap-3 text-right">
             <div>
-              <Label>الاسم الكامل</Label>
+              <Label className="text-slate-300">{lang === "ar" ? "الاسم الكامل" : "Full Name"}</Label>
               <Input
                 value={editForm.fullName}
                 onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
-                placeholder="اسم الشخص أو الموظف"
+                placeholder={lang === "ar" ? "اسم الشخص أو الموظف" : "Person or employee name"}
+                className="bg-slate-900 border-slate-700 text-white"
               />
             </div>
             <div>
-              <Label>البريد الإلكتروني *</Label>
+              <Label className="text-slate-300">{lang === "ar" ? "البريد الإلكتروني *" : "Email Address *"}</Label>
               <Input
                 type="email"
                 required
@@ -572,10 +612,11 @@ export function UsersPage() {
                 onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
                 placeholder="example@domain.com"
                 dir="ltr"
+                className="bg-slate-900 border-slate-700 text-white"
               />
             </div>
             <div>
-              <Label>الدور *</Label>
+              <Label className="text-slate-300">{lang === "ar" ? "الدور *" : "Role *"}</Label>
               <Select
                 value={editForm.role}
                 onValueChange={(v: any) => {
@@ -586,11 +627,11 @@ export function UsersPage() {
                 }}
                 disabled={editForm.userId === user?.id} // Prevent changing own role
               >
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="bg-slate-900 border-slate-700 text-white"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">مسؤول (صلاحيات كاملة)</SelectItem>
-                  <SelectItem value="employee">موظف</SelectItem>
-                  <SelectItem value="client">عميل (يرى قنواته فقط)</SelectItem>
+                  <SelectItem value="admin">{lang === "ar" ? "مسؤول (صلاحيات كاملة)" : "Admin (Full Access)"}</SelectItem>
+                  <SelectItem value="employee">{lang === "ar" ? "موظف" : "Employee"}</SelectItem>
+                  <SelectItem value="client">{lang === "ar" ? "عميل (يرى قنواته فقط)" : "Client (View own channels only)"}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -606,7 +647,7 @@ export function UsersPage() {
                       onChange={() => setEditShowNewClientInput(false)}
                       className="accent-primary h-4 w-4"
                     />
-                    عميل مسجل حالياً
+                    {lang === "ar" ? "عميل مسجل حالياً" : "Currently Registered Client"}
                   </label>
                   <label className="flex items-center gap-2 text-sm cursor-pointer text-white">
                     <input
@@ -616,13 +657,13 @@ export function UsersPage() {
                       onChange={() => setEditShowNewClientInput(true)}
                       className="accent-primary h-4 w-4"
                     />
-                    إنشاء عميل جديد تلقائياً
+                    {lang === "ar" ? "إنشاء عميل جديد تلقائياً" : "Auto-create New Client"}
                   </label>
                 </div>
 
                 {!editShowNewClientInput ? (
                   <div>
-                    <Label className="text-white mb-2 block">العملاء المرتبطين *</Label>
+                    <Label className="text-white mb-2 block">{lang === "ar" ? "العملاء المرتبطين *" : "Linked Clients *"}</Label>
                     <div className="h-44 overflow-y-auto border border-slate-800 bg-slate-950 rounded-md p-2.5 space-y-2">
                       {clients.map((c) => {
                         const isChecked = editForm.clientIds.includes(c.id);
@@ -646,11 +687,12 @@ export function UsersPage() {
                   </div>
                 ) : (
                   <div>
-                    <Label>اسم العميل الجديد *</Label>
+                    <Label className="text-slate-300">{lang === "ar" ? "اسم العميل الجديد *" : "New Client Name *"}</Label>
                     <Input
                       value={editNewClientName}
                       onChange={(e) => setEditNewClientName(e.target.value)}
-                      placeholder="اسم العميل أو الشركة لتسجيلها..."
+                      placeholder={lang === "ar" ? "اسم العميل أو الشركة لتسجيلها..." : "Name of the client or company to register..."}
+                      className="bg-slate-900 border-slate-700 text-white"
                     />
                   </div>
                 )}
@@ -658,9 +700,9 @@ export function UsersPage() {
             )}
           </div>
           <DialogFooter className="gap-2 mt-2">
-            <Button variant="outline" onClick={() => setEditOpen(false)}>إلغاء</Button>
+            <Button variant="outline" onClick={() => setEditOpen(false)} className="bg-slate-900 border-slate-800 text-white hover:bg-slate-800">{lang === "ar" ? "إلغاء" : "Cancel"}</Button>
             <Button onClick={submitEdit} disabled={editSubmitting}>
-              {editSubmitting ? "جاري التحديث..." : "حفظ التغييرات"}
+              {editSubmitting ? (lang === "ar" ? "جاري التحديث..." : "Updating...") : (lang === "ar" ? "حفظ التغييرات" : "Save Changes")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -668,30 +710,33 @@ export function UsersPage() {
 
       {/* Password Reset Dialog */}
       <Dialog open={resetOpen} onOpenChange={(v) => { setResetOpen(v); if (!v) { setResetTarget(null); setNewPassword(""); } }}>
-        <DialogContent dir="rtl">
+        <DialogContent dir={lang === "ar" ? "rtl" : "ltr"} className="text-right">
           <DialogHeader>
-            <DialogTitle>تغيير كلمة المرور للمستخدم</DialogTitle>
+            <DialogTitle className={lang === "en" ? "text-left text-white font-bold" : "text-white font-bold"}>
+              {lang === "ar" ? "تغيير كلمة المرور للمستخدم" : "Change User Password"}
+            </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleResetPassword} className="space-y-4 mt-2">
+          <form onSubmit={handleResetPassword} className="space-y-4 mt-2 text-right">
             <div className="space-y-1">
-              <span className="text-xs text-muted-foreground">تعديل كلمة مرور الحساب التالي:</span>
+              <span className="text-xs text-muted-foreground">{lang === "ar" ? "تعديل كلمة مرور الحساب التالي:" : "Modify password for the following account:"}</span>
               <p className="text-sm font-bold text-white font-mono">{resetTarget?.email}</p>
             </div>
             <div className="space-y-2">
-              <Label>كلمة المرور الجديدة *</Label>
+              <Label className="text-slate-300">{lang === "ar" ? "كلمة المرور الجديدة *" : "New Password *"}</Label>
               <Input
                 type="text"
                 required
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="أدخل 6 أحرف على الأقل..."
+                placeholder={lang === "ar" ? "أدخل 6 أحرف على الأقل..." : "Enter at least 6 characters..."}
                 dir="ltr"
+                className="bg-slate-900 border-slate-700 text-white"
               />
             </div>
             <DialogFooter className="gap-2">
-              <Button type="button" variant="outline" onClick={() => setResetOpen(false)}>إلغاء</Button>
+              <Button type="button" variant="outline" onClick={() => setResetOpen(false)} className="bg-slate-900 border-slate-800 text-white hover:bg-slate-800">{lang === "ar" ? "إلغاء" : "Cancel"}</Button>
               <Button type="submit" disabled={resetting}>
-                {resetting ? "جاري التحديث..." : "تحديث كلمة المرور"}
+                {resetting ? (lang === "ar" ? "جاري التحديث..." : "Updating...") : (lang === "ar" ? "تحديث كلمة المرور" : "Update Password")}
               </Button>
             </DialogFooter>
           </form>
@@ -700,15 +745,19 @@ export function UsersPage() {
 
       {/* Unlink AlertDialog */}
       <AlertDialog open={!!unlinkTarget} onOpenChange={(o) => !o && setUnlinkTarget(null)}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir={lang === "ar" ? "rtl" : "ltr"} className="text-right">
           <AlertDialogHeader>
-            <AlertDialogTitle>هل تريد فك ربط كافة العملاء عن هذا المستخدم؟</AlertDialogTitle>
-            <AlertDialogDescription>
-              هذا الإجراء سيقوم بإزالة ارتباط كافة العملاء بهذا الحساب، ولن يتمكن هذا الحساب من رؤية أي قنوات أو تقارير تخص هؤلاء العملاء.
+            <AlertDialogTitle className={lang === "en" ? "text-left text-white font-bold font-black" : "text-white font-bold font-black"}>
+              {lang === "ar" ? "هل تريد فك ربط كافة العملاء عن هذا المستخدم؟" : "Do you want to unlink all clients from this user?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription className={lang === "en" ? "text-left" : "text-right"}>
+              {lang === "ar" 
+                ? "هذا الإجراء سيقوم بإزالة ارتباط كافة العملاء بهذا الحساب، ولن يتمكن هذا الحساب من رؤية أي قنوات أو تقارير تخص هؤلاء العملاء." 
+                : "This action will remove all client links from this account. This user will no longer be able to see any channels or reports for these clients."}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+          <AlertDialogFooter className="gap-2 mt-2">
+            <AlertDialogCancel className="bg-slate-900 border-slate-800 text-white hover:bg-slate-800">{lang === "ar" ? "إلغاء" : "Cancel"}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 if (unlinkTarget) {
@@ -718,7 +767,7 @@ export function UsersPage() {
               }}
               className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
             >
-              نعم، فك الربط
+              {lang === "ar" ? "نعم، فك الربط" : "Yes, Unlink"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

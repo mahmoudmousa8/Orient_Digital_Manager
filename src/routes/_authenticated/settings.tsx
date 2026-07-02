@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Upload, Save, Settings as SettingsIcon } from "lucide-react";
+import { useLanguage } from "@/hooks/use-language";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   ssr: false,
@@ -17,6 +18,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
 });
 
 function SettingsPage() {
+  const { t, lang } = useLanguage();
   const { isAdmin, loading } = useAuth();
   const navigate = useNavigate();
   const { data: settings } = useSettings();
@@ -42,7 +44,7 @@ function SettingsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 500 * 1024) {
-      toast.error("حجم الصورة كبير. الحد الأقصى 500 كيلوبايت");
+      toast.error(lang === "ar" ? "حجم الصورة كبير. الحد الأقصى 500 كيلوبايت" : "Image size is too large. Maximum size is 500KB");
       return;
     }
     const reader = new FileReader();
@@ -58,7 +60,7 @@ function SettingsPage() {
     }).eq("id", true);
     setBusy(false);
     if (error) return toast.error(error.message);
-    toast.success("تم حفظ الإعدادات");
+    toast.success(lang === "ar" ? "تم حفظ الإعدادات" : "Settings saved successfully");
     qc.invalidateQueries({ queryKey: ["app_settings"] });
   }
 
@@ -67,40 +69,42 @@ function SettingsPage() {
       <div className="space-y-1">
         <h1 className="text-2xl sm:text-3xl font-black flex items-center gap-2.5 text-white">
           <SettingsIcon className="w-8 h-8 text-primary" />
-          الإعدادات
+          {lang === "ar" ? "الإعدادات" : "Settings"}
         </h1>
-        <p className="text-sm text-muted-foreground mt-1.5">شعار الشركة والمعلومات الأساسية للمنصة</p>
+        <p className="text-sm text-muted-foreground mt-1.5">
+          {lang === "ar" ? "شعار الشركة والمعلومات الأساسية للمنصة" : "Company logo and basic platform configuration"}
+        </p>
       </div>
 
-      <Card>
-        <CardHeader><CardTitle>هوية الشركة</CardTitle></CardHeader>
-        <CardContent className="space-y-5">
+      <Card className="border border-slate-800">
+        <CardHeader><CardTitle className="text-white text-right font-bold">{lang === "ar" ? "هوية الشركة" : "Company Identity"}</CardTitle></CardHeader>
+        <CardContent className="space-y-5 text-right">
           <div className="space-y-2">
-            <Label>اسم الشركة</Label>
-            <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
+            <Label className="text-slate-300">{lang === "ar" ? "اسم الشركة" : "Company Name"}</Label>
+            <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="bg-slate-900 border-slate-700 text-white" />
           </div>
 
           <div className="space-y-2">
-            <Label>الشعار</Label>
+            <Label className="text-slate-300">{lang === "ar" ? "الشعار" : "Logo"}</Label>
             <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-2xl bg-muted border flex items-center justify-center overflow-hidden">
-                {logoUrl ? <img src={logoUrl} alt="logo" className="w-full h-full object-cover" /> : <span className="text-xs text-muted-foreground">لا يوجد</span>}
+              <div className="w-20 h-20 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center overflow-hidden">
+                {logoUrl ? <img src={logoUrl} alt="logo" className="w-full h-full object-cover" /> : <span className="text-xs text-muted-foreground">{lang === "ar" ? "لا يوجد" : "None"}</span>}
               </div>
               <div className="flex flex-col gap-2">
                 <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
-                <Button type="button" variant="outline" onClick={() => fileRef.current?.click()}>
+                <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} className="bg-slate-900 border-slate-800 text-white hover:bg-slate-800">
                   <Upload className="w-4 h-4 ml-2" />
-                  رفع شعار جديد
+                  {lang === "ar" ? "رفع شعار جديد" : "Upload New Logo"}
                 </Button>
-                {logoUrl && <Button type="button" variant="ghost" size="sm" onClick={() => setLogoUrl(null)}>إزالة</Button>}
+                {logoUrl && <Button type="button" variant="ghost" size="sm" onClick={() => setLogoUrl(null)} className="text-slate-400 hover:text-white">{lang === "ar" ? "إزالة" : "Remove"}</Button>}
               </div>
             </div>
-            <p className="text-xs text-muted-foreground">يفضل صورة مربعة بصيغة PNG/JPG. الحد الأقصى 500 كيلوبايت.</p>
+            <p className="text-xs text-muted-foreground">{lang === "ar" ? "يفضل صورة مربعة بصيغة PNG/JPG. الحد الأقصى 500 كيلوبايت." : "Preferred format: square PNG/JPG image. Max size 500KB."}</p>
           </div>
 
           <Button onClick={save} disabled={busy}>
             <Save className="w-4 h-4 ml-2" />
-            {busy ? "جاري الحفظ..." : "حفظ التغييرات"}
+            {busy ? (lang === "ar" ? "جاري الحفظ..." : "Saving...") : (lang === "ar" ? "حفظ التغييرات" : "Save Changes")}
           </Button>
         </CardContent>
       </Card>

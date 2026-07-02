@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
@@ -41,6 +41,7 @@ import { money, STATUS_AR } from "@/lib/format";
 import { getInvoiceDetails, recordInvoicePayment } from "@/lib/invoices.functions";
 import { Brand } from "@/components/brand";
 import { exportInvoicePDF } from "@/lib/exports";
+import { useLanguage } from "@/hooks/use-language";
 
 export const Route = createFileRoute("/_authenticated/invoices/$id")({
   component: InvoiceDetailsPage,
@@ -55,7 +56,17 @@ const statusVariant: Record<string, string> = {
   cancelled: "bg-slate-600 text-slate-100 rounded-full border-none",
 };
 
+const STATUS_EN: Record<string, string> = {
+  draft: "Draft",
+  issued: "Issued",
+  paid: "Paid",
+  partial: "Partially Paid",
+  overdue: "Overdue",
+  cancelled: "Cancelled",
+};
+
 function InvoiceDetailsPage() {
+  const { t, lang: globalLang } = useLanguage();
   const { id } = Route.useParams();
   const { isStaff } = useAuth();
   const qc = useQueryClient();
@@ -72,7 +83,11 @@ function InvoiceDetailsPage() {
   const [busy, setBusy] = useState(false);
 
   const [shareOpen, setShareOpen] = useState(false);
-  const [lang, setLang] = useState<"ar" | "en">("ar");
+  const [lang, setLang] = useState<"ar" | "en">(globalLang);
+
+  useEffect(() => {
+    setLang(globalLang);
+  }, [globalLang]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["invoice-details", id],
@@ -94,7 +109,7 @@ function InvoiceDetailsPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["invoice-details", id] });
       qc.invalidateQueries({ queryKey: ["invoices"] });
-      toast.success("تم تسجيل الدفعة وإصدار الإيصال التلقائي");
+      toast.success(globalLang === "ar" ? "تم تسجيل الدفعة وإصدار الإيصال التلقائي" : "Payment registered and automatic receipt issued");
       setPaymentOpen(false);
       setPayAmount("");
       setPayTransferNo("");
@@ -110,7 +125,7 @@ function InvoiceDetailsPage() {
   const copyShareLink = () => {
     const link = `${window.location.origin}/invoices/${id}/preview`;
     navigator.clipboard.writeText(link);
-    toast.success("تم نسخ رابط مشاركة الفاتورة");
+    toast.success(globalLang === "ar" ? "تم نسخ رابط مشاركة الفاتورة" : "Invoice share link copied to clipboard");
     setShareOpen(false);
   };
 
@@ -119,7 +134,7 @@ function InvoiceDetailsPage() {
       <div className="min-h-[50vh] flex items-center justify-center">
         <div className="text-center space-y-2">
           <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-muted-foreground text-sm">جاري تحميل تفاصيل الفاتورة…</p>
+          <p className="text-muted-foreground text-sm">{globalLang === "ar" ? "جاري تحميل تفاصيل الفاتورة…" : "Loading invoice details..."}</p>
         </div>
       </div>
     );
@@ -127,13 +142,13 @@ function InvoiceDetailsPage() {
 
   if (error || !data) {
     return (
-      <div className="p-6 text-center space-y-4">
-        <h2 className="text-xl font-bold text-destructive">حدث خطأ أثناء تحميل الفاتورة</h2>
-        <p className="text-muted-foreground">الفاتورة غير موجودة أو ليس لديك صلاحية لاستعراضها.</p>
+      <div className="p-6 text-center space-y-4" dir={globalLang === "ar" ? "rtl" : "ltr"}>
+        <h2 className="text-xl font-bold text-destructive">{globalLang === "ar" ? "حدث خطأ أثناء تحميل الفاتورة" : "An error occurred while loading the invoice"}</h2>
+        <p className="text-muted-foreground">{globalLang === "ar" ? "الفاتورة غير موجودة أو ليس لديك صلاحية لاستعراضها." : "The invoice does not exist or you do not have permission to view it."}</p>
         <Button asChild variant="outline">
           <Link to="/invoices">
             <ArrowRight className="w-4 h-4 ml-1" />
-            العودة للفواتير
+            {globalLang === "ar" ? "العودة للفواتير" : "Back to Invoices"}
           </Link>
         </Button>
       </div>
@@ -148,35 +163,37 @@ function InvoiceDetailsPage() {
   return (
     <div className="space-y-6">
       {/* Action Buttons (Hidden on Print) */}
-      <div className="flex items-center justify-between flex-wrap gap-3 print:hidden">
+      <div className="flex items-center justify-between flex-wrap gap-3 print:hidden" dir={globalLang === "ar" ? "rtl" : "ltr"}>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" asChild>
+          <Button variant="outline" size="sm" asChild className="bg-slate-900 border-slate-800 text-white hover:bg-slate-800">
             <Link to="/invoices">
-              <ArrowRight className="w-4 h-4 ml-1" />
-              قائمة الفواتير
+              <ArrowRight className={`w-4 h-4 ${globalLang === "en" ? "rotate-180 mr-1" : "ml-1"}`} />
+              {globalLang === "ar" ? "قائمة الفواتير" : "Invoices List"}
             </Link>
           </Button>
-          <Badge className={statusVariant[inv.status]}>{STATUS_AR[inv.status]}</Badge>
+          <Badge className={statusVariant[inv.status]}>
+            {globalLang === "ar" ? STATUS_AR[inv.status] : STATUS_EN[inv.status]}
+          </Badge>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <Select value={lang} onValueChange={(v: any) => setLang(v)}>
-            <SelectTrigger className="w-28 h-9 text-xs">
+            <SelectTrigger className="w-28 h-9 text-xs bg-slate-900 border-slate-800 text-white">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ar">العربية</SelectItem>
-              <SelectItem value="en">الإنجليزية</SelectItem>
+              <SelectItem value="ar">{globalLang === "ar" ? "العربية" : "Arabic"}</SelectItem>
+              <SelectItem value="en">{globalLang === "ar" ? "الإنجليزية" : "English"}</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={handlePrint} size="sm">
-            <Download className="w-4 h-4 ml-1" /> تحميل / طباعة PDF
+          <Button variant="outline" onClick={handlePrint} size="sm" className="bg-slate-900 border-slate-800 text-white hover:bg-slate-800">
+            <Download className="w-4 h-4 ml-1" /> {globalLang === "ar" ? "تحميل / طباعة PDF" : "Download / Print PDF"}
           </Button>
-          <Button variant="outline" onClick={() => setShareOpen(true)} size="sm">
-            <Share2 className="w-4 h-4 ml-1" /> مشاركة
+          <Button variant="outline" onClick={() => setShareOpen(true)} size="sm" className="bg-slate-900 border-slate-800 text-white hover:bg-slate-800">
+            <Share2 className="w-4 h-4 ml-1" /> {globalLang === "ar" ? "مشاركة" : "Share"}
           </Button>
           {isStaff && inv.remaining_balance > 0 && (
             <Button onClick={() => setPaymentOpen(true)} size="sm">
-              <DollarSign className="w-4 h-4 ml-1" /> تسجيل دفعة
+              <DollarSign className="w-4 h-4 ml-1" /> {globalLang === "ar" ? "تسجيل دفعة" : "Record Payment"}
             </Button>
           )}
         </div>
@@ -357,16 +374,16 @@ function InvoiceDetailsPage() {
           {/* Quick Metrics */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">ملخص الدفع للفاتورة</CardTitle>
+              <CardTitle className="text-base">{globalLang === "ar" ? "ملخص الدفع للفاتورة" : "Invoice Payment Summary"}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-2">
                 <div className="bg-muted/50 p-2.5 rounded-lg text-center">
-                  <div className="text-xs text-muted-foreground">المدفوع</div>
+                  <div className="text-xs text-muted-foreground">{globalLang === "ar" ? "المدفوع" : "Paid"}</div>
                   <div className="text-base font-bold text-success" dir="ltr">{money(inv.amount_paid)}</div>
                 </div>
                 <div className="bg-muted/50 p-2.5 rounded-lg text-center">
-                  <div className="text-xs text-muted-foreground">المتبقي</div>
+                  <div className="text-xs text-muted-foreground">{globalLang === "ar" ? "المتبقي" : "Remaining"}</div>
                   <div className="text-base font-bold text-destructive" dir="ltr">{money(inv.remaining_balance)}</div>
                 </div>
               </div>
@@ -377,7 +394,7 @@ function InvoiceDetailsPage() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center justify-between">
-                <span>سجل الدفعات</span>
+                <span>{globalLang === "ar" ? "سجل الدفعات" : "Payment History"}</span>
                 <History className="w-4 h-4 text-muted-foreground" />
               </CardTitle>
             </CardHeader>
@@ -385,16 +402,16 @@ function InvoiceDetailsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-right">التاريخ</TableHead>
-                    <TableHead className="text-left">المبلغ</TableHead>
-                    <TableHead className="text-right">المرجع</TableHead>
+                    <TableHead className="text-right">{globalLang === "ar" ? "التاريخ" : "Date"}</TableHead>
+                    <TableHead className="text-left">{globalLang === "ar" ? "المبلغ" : "Amount"}</TableHead>
+                    <TableHead className="text-right">{globalLang === "ar" ? "المرجع" : "Reference"}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {transactions.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={3} className="text-center text-muted-foreground py-4 text-xs">
-                        لا توجد دفعات مسجلة لهذه الفاتورة
+                        {globalLang === "ar" ? "لا توجد دفعات مسجلة لهذه الفاتورة" : "No payments registered for this invoice"}
                       </TableCell>
                     </TableRow>
                   )}
@@ -415,7 +432,7 @@ function InvoiceDetailsPage() {
           {/* Activity Log */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">سجل الأنشطة والمتابعة</CardTitle>
+              <CardTitle className="text-base">{globalLang === "ar" ? "سجل الأنشطة والمتابعة" : "Activity & Audit Log"}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="relative border-r pr-4 space-y-4 text-xs">
@@ -423,11 +440,11 @@ function InvoiceDetailsPage() {
                   <div key={log.id} className="relative">
                     {/* Circle marker */}
                     <div className="absolute -right-[21px] top-0.5 w-2.5 h-2.5 rounded-full bg-primary border border-background"></div>
-                    <div className="font-semibold text-black">{log.action}</div>
+                    <div className="font-semibold text-white">{log.action}</div>
                     <p className="text-muted-foreground mt-0.5">{log.notes}</p>
                     <div className="text-[10px] text-muted-foreground mt-1 flex items-center justify-between">
-                      <span>بواسطة: {log.createdBy}</span>
-                      <span dir="ltr">{new Date(log.createdAt).toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" })}</span>
+                      <span>{globalLang === "ar" ? `بواسطة: ${log.createdBy}` : `By: ${log.createdBy}`}</span>
+                      <span dir="ltr">{new Date(log.createdAt).toLocaleString(globalLang === "ar" ? "ar-EG" : "en-US", { dateStyle: "short", timeStyle: "short" })}</span>
                     </div>
                   </div>
                 ))}
@@ -439,13 +456,13 @@ function InvoiceDetailsPage() {
 
       {/* Record Payment Dialog */}
       <Dialog open={paymentOpen} onOpenChange={setPaymentOpen}>
-        <DialogContent dir="rtl" className="max-w-md">
+        <DialogContent dir={globalLang === "ar" ? "rtl" : "ltr"} className="max-w-md bg-slate-950 border border-slate-800 text-slate-100">
           <DialogHeader>
-            <DialogTitle>تسجيل دفعة للفاتورة</DialogTitle>
+            <DialogTitle className="text-white text-right font-bold">{globalLang === "ar" ? "تسجيل دفعة للفاتورة" : "Record Invoice Payment"}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={(e) => { e.preventDefault(); payMut.mutate(); }} className="space-y-4">
+          <form onSubmit={(e) => { e.preventDefault(); payMut.mutate(); }} className="space-y-4 text-right">
             <div className="space-y-1">
-              <Label htmlFor="pay-amount">المبلغ (USD) *</Label>
+              <Label htmlFor="pay-amount" className="text-slate-300">{globalLang === "ar" ? "المبلغ (USD) *" : "Amount (USD) *"}</Label>
               <Input
                 id="pay-amount"
                 type="number"
@@ -457,11 +474,12 @@ function InvoiceDetailsPage() {
                 required
                 defaultValue={inv.remaining_balance}
                 dir="ltr"
+                className="bg-slate-900 border-slate-700 text-white"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label htmlFor="pay-date">تاريخ الدفعة *</Label>
+                <Label htmlFor="pay-date" className="text-slate-300">{globalLang === "ar" ? "تاريخ الدفعة *" : "Payment Date *"}</Label>
                 <Input
                   id="pay-date"
                   type="date"
@@ -469,31 +487,34 @@ function InvoiceDetailsPage() {
                   onChange={(e) => setPayDate(e.target.value)}
                   required
                   dir="ltr"
+                  className="bg-slate-900 border-slate-700 text-white"
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="pay-ref">رقم تحويل فودافون كاش</Label>
+                <Label htmlFor="pay-ref" className="text-slate-300">{globalLang === "ar" ? "رقم تحويل فودافون كاش" : "Vodafone Cash Transfer No."}</Label>
                 <Input
                   id="pay-ref"
                   value={payTransferNo}
                   onChange={(e) => setPayTransferNo(e.target.value)}
                   dir="ltr"
+                  className="bg-slate-900 border-slate-700 text-white"
                 />
               </div>
             </div>
             <div className="space-y-1">
-              <Label htmlFor="pay-notes">ملاحظات</Label>
+              <Label htmlFor="pay-notes" className="text-slate-300">{globalLang === "ar" ? "ملاحظات" : "Notes"}</Label>
               <Input
                 id="pay-notes"
                 value={payNotes}
                 onChange={(e) => setPayNotes(e.target.value)}
-                placeholder="تفاصيل إضافية"
+                placeholder={globalLang === "ar" ? "تفاصيل إضافية" : "Additional details"}
+                className="bg-slate-900 border-slate-700 text-white"
               />
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setPaymentOpen(false)} type="button">إلغاء</Button>
+            <DialogFooter className="gap-2 pt-2">
+              <Button variant="outline" onClick={() => setPaymentOpen(false)} type="button" className="border-slate-700 text-white hover:bg-slate-900 bg-slate-950">{t("cancel")}</Button>
               <Button type="submit" disabled={payMut.isPending || !payAmount}>
-                {payMut.isPending ? "جاري الحفظ..." : "تسجيل الدفعة"}
+                {payMut.isPending ? (globalLang === "ar" ? "جاري الحفظ..." : "Saving...") : (globalLang === "ar" ? "تسجيل الدفعة" : "Record Payment")}
               </Button>
             </DialogFooter>
           </form>
@@ -502,26 +523,28 @@ function InvoiceDetailsPage() {
 
       {/* Share Dialog */}
       <Dialog open={shareOpen} onOpenChange={setShareOpen}>
-        <DialogContent dir="rtl" className="max-w-md">
+        <DialogContent dir={globalLang === "ar" ? "rtl" : "ltr"} className="max-w-md bg-slate-950 border border-slate-800 text-slate-100">
           <DialogHeader>
-            <DialogTitle>مشاركة الفاتورة مع العميل</DialogTitle>
+            <DialogTitle className="text-white text-right font-bold">{globalLang === "ar" ? "مشاركة الفاتورة مع العميل" : "Share Invoice with Client"}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2">
+          <div className="space-y-4 py-2 text-right">
             <p className="text-sm text-muted-foreground">
-              يمكنك نسخ رابط المعاينة المباشر للفاتورة وإرساله للعميل لمطابقة الأرباح والدفع مباشرة دون الحاجة لتسجيل دخول.
+              {globalLang === "ar" 
+                ? "يمكنك نسخ رابط المعاينة المباشر للفاتورة وإرساله للعميل لمطابقة الأرباح والدفع مباشرة دون الحاجة لتسجيل دخول." 
+                : "You can copy the direct preview link of the invoice and send it to the client to verify profits and pay directly without logging in."}
             </p>
             <div className="flex gap-2">
               <Input
                 value={`${window.location.origin}/invoices/${id}/preview`}
                 readOnly
                 dir="ltr"
-                className="bg-muted"
+                className="bg-slate-900 border-slate-700 text-white flex-1"
               />
-              <Button onClick={copyShareLink}>نسخ الرابط</Button>
+              <Button onClick={copyShareLink}>{globalLang === "ar" ? "نسخ الرابط" : "Copy Link"}</Button>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShareOpen(false)}>إغلاق</Button>
+            <Button variant="outline" onClick={() => setShareOpen(false)} className="border-slate-700 text-white hover:bg-slate-900 bg-slate-950">{globalLang === "ar" ? "إغلاق" : "Close"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

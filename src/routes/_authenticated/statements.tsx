@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FileSpreadsheet, FileDown, ExternalLink, RefreshCw } from "lucide-react";
 import { money, monthLabel, STATUS_AR } from "@/lib/format";
 import { exportStatementPDF, type StatementRow } from "@/lib/exports";
+import { useLanguage } from "@/hooks/use-language";
 
 export const Route = createFileRoute("/_authenticated/statements")({
   component: StatementsPage,
@@ -27,6 +28,7 @@ function currentMonthStr() {
 }
 
 function StatementsPage() {
+  const { t, lang } = useLanguage();
   const { isStaff, user } = useAuth();
   const [clientId, setClientId] = useState<string>("");
   const [startMonth, setStartMonth] = useState<string>(firstOfCurrentYear());
@@ -97,6 +99,16 @@ function StatementsPage() {
     },
   });
 
+  const STATUS_EN: Record<string, string> = {
+    draft: "Draft",
+    issued: "Issued",
+    paid: "Paid",
+    partial: "Partially Paid",
+    overdue: "Overdue",
+    cancelled: "Cancelled",
+    unpaid: "Unpaid"
+  };
+
   // Calculate Running Balance and map statement rows
   const { statementRows, closingBalance } = useMemo(() => {
     let running = openingBalance;
@@ -109,6 +121,7 @@ function StatementsPage() {
       const remaining = Number(p?.remaining ?? clientShare);
       running = running + clientShare - paid;
 
+      const pStatus = p?.status ?? "unpaid";
       rows.push({
         channel: r.channels?.name ?? "",
         link: r.channels?.link ?? "",
@@ -117,7 +130,7 @@ function StatementsPage() {
         percentage: Number(r.client_percentage),
         clientShare,
         companyShare: Number(r.company_share ?? 0),
-        paymentStatus: STATUS_AR[p?.status ?? "unpaid"],
+        paymentStatus: lang === "ar" ? STATUS_AR[pStatus] : (STATUS_EN[pStatus] || pStatus),
         amountPaid: paid,
         remaining,
         runningBalance: running,
@@ -125,7 +138,7 @@ function StatementsPage() {
     });
 
     return { statementRows: rows, closingBalance: running };
-  }, [rawRows, openingBalance]);
+  }, [rawRows, openingBalance, lang]);
 
   const totals = useMemo(() => ({
     revenue: statementRows.reduce((s, r) => s + r.revenue, 0),
@@ -153,29 +166,29 @@ function StatementsPage() {
   const isLoading = loadingOpening || loadingRows;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in-up">
       <div className="space-y-1">
         <h1 className="text-2xl sm:text-3xl font-black flex items-center gap-2.5 text-white">
           <FileSpreadsheet className="w-8 h-8 text-primary" /> 
-          كشوف الحسابات
+          {lang === "ar" ? "كشوف الحسابات" : "Account Statements"}
         </h1>
         <p className="text-sm text-muted-foreground mt-1.5">
-          عرض الأرصدة الافتتاحية، كشف حساب جاري تفصيلي، والرصيد الختامي مع التصدير المباشر
+          {lang === "ar" ? "عرض الأرصدة الافتتاحية، كشف حساب جاري تفصيلي، والرصيد الختامي مع التصدير المباشر" : "View opening balances, detailed current statement, and closing balance with direct export"}
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">تحديد الفترة وتصفية الكشف</CardTitle>
+          <CardTitle className="text-base">{lang === "ar" ? "تحديد الفترة وتصفية الكشف" : "Filter Statement & Period"}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end text-right">
             {isStaff ? (
               <div className="space-y-2">
-                <Label>العميل</Label>
+                <Label className="text-slate-300">{lang === "ar" ? "العميل" : "Client"}</Label>
                 <Select value={clientId} onValueChange={setClientId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="اختر العميل" />
+                  <SelectTrigger className="bg-slate-900 border-slate-700 text-white">
+                    <SelectValue placeholder={lang === "ar" ? "اختر العميل" : "Select client"} />
                   </SelectTrigger>
                   <SelectContent>
                     {clients.map((c) => (
@@ -186,20 +199,20 @@ function StatementsPage() {
               </div>
             ) : (
               <div className="space-y-2">
-                <Label>العميل</Label>
-                <div className="px-3 py-2 border rounded-md text-sm bg-muted/30">{client?.name ?? "—"}</div>
+                <Label className="text-slate-300">{lang === "ar" ? "العميل" : "Client"}</Label>
+                <div className="px-3 py-2 border border-slate-700 rounded-md text-sm bg-slate-900 text-white">{client?.name ?? "—"}</div>
               </div>
             )}
             <div className="space-y-2">
-              <Label>من شهر</Label>
-              <Input type="month" value={startMonth} onChange={(e) => setStartMonth(e.target.value)} dir="ltr" />
+              <Label className="text-slate-300">{lang === "ar" ? "من شهر" : "From Month"}</Label>
+              <Input type="month" value={startMonth} onChange={(e) => setStartMonth(e.target.value)} dir="ltr" className="bg-slate-900 border-slate-700 text-white" />
             </div>
             <div className="space-y-2">
-              <Label>إلى شهر</Label>
-              <Input type="month" value={endMonth} onChange={(e) => setEndMonth(e.target.value)} dir="ltr" />
+              <Label className="text-slate-300">{lang === "ar" ? "إلى شهر" : "To Month"}</Label>
+              <Input type="month" value={endMonth} onChange={(e) => setEndMonth(e.target.value)} dir="ltr" className="bg-slate-900 border-slate-700 text-white" />
             </div>
-            <Button onClick={exportPdf} disabled={!statementRows.length || isLoading}>
-              <FileDown className="w-4 h-4 ml-1" /> تصدير كشف PDF
+            <Button onClick={exportPdf} disabled={!statementRows.length || isLoading} className="w-full">
+              <FileDown className="w-4 h-4 ml-1" /> {lang === "ar" ? "تصدير كشف PDF" : "Export PDF Statement"}
             </Button>
           </div>
         </CardContent>
@@ -207,63 +220,63 @@ function StatementsPage() {
 
       {/* Opening & Closing Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-muted/30">
+        <Card className="bg-muted/10 border-slate-800">
           <CardContent className="pt-4 text-center">
-            <div className="text-sm text-muted-foreground">الرصيد الافتتاحي (السابق)</div>
-            <div className="text-xl font-bold mt-1" dir="ltr">{money(openingBalance)}</div>
+            <div className="text-sm text-muted-foreground">{lang === "ar" ? "الرصيد الافتتاحي (السابق)" : "Opening Balance (Previous)"}</div>
+            <div className="text-xl font-bold mt-1 text-white" dir="ltr">{money(openingBalance)}</div>
           </CardContent>
         </Card>
         <Card className="bg-primary/5 border-primary/20">
           <CardContent className="pt-4 text-center">
-            <div className="text-sm text-primary">صافي أرباح الفترة</div>
+            <div className="text-sm text-primary">{lang === "ar" ? "صافي أرباح الفترة" : "Net Period Earnings"}</div>
             <div className="text-xl font-bold mt-1 text-white" dir="ltr">{money(totals.clientShare)}</div>
           </CardContent>
         </Card>
         <Card className="bg-destructive/5 border-destructive/20">
           <CardContent className="pt-4 text-center">
-            <div className="text-sm text-destructive">الرصيد الختامي المستحق</div>
+            <div className="text-sm text-destructive">{lang === "ar" ? "الرصيد الختامي المستحق" : "Outstanding Closing Balance"}</div>
             <div className="text-xl font-black mt-1 text-white" dir="ltr">{money(closingBalance)}</div>
           </CardContent>
         </Card>
       </div>
 
       {client && (
-        <Card>
+        <Card className="border-slate-800">
           <CardContent className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
             <div className="text-right">
-              <div className="text-muted-foreground mb-0.5">العميل</div>
+              <div className="text-muted-foreground mb-0.5">{lang === "ar" ? "العميل" : "Client"}</div>
               <div className="font-bold text-white">{client.name}</div>
             </div>
             <div className="text-right">
-              <div className="text-muted-foreground mb-0.5">البريد</div>
+              <div className="text-muted-foreground mb-0.5">{lang === "ar" ? "البريد" : "Email"}</div>
               <div dir="ltr" className="text-right text-white font-medium">{client.email || "—"}</div>
             </div>
             <div className="text-right">
-              <div className="text-muted-foreground mb-0.5">الهاتف</div>
+              <div className="text-muted-foreground mb-0.5">{lang === "ar" ? "الهاتف" : "Phone"}</div>
               <div dir="ltr" className="text-right text-white font-medium">{client.phone || "—"}</div>
             </div>
             <div className="text-right">
-              <div className="text-muted-foreground mb-0.5">إنستاباي / محفظة</div>
+              <div className="text-muted-foreground mb-0.5">{lang === "ar" ? "إنستاباي / محفظة" : "InstaPay / Wallet"}</div>
               <div dir="ltr" className="text-right text-white font-medium">{client.vodafone_cash || "—"}</div>
             </div>
           </CardContent>
         </Card>
       )}
 
-      <Card>
+      <Card className="border-slate-800">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-right">الشهر</TableHead>
-                <TableHead className="text-right">القناة</TableHead>
-                {isStaff && <TableHead className="text-left">إجمالي الأرباح</TableHead>}
-                {isStaff && <TableHead className="text-center">النسبة</TableHead>}
-                <TableHead className="text-left">صافي حصة العميل</TableHead>
-                <TableHead className="text-left">المدفوع للعميل</TableHead>
-                <TableHead className="text-left">الرصيد المتبقي للشهر</TableHead>
-                <TableHead className="text-left text-primary font-bold">الرصيد الجاري المستحق</TableHead>
-                <TableHead className="text-right">الحالة</TableHead>
+                <TableHead className="text-right">{lang === "ar" ? "الشهر" : "Month"}</TableHead>
+                <TableHead className="text-right">{t("channelName")}</TableHead>
+                {isStaff && <TableHead className="text-left">{lang === "ar" ? "إجمالي الأرباح" : "Total Profits"}</TableHead>}
+                {isStaff && <TableHead className="text-center">{lang === "ar" ? "النسبة" : "Percent"}</TableHead>}
+                <TableHead className="text-left">{lang === "ar" ? "صافي حصة العميل" : "Net Client Share"}</TableHead>
+                <TableHead className="text-left">{lang === "ar" ? "المدفوع للعميل" : "Paid to Client"}</TableHead>
+                <TableHead className="text-left">{lang === "ar" ? "الرصيد المتبقي للشهر" : "Remaining Month Balance"}</TableHead>
+                <TableHead className="text-left text-primary font-bold">{lang === "ar" ? "الرصيد الجاري المستحق" : "Current Outstanding"}</TableHead>
+                <TableHead className="text-right">{lang === "ar" ? "الحالة" : "Status"}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -272,7 +285,7 @@ function StatementsPage() {
                   <TableCell colSpan={isStaff ? 9 : 7} className="text-center py-8">
                     <div className="flex items-center justify-center gap-2 text-muted-foreground">
                       <RefreshCw className="w-4 h-4 animate-spin" />
-                      جاري تحميل كشف الحساب…
+                      {lang === "ar" ? "جاري تحميل كشف الحساب…" : "Loading account statement..."}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -280,26 +293,26 @@ function StatementsPage() {
               {!isLoading && !statementRows.length && (
                 <TableRow>
                   <TableCell colSpan={isStaff ? 9 : 7} className="text-center text-muted-foreground py-12">
-                    لا توجد معاملات مسجلة للفترة المحددة
+                    {lang === "ar" ? "لا توجد معاملات مسجلة للفترة المحددة" : "No transactions recorded for the selected period"}
                   </TableCell>
                 </TableRow>
               )}
               {statementRows.map((r, i) => (
                 <TableRow key={i}>
                   <TableCell dir="ltr" className="text-right font-medium">{r.month}</TableCell>
-                  <TableCell className="font-semibold">{r.channel}</TableCell>
+                  <TableCell className="font-semibold text-right">{r.channel}</TableCell>
                   {isStaff && <TableCell dir="ltr" className="text-left text-white">{money(r.revenue)}</TableCell>}
                   {isStaff && <TableCell dir="ltr" className="text-center text-white">{r.percentage}%</TableCell>}
                   <TableCell dir="ltr" className="text-left text-white font-semibold">{money(r.clientShare)}</TableCell>
                   <TableCell dir="ltr" className="text-left text-white">{money(r.amountPaid)}</TableCell>
                   <TableCell dir="ltr" className="text-left text-white">{money(r.remaining)}</TableCell>
                   <TableCell dir="ltr" className="text-left font-black text-white">{money(r.runningBalance)}</TableCell>
-                  <TableCell className="text-right">{r.paymentStatus}</TableCell>
+                  <TableCell className="text-right text-white font-medium">{r.paymentStatus}</TableCell>
                 </TableRow>
               ))}
               {statementRows.length > 0 && (
-                <TableRow className="bg-muted/50 font-bold">
-                  <TableCell colSpan={2}>إجمالي الفترة</TableCell>
+                <TableRow className="bg-muted/10 font-bold">
+                  <TableCell colSpan={2} className="text-right">{lang === "ar" ? "إجمالي الفترة" : "Period Total"}</TableCell>
                   {isStaff && <TableCell dir="ltr" className="text-left text-white">{money(totals.revenue)}</TableCell>}
                   {isStaff && <TableCell></TableCell>}
                   <TableCell dir="ltr" className="text-left text-white">{money(totals.clientShare)}</TableCell>

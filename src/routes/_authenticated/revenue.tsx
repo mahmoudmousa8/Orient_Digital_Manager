@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DollarSign, Plus, Pencil, Trash2, Upload, Download, Search } from "lucide-react";
 import { money, monthLabel } from "@/lib/format";
 import { parseRevenueFile, downloadRevenueTemplate } from "@/lib/exports";
+import { useLanguage } from "@/hooks/use-language";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,6 +43,7 @@ function firstOfMonth(d = new Date()) {
 
 function RevenuePage() {
   const { isStaff } = useAuth();
+  const { t, lang } = useLanguage();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -189,33 +191,33 @@ function RevenuePage() {
         <div className="space-y-1">
           <h1 className="text-2xl sm:text-3xl font-black flex items-center gap-2.5 text-white">
             <DollarSign className="w-8 h-8 text-primary" />
-            الإيرادات الشهرية
+            {t("revenue")}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1.5">إدخال إيرادات القنوات وحساب الحصص تلقائياً</p>
+          <p className="text-sm text-muted-foreground mt-1.5">{lang === "ar" ? "إدخال إيرادات القنوات وحساب الحصص تلقائياً" : "Enter channel revenues and auto-calculate shares"}</p>
         </div>
         {isStaff && (
           <div className="flex gap-2 flex-wrap">
-            <Button variant="outline" className="btn-header-action" onClick={() => downloadRevenueTemplate(channels)}><Download className="w-4 h-4 ml-1" /> تحميل نموذج</Button>
+            <Button variant="outline" className="btn-header-action" onClick={() => downloadRevenueTemplate(channels)}><Download className="w-4 h-4 ml-1" /> {lang === "ar" ? "تحميل نموذج" : "Download Template"}</Button>
             <Dialog open={importOpen} onOpenChange={setImportOpen}>
-              <DialogTrigger asChild><Button variant="outline" className="btn-header-action"><Upload className="w-4 h-4 ml-1" /> استيراد Excel/CSV</Button></DialogTrigger>
-              <DialogContent dir="rtl">
-                <DialogHeader><DialogTitle>استيراد إيرادات</DialogTitle></DialogHeader>
-                <div className="space-y-4 text-sm">
-                  <p className="text-muted-foreground">الأعمدة المطلوبة: <code dir="ltr">channel, month, revenue, percentage</code> (النسبة اختيارية). يدعم XLSX و CSV.</p>
-                  <Input type="file" accept=".xlsx,.xls,.csv" onChange={(e) => {
+              <DialogTrigger asChild><Button variant="outline" className="btn-header-action"><Upload className="w-4 h-4 ml-1" /> {lang === "ar" ? "استيراد Excel/CSV" : "Import Excel/CSV"}</Button></DialogTrigger>
+              <DialogContent className="bg-slate-950 border border-slate-800 text-slate-100" dir={lang === "ar" ? "rtl" : "ltr"}>
+                <DialogHeader><DialogTitle className="text-white text-right font-bold">{lang === "ar" ? "استيراد إيرادات" : "Import Revenues"}</DialogTitle></DialogHeader>
+                <div className="space-y-4 text-sm text-right">
+                  <p className="text-muted-foreground">{lang === "ar" ? "الأعمدة المطلوبة: channel, month, revenue, percentage (النسبة اختيارية). يدعم XLSX و CSV." : "Required columns: channel, month, revenue, percentage (percentage is optional). Supports XLSX and CSV."}</p>
+                  <Input type="file" accept=".xlsx,.xls,.csv" className="bg-slate-900 border-slate-700 text-white" onChange={(e) => {
                     const f = e.target.files?.[0]; if (f) importMut.mutate(f);
                   }} />
-                  {importMut.isPending && <p className="text-muted-foreground">جاري المعالجة…</p>}
+                  {importMut.isPending && <p className="text-muted-foreground">{lang === "ar" ? "جاري المعالجة…" : "Processing..."}</p>}
                 </div>
               </DialogContent>
             </Dialog>
             <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
-              <DialogTrigger asChild><Button onClick={openNew} className="btn-header-action"><Plus className="w-4 h-4 ml-1" /> إيراد جديد</Button></DialogTrigger>
-              <DialogContent dir="rtl">
-                <DialogHeader><DialogTitle>{editing ? "تعديل إيراد" : "إيراد شهري جديد"}</DialogTitle></DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
+              <DialogTrigger asChild><Button onClick={openNew} className="btn-header-action"><Plus className="w-4 h-4 ml-1" /> {lang === "ar" ? "إيراد جديد" : "New Revenue"}</Button></DialogTrigger>
+              <DialogContent className="bg-slate-950 border border-slate-800 text-slate-100" dir={lang === "ar" ? "rtl" : "ltr"}>
+                <DialogHeader><DialogTitle className="text-white text-right font-bold">{editing ? (lang === "ar" ? "تعديل إيراد" : "Edit Revenue") : (lang === "ar" ? "إيراد شهري جديد" : "New Monthly Revenue")}</DialogTitle></DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4 text-right">
                   <div className="space-y-2">
-                    <Label>القناة *</Label>
+                    <Label className="text-slate-300">{lang === "ar" ? "القناة *" : "Channel *"}</Label>
                     <Select 
                       value={channelId} 
                       onValueChange={(val) => {
@@ -226,16 +228,16 @@ function RevenuePage() {
                         }
                       }}
                     >
-                      <SelectTrigger><SelectValue placeholder="اختر القناة" /></SelectTrigger>
+                      <SelectTrigger className="bg-slate-900 border-slate-700 text-white"><SelectValue placeholder={lang === "ar" ? "اختر القناة" : "Select channel"} /></SelectTrigger>
                       <SelectContent>{channels.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name} — {c.clients?.name}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2"><Label>الشهر *</Label><Input name="period_month" type="month" required defaultValue={editing ? editing.period_month.slice(0, 7) : firstOfMonth().slice(0, 7)} dir="ltr" /></div>
-                    <div className="space-y-2"><Label>إجمالي الإيراد (USD) *</Label><Input name="total_revenue" type="number" step="0.01" min="0" required defaultValue={editing?.total_revenue} dir="ltr" /></div>
+                    <div className="space-y-2"><Label className="text-slate-300">{lang === "ar" ? "الشهر *" : "Month *"}</Label><Input name="period_month" type="month" required defaultValue={editing ? editing.period_month.slice(0, 7) : firstOfMonth().slice(0, 7)} dir="ltr" className="bg-slate-900 border-slate-700 text-white" /></div>
+                    <div className="space-y-2"><Label className="text-slate-300">{lang === "ar" ? "إجمالي الإيراد (USD) *" : "Total Revenue (USD) *"}</Label><Input name="total_revenue" type="number" step="0.01" min="0" required defaultValue={editing?.total_revenue} dir="ltr" className="bg-slate-900 border-slate-700 text-white" /></div>
                   </div>
                   <div className="space-y-2">
-                    <Label>نسبة العميل % (يمكن تجاوز قيمة القناة)</Label>
+                    <Label className="text-slate-300">{lang === "ar" ? "نسبة العميل % (يمكن تجاوز قيمة القناة)" : "Client % (can override channel value)"}</Label>
                     <Input 
                       name="client_percentage" 
                       type="number" 
@@ -245,9 +247,10 @@ function RevenuePage() {
                       value={clientPctInput} 
                       onChange={(e) => setClientPctInput(e.target.value)} 
                       dir="ltr" 
+                      className="bg-slate-900 border-slate-700 text-white"
                     />
                   </div>
-                  <DialogFooter><Button type="submit" disabled={save.isPending}>حفظ</Button></DialogFooter>
+                  <DialogFooter className="gap-2 pt-2"><Button type="submit" disabled={save.isPending}>{save.isPending ? t("loading") : t("save")}</Button></DialogFooter>
                 </form>
               </DialogContent>
             </Dialog>
@@ -258,15 +261,15 @@ function RevenuePage() {
       <div className="flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="بحث بالقناة أو العميل…" value={search} onChange={(e) => setSearch(e.target.value)} className="search-input-padding" />
+          <Input placeholder={lang === "ar" ? "بحث بالقناة أو العميل…" : "Search by channel or client..."} value={search} onChange={(e) => setSearch(e.target.value)} className="search-input-padding" />
         </div>
         
         <Select value={filterYear} onValueChange={setFilterYear}>
-          <SelectTrigger className="w-32">
-            <SelectValue placeholder="السنة" />
+          <SelectTrigger className="w-32 bg-slate-900 border-slate-700">
+            <SelectValue placeholder={t("yearLabel")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">كل السنوات</SelectItem>
+            <SelectItem value="all">{lang === "ar" ? "كل السنوات" : "All years"}</SelectItem>
             {availableYears.map((y) => (
               <SelectItem key={y} value={y}>{y}</SelectItem>
             ))}
@@ -274,29 +277,29 @@ function RevenuePage() {
         </Select>
 
         <Select value={filterMonth} onValueChange={setFilterMonth}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="الشهر" />
+          <SelectTrigger className="w-40 bg-slate-900 border-slate-700">
+            <SelectValue placeholder={lang === "ar" ? "الشهر" : "Month"} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">كل الشهور</SelectItem>
-            <SelectItem value="01">يناير (01)</SelectItem>
-            <SelectItem value="02">فبراير (02)</SelectItem>
-            <SelectItem value="03">مارس (03)</SelectItem>
-            <SelectItem value="04">أبريل (04)</SelectItem>
-            <SelectItem value="05">مايو (05)</SelectItem>
-            <SelectItem value="06">يونيو (06)</SelectItem>
-            <SelectItem value="07">يوليو (07)</SelectItem>
-            <SelectItem value="08">أغسطس (08)</SelectItem>
-            <SelectItem value="09">سبتمبر (09)</SelectItem>
-            <SelectItem value="10">أكتوبر (10)</SelectItem>
-            <SelectItem value="11">نوفمبر (11)</SelectItem>
-            <SelectItem value="12">ديسمبر (12)</SelectItem>
+            <SelectItem value="all">{lang === "ar" ? "كل الشهور" : "All months"}</SelectItem>
+            <SelectItem value="01">{lang === "ar" ? "يناير" : "January"} (01)</SelectItem>
+            <SelectItem value="02">{lang === "ar" ? "فبراير" : "February"} (02)</SelectItem>
+            <SelectItem value="03">{lang === "ar" ? "مارس" : "March"} (03)</SelectItem>
+            <SelectItem value="04">{lang === "ar" ? "أبريل" : "April"} (04)</SelectItem>
+            <SelectItem value="05">{lang === "ar" ? "مايو" : "May"} (05)</SelectItem>
+            <SelectItem value="06">{lang === "ar" ? "يونيو" : "June"} (06)</SelectItem>
+            <SelectItem value="07">{lang === "ar" ? "يوليو" : "July"} (07)</SelectItem>
+            <SelectItem value="08">{lang === "ar" ? "أغسطس" : "August"} (08)</SelectItem>
+            <SelectItem value="09">{lang === "ar" ? "سبتمبر" : "September"} (09)</SelectItem>
+            <SelectItem value="10">{lang === "ar" ? "أكتوبر" : "October"} (10)</SelectItem>
+            <SelectItem value="11">{lang === "ar" ? "نوفمبر" : "November"} (11)</SelectItem>
+            <SelectItem value="12">{lang === "ar" ? "ديسمبر" : "December"} (12)</SelectItem>
           </SelectContent>
         </Select>
 
         {(filterYear !== "all" || filterMonth !== "all") && (
-          <Button variant="ghost" size="sm" onClick={() => { setFilterYear("all"); setFilterMonth("all"); }}>
-            مسح التصفية
+          <Button variant="ghost" size="sm" onClick={() => { setFilterYear("all"); setFilterMonth("all"); }} className="text-slate-300 hover:text-white">
+            {t("clearFilters")}
           </Button>
         )}
       </div>
@@ -306,22 +309,22 @@ function RevenuePage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-right">الشهر</TableHead>
-                <TableHead className="text-right">القناة</TableHead>
-                <TableHead className="text-right">العميل</TableHead>
-                {isStaff && <TableHead className="text-right">إجمالي الإيراد</TableHead>}
-                {isStaff && <TableHead className="text-right">نسبة العميل</TableHead>}
-                {isStaff && <TableHead className="text-right">نسبة السيستم</TableHead>}
-                {isStaff && <TableHead className="text-right">نسبة الشركة</TableHead>}
-                <TableHead className="text-right">حصة العميل</TableHead>
-                {isStaff && <TableHead className="text-right">حصة السيستم</TableHead>}
-                {isStaff && <TableHead className="text-right">حصة الشركة</TableHead>}
-                {isStaff && <TableHead className="text-left">إجراءات</TableHead>}
+                <TableHead className="text-right">{lang === "ar" ? "الشهر" : "Month"}</TableHead>
+                <TableHead className="text-right">{t("channelName")}</TableHead>
+                <TableHead className="text-right">{t("clientName")}</TableHead>
+                {isStaff && <TableHead className="text-right">{lang === "ar" ? "إجمالي الإيراد" : "Total Revenue"}</TableHead>}
+                {isStaff && <TableHead className="text-right">{t("clientPercent")}</TableHead>}
+                {isStaff && <TableHead className="text-right">{t("systemPercent")}</TableHead>}
+                {isStaff && <TableHead className="text-right">{t("companyPercent")}</TableHead>}
+                <TableHead className="text-right">{t("clientShare")}</TableHead>
+                {isStaff && <TableHead className="text-right">{lang === "ar" ? "حصة السيستم" : "System Share"}</TableHead>}
+                {isStaff && <TableHead className="text-right">{lang === "ar" ? "حصة الشركة" : "Company Share"}</TableHead>}
+                {isStaff && <TableHead className="text-left">{t("actions")}</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading && <TableRow><TableCell colSpan={isStaff ? 11 : 4} className="text-center">جاري التحميل…</TableCell></TableRow>}
-              {!isLoading && filtered.length === 0 && <TableRow><TableCell colSpan={isStaff ? 11 : 4} className="text-center text-muted-foreground py-8">لا توجد إيرادات</TableCell></TableRow>}
+              {isLoading && <TableRow><TableCell colSpan={isStaff ? 11 : 4} className="text-center">{t("loading")}</TableCell></TableRow>}
+              {!isLoading && filtered.length === 0 && <TableRow><TableCell colSpan={isStaff ? 11 : 4} className="text-center text-muted-foreground py-8">{lang === "ar" ? "لا توجد إيرادات" : "No revenues found"}</TableCell></TableRow>}
               {filtered.map((r) => {
                 const systemPct = 100 - r.client_percentage - r.company_percentage;
                 const systemShare = r.total_revenue * systemPct / 100;
@@ -352,14 +355,14 @@ function RevenuePage() {
       </Card>
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir={lang === "ar" ? "rtl" : "ltr"} className="bg-slate-900 border border-slate-800 text-slate-100">
           <AlertDialogHeader>
-            <AlertDialogTitle>هل أنت متأكد تماماً من حذف هذا الإيراد؟</AlertDialogTitle>
-            <AlertDialogDescription>
-              هذا الإجراء سيقوم بحذف سجل الأرباح الشهرية من النظام، وسيؤثر على الحسابات والفواتير المرتبطة.
+            <AlertDialogTitle className="text-white text-right">{lang === "ar" ? "هل أنت متأكد تماماً من حذف هذا الإيراد؟" : "Are you absolutely sure you want to delete this revenue?"}</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-400 text-right">
+              {lang === "ar" ? "هذا الإجراء سيقوم بحذف سجل الأرباح الشهرية من النظام، وسيؤثر على الحسابات والفواتير المرتبطة." : "This action will permanently delete the monthly revenue record from the system, which will affect associated settlements and invoices."}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="gap-2">
             <AlertDialogAction
               onClick={() => {
                 if (deleteTarget) {
@@ -369,9 +372,9 @@ function RevenuePage() {
               }}
               className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
             >
-              نعم، احذف سجل الأرباح
+              {lang === "ar" ? "نعم، احذف سجل الأرباح" : "Yes, delete revenue record"}
             </AlertDialogAction>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogCancel className="bg-slate-800 text-white border-slate-700 hover:bg-slate-700">{t("cancel")}</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -7,6 +7,7 @@ import { Users, Youtube, DollarSign, TrendingUp, Wallet, AlertTriangle } from "l
 import { money, monthLabel } from "@/lib/format";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/hooks/use-language";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 function Dashboard() {
   const { isStaff } = useAuth();
+  const { t, lang } = useLanguage();
 
   const { data } = useQuery({
     queryKey: ["dashboard"],
@@ -73,58 +75,58 @@ function Dashboard() {
 
   const cards = [
     { 
-      label: "إجمالي الإيرادات", 
+      label: lang === "ar" ? "إجمالي الإيرادات" : "Total Revenue", 
       value: money(data?.totalRevenue), 
       icon: DollarSign, 
       cardBg: "bg-card border-border hover:border-fuchsia-500/50 hover:shadow-lg hover:shadow-fuchsia-950/20",
       iconBg: "bg-fuchsia-600 text-white shadow-sm shadow-fuchsia-600/20 border-none",
       valueColor: "text-fuchsia-400",
-      subtext: "إجمالي الأرباح لكافة القنوات قبل تقسيم النسب"
+      subtext: lang === "ar" ? "إجمالي الأرباح لكافة القنوات قبل تقسيم النسب" : "Total earnings for all channels before split"
     },
     { 
-      label: "أرباح الشركة", 
+      label: lang === "ar" ? "أرباح الشركة" : "Company Profit", 
       value: money(data?.companyProfit), 
       icon: TrendingUp, 
       cardBg: "bg-card border-border hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-950/20",
       iconBg: "bg-purple-600 text-white shadow-sm shadow-purple-600/20 border-none",
       valueColor: "text-purple-400",
-      subtext: "إجمالي حصة الشركة الصافية من الإيرادات"
+      subtext: lang === "ar" ? "إجمالي حصة الشركة الصافية من الإيرادات" : "Total net company share from revenue"
     },
     { 
-      label: "مستحقات العملاء", 
+      label: lang === "ar" ? "مستحقات العملاء" : "Clients Share", 
       value: money(data?.clientPayouts), 
       icon: Wallet, 
       cardBg: "bg-card border-border hover:border-indigo-500/50 hover:shadow-lg hover:shadow-indigo-950/20",
       iconBg: "bg-indigo-600 text-white shadow-sm shadow-indigo-600/20 border-none",
       valueColor: "text-indigo-400",
-      subtext: "صافي المبالغ المستحقة لجميع الشركاء"
+      subtext: lang === "ar" ? "صافي المبالغ المستحقة لجميع الشركاء" : "Net payout balance for all clients"
     },
     { 
-      label: "أرصدة معلقة غير مدفوعة", 
+      label: lang === "ar" ? "أرصدة معلقة غير مدفوعة" : "Pending Unpaid Balance", 
       value: money(data?.unpaid), 
       icon: AlertTriangle, 
       cardBg: "bg-card border-border hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-950/20",
       iconBg: "bg-amber-500 text-white shadow-sm shadow-amber-500/20 border-none",
       valueColor: "text-amber-400",
-      subtext: `عدد الفواتير غير المدفوعة حالياً: ${data?.unpaidCount ?? 0}`
+      subtext: lang === "ar" ? `عدد الفواتير غير المدفوعة حالياً: ${data?.unpaidCount ?? 0}` : `Unpaid invoices count: ${data?.unpaidCount ?? 0}`
     },
     { 
-      label: "إجمالي القنوات", 
+      label: lang === "ar" ? "إجمالي القنوات" : "Total Channels", 
       value: data?.channels ?? 0, 
       icon: Youtube, 
       cardBg: "bg-card border-border hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-950/20",
       iconBg: "bg-blue-600 text-white shadow-sm shadow-blue-600/20 border-none",
       valueColor: "text-blue-400",
-      subtext: "عدد قنوات اليوتيوب المضافة بالنظام"
+      subtext: lang === "ar" ? "عدد قنوات اليوتيوب المضافة بالنظام" : "YouTube channels count added to system"
     },
     { 
-      label: "إجمالي الشركاء والعملاء", 
+      label: lang === "ar" ? "إجمالي الشركاء والعملاء" : "Total Clients & Partners", 
       value: data?.clients ?? 0, 
       icon: Users, 
       cardBg: "bg-card border-border hover:border-teal-500/50 hover:shadow-lg hover:shadow-teal-950/20",
       iconBg: "bg-teal-600 text-white shadow-sm shadow-teal-600/20 border-none",
       valueColor: "text-teal-400",
-      subtext: "عدد حسابات العملاء المسجلين حالياً"
+      subtext: lang === "ar" ? "عدد حسابات العملاء المسجلين حالياً" : "Number of client accounts registered currently"
     },
   ];
 
@@ -132,31 +134,31 @@ function Dashboard() {
     ? cards 
     : [
         {
-          label: "إجمالي الأرباح المستحقة",
+          label: lang === "ar" ? "إجمالي الأرباح المستحقة" : "Total Earned Revenue",
           value: money(data?.clientPayouts),
           icon: Wallet,
           cardBg: "bg-card border-border hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-950/20",
           iconBg: "bg-purple-600 text-white shadow-sm shadow-purple-600/20 border-none",
           valueColor: "text-purple-400",
-          subtext: "إجمالي مستحقاتك من الأرباح"
+          subtext: lang === "ar" ? "إجمالي مستحقاتك من الأرباح" : "Your total payouts"
         },
         {
-          label: "مستحقات معلقة غير مدفوعة",
+          label: lang === "ar" ? "مستحقات معلقة غير مدفوعة" : "Unpaid Pending Balance",
           value: money(data?.unpaid),
           icon: AlertTriangle,
           cardBg: "bg-card border-border hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-950/20",
           iconBg: "bg-amber-500 text-white shadow-sm shadow-amber-500/20 border-none",
           valueColor: "text-amber-400",
-          subtext: "المبالغ المتبقية قيد التحصيل"
+          subtext: lang === "ar" ? "المبالغ المتبقية قيد التحصيل" : "Remaining balance pending collection"
         },
         {
-          label: "عدد القنوات",
+          label: lang === "ar" ? "عدد القنوات" : "Channels Count",
           value: data?.channels ?? 0,
           icon: Youtube,
           cardBg: "bg-card border-border hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-950/20",
           iconBg: "bg-blue-600 text-white shadow-sm shadow-blue-600/20 border-none",
           valueColor: "text-blue-400",
-          subtext: "قنوات اليوتيوب التابعة لك"
+          subtext: lang === "ar" ? "قنوات اليوتيوب التابعة لك" : "YouTube channels assigned to you"
         }
       ];
 
@@ -167,9 +169,13 @@ function Dashboard() {
         <div className="space-y-1">
           <h1 className="text-2xl sm:text-3xl font-black flex items-center gap-2.5 text-white">
             <TrendingUp className="w-8 h-8 text-primary" />
-            {isStaff ? "لوحة التحكم الرئيسية" : "نظرة عامة على الأداء"}
+            {isStaff 
+              ? (lang === "ar" ? "لوحة التحكم الرئيسية" : "Dashboard Overview") 
+              : (lang === "ar" ? "نظرة عامة على الأداء" : "Performance Overview")}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1.5">ملخص أداء القنوات، الأرباح، وحالة التسويات المالية الحالية</p>
+          <p className="text-sm text-muted-foreground mt-1.5">
+            {lang === "ar" ? "ملخص أداء القنوات، الأرباح، وحالة التسويات المالية الحالية" : "Summary of channel performance, profits, and current financial settlements"}
+          </p>
         </div>
       </div>
 
@@ -216,8 +222,8 @@ function Dashboard() {
       >
         <CardHeader className="p-6 border-b">
           <CardTitle className="text-base sm:text-lg font-extrabold text-white flex items-center justify-between">
-            <span>{isStaff ? "منحنى الإيرادات وحصص الأرباح (12 شهر الأخيرة)" : "منحنى الأرباح المستحقة (12 شهر الأخيرة)"}</span>
-            <span className="text-xs sm:text-sm font-bold text-slate-300">القيم بالدولار الأمريكي (USD)</span>
+            <span>{isStaff ? (lang === "ar" ? "منحنى الإيرادات وحصص الأرباح (12 شهر الأخيرة)" : "Revenue & Share Distribution (Last 12 Months)") : (lang === "ar" ? "منحنى الأرباح المستحقة (12 شهر الأخيرة)" : "Earned Share Distribution (Last 12 Months)")}</span>
+            <span className="text-xs sm:text-sm font-bold text-slate-300">{lang === "ar" ? "القيم بالدولار الأمريكي (USD)" : "Values in US Dollars (USD)"}</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
@@ -244,11 +250,11 @@ function Dashboard() {
                 />
                 {isStaff ? (
                   <>
-                    <Bar dataKey="clientShare" stackId="a" fill="url(#colorClient)" name="حصة العميل" radius={[4, 4, 0, 0]} barSize={28} />
-                    <Bar dataKey="companyShare" stackId="a" fill="url(#colorCompany)" name="حصة الشركة" radius={[4, 4, 0, 0]} barSize={28} />
+                    <Bar dataKey="clientShare" stackId="a" fill="url(#colorClient)" name={lang === "ar" ? "حصة العميل" : "Client Share"} radius={[4, 4, 0, 0]} barSize={28} />
+                    <Bar dataKey="companyShare" stackId="a" fill="url(#colorCompany)" name={lang === "ar" ? "حصة الشركة" : "Company Share"} radius={[4, 4, 0, 0]} barSize={28} />
                   </>
                 ) : (
-                  <Bar dataKey="clientShare" fill="url(#colorClient)" name="الأرباح المستحقة" radius={[4, 4, 0, 0]} barSize={28} />
+                  <Bar dataKey="clientShare" fill="url(#colorClient)" name={lang === "ar" ? "الأرباح المستحقة" : "Earned Revenue"} radius={[4, 4, 0, 0]} barSize={28} />
                 )}
               </BarChart>
             </ResponsiveContainer>
@@ -265,10 +271,10 @@ function Dashboard() {
             style={{ animationDelay: "420ms" }}
           >
             <CardHeader className="bg-muted/30 border-b p-5">
-              <CardTitle className="text-base sm:text-lg font-extrabold text-white">أعلى العملاء إيرادات</CardTitle>
+              <CardTitle className="text-base sm:text-lg font-extrabold text-white">{lang === "ar" ? "أعلى العملاء إيرادات" : "Top Revenue Clients"}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-5 p-5">
-              {(data?.topClients ?? []).length === 0 && <p className="text-sm sm:text-base text-muted-foreground py-6 text-center">لا توجد بيانات متاحة</p>}
+              {(data?.topClients ?? []).length === 0 && <p className="text-sm sm:text-base text-muted-foreground py-6 text-center">{lang === "ar" ? "لا توجد بيانات متاحة" : "No data available"}</p>}
               {data?.topClients.map((c, i) => {
                 const maxVal = data.topClients[0]?.total || 1;
                 const percentage = Math.round((c.total / maxVal) * 100);
@@ -299,10 +305,10 @@ function Dashboard() {
             style={{ animationDelay: "480ms" }}
           >
             <CardHeader className="bg-muted/30 border-b p-5">
-              <CardTitle className="text-base sm:text-lg font-extrabold text-white">القنوات الأعلى أداءً وإيرادات</CardTitle>
+              <CardTitle className="text-base sm:text-lg font-extrabold text-white">{lang === "ar" ? "القنوات الأعلى أداءً وإيرادات" : "Top Performing Channels"}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-5 p-5">
-              {(data?.topChannels ?? []).length === 0 && <p className="text-sm sm:text-base text-muted-foreground py-6 text-center">لا توجد بيانات متاحة</p>}
+              {(data?.topChannels ?? []).length === 0 && <p className="text-sm sm:text-base text-muted-foreground py-6 text-center">{lang === "ar" ? "لا توجد بيانات متاحة" : "No data available"}</p>}
               {data?.topChannels.map((c, i) => {
                 const maxVal = data.topChannels[0]?.total || 1;
                 const percentage = Math.round((c.total / maxVal) * 100);
