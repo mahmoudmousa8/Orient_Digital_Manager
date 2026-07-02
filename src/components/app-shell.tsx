@@ -99,6 +99,10 @@ export function AppShell({ children, roles, email }: { children: ReactNode; role
           })}
         </nav>
         <div className="p-3 border-t border-sidebar-border space-y-3">
+          <div className="px-3 py-1 text-center flex flex-col items-center justify-center">
+            <div className="text-xs text-muted-foreground">{roleLabel}</div>
+            <div className="text-sm font-medium truncate w-full text-center mt-0.5" dir="ltr">{email}</div>
+          </div>
           <Button
             variant="outline"
             size="sm"
@@ -107,10 +111,6 @@ export function AppShell({ children, roles, email }: { children: ReactNode; role
           >
             🌐 {lang === "ar" ? "English" : "العربية"}
           </Button>
-          <div className="px-3 py-1 text-center flex flex-col items-center justify-center">
-            <div className="text-xs text-muted-foreground">{roleLabel}</div>
-            <div className="text-sm font-medium truncate w-full text-center mt-0.5" dir="ltr">{email}</div>
-          </div>
           <Button variant="outline" size="sm" className="w-full" onClick={signOut}>
             <LogOut className="w-4 h-4 ml-2" />
             {t("logout")}
