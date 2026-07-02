@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronDown, CreditCard, History, Plus, Search, Trash2 } from "lucide-react";
 import { money, monthLabel, STATUS_AR } from "@/lib/format";
 import { useLanguage } from "@/hooks/use-language";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
