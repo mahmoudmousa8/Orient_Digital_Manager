@@ -510,6 +510,7 @@ function ChannelsPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="text-right w-12">#</TableHead>
                 <TableHead className="text-right">القناة</TableHead>
                 <TableHead className="text-right">العميل</TableHead>
                 {isAdmin && <TableHead className="text-right">السيستم</TableHead>}
@@ -525,20 +526,21 @@ function ChannelsPage() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={isAdmin ? 10 : 5} className="text-center">
+                  <TableCell colSpan={isAdmin ? 11 : 6} className="text-center">
                     جاري التحميل…
                   </TableCell>
                 </TableRow>
               )}
               {!isLoading && filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={isAdmin ? 10 : 5} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={isAdmin ? 11 : 6} className="text-center text-muted-foreground py-8">
                     لا توجد قنوات
                   </TableCell>
                 </TableRow>
               )}
-              {filtered.map((c) => (
+              {filtered.map((c, index) => (
                 <TableRow key={c.id}>
+                  <TableCell className="font-semibold text-slate-400 text-right">{index + 1}</TableCell>
                   <TableCell className="font-medium text-right">{c.name}</TableCell>
                   <TableCell className="text-right">{c.clients?.name ?? "—"}</TableCell>
                   {isAdmin && <TableCell className="text-right text-white">{c.systems?.name ?? "مباشر"}</TableCell>}

@@ -235,6 +235,7 @@ function ClientsPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="text-right w-12">#</TableHead>
                 <TableHead className="text-right">الاسم</TableHead>
                 <TableHead className="text-right">الهاتف</TableHead>
                 <TableHead className="text-right">إنستاباي / محفظة</TableHead>
@@ -246,12 +247,13 @@ function ClientsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading && <TableRow><TableCell colSpan={8} className="text-center">جاري التحميل…</TableCell></TableRow>}
-              {!isLoading && filtered.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">لا يوجد عملاء</TableCell></TableRow>}
-              {filtered.map((c) => {
+              {isLoading && <TableRow><TableCell colSpan={9} className="text-center">جاري التحميل…</TableCell></TableRow>}
+              {!isLoading && filtered.length === 0 && <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">لا يوجد عملاء</TableCell></TableRow>}
+              {filtered.map((c, index) => {
                 const s = (stats as any)[c.id] ?? { channels: 0, revenue: 0, payout: 0 };
                 return (
                   <TableRow key={c.id}>
+                    <TableCell className="font-semibold text-slate-400 text-right">{index + 1}</TableCell>
                     <TableCell className="font-medium text-right">{c.name}</TableCell>
                     <TableCell dir="ltr" className="text-right">{c.phone || "—"}</TableCell>
                     <TableCell dir="ltr" className="text-right">

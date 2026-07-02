@@ -310,6 +310,7 @@ function PublishingPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="text-right w-12 text-[10px]">#</TableHead>
                   <TableHead className="text-center min-w-[130px] text-[10px]">القناة</TableHead>
                   <TableHead className="text-center text-[10px] min-w-[100px]">الموظف</TableHead>
                   <TableHead className="text-center text-[10px] min-w-[220px]">العميل</TableHead>
@@ -333,7 +334,7 @@ function PublishingPage() {
               <TableBody>
                 {isLoading && (
                   <TableRow>
-                    <TableCell colSpan={18} className="text-center py-8">
+                    <TableCell colSpan={19} className="text-center py-8">
                       <div className="flex items-center justify-center gap-2">
                         <Loader2 className="w-5 h-5 animate-spin text-primary" />
                         <span>جاري تحميل قنوات التتبع…</span>
@@ -343,13 +344,13 @@ function PublishingPage() {
                 )}
                 {!isLoading && filteredTasks.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={18} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={19} className="text-center text-muted-foreground py-8">
                       لا توجد نتائج مطابقة للفلاتر الحالية.
                     </TableCell>
                   </TableRow>
                 )}
                 {!isLoading &&
-                  filteredTasks.map((t) => {
+                  filteredTasks.map((t, index) => {
                     const isAssignedToMe = t.assignedTo === user?.id;
                     const canEdit = isAdmin || isAssignedToMe;
                     const isMonthDisabled = (m: number) => selectedYear === 2026 && m <= 6;
@@ -364,6 +365,10 @@ function PublishingPage() {
 
                     return (
                       <TableRow key={t.channelId} className={isAssignedToMe ? "bg-primary/5" : ""}>
+                        {/* Sequence */}
+                        <TableCell className="font-semibold text-slate-400 text-right text-[10px] py-1.5 w-12">
+                          {index + 1}
+                        </TableCell>
                         {/* Channel Name */}
                         <TableCell className="font-bold text-right text-slate-200 text-[10px] py-1.5">
                           {t.channelName}
