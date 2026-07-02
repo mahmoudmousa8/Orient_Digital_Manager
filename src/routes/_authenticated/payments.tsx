@@ -12,8 +12,14 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, History, Plus, Search, Trash2 } from "lucide-react";
+import { ChevronDown, CreditCard, History, Plus, Search, Trash2 } from "lucide-react";
 import { money, monthLabel, STATUS_AR } from "@/lib/format";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,7 +58,7 @@ function PaymentsPage() {
   const qc = useQueryClient();
   const [historyFor, setHistoryFor] = useState<Pay | null>(null);
   const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>(["paid", "unpaid", "partial"]);
   const [filterYear, setFilterYear] = useState("all");
   const [filterMonth, setFilterMonth] = useState("all");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -137,17 +143,8 @@ function PaymentsPage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return payments.filter((p) => {
-      if (filterStatus !== "all") {
-        if (filterStatus === "paid") {
-          if (p.status !== "paid") return false;
-        } else if (filterStatus === "unpaid") {
-          // unpaid or partial (i.e. remaining > 0)
-          if (p.status === "paid") return false;
-        } else if (filterStatus === "only_unpaid") {
-          if (p.status !== "unpaid") return false;
-        } else if (filterStatus === "partial") {
-          if (p.status !== "partial") return false;
-        }
+      if (!selectedStatuses.includes(p.status)) {
+        return false;
       }
       const period = p.monthly_revenues?.period_month;
       if (period) {
@@ -163,7 +160,7 @@ function PaymentsPage() {
       }
       return true;
     });
-  }, [payments, search, filterStatus, filterYear, filterMonth]);
+  }, [payments, search, selectedStatuses, filterYear, filterMonth]);
 
   const totals = useMemo(() => ({
     due: filtered.reduce((s, p) => s + Number(p.monthly_revenues?.client_share ?? 0), 0),
@@ -194,18 +191,61 @@ function PaymentsPage() {
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs text-slate-300">حالة الدفع</Label>
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-48 bg-slate-900 border-slate-700">
-              <SelectValue placeholder="حالة الدفع" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">كل الحالات</SelectItem>
-              <SelectItem value="paid">المدفوع (كامل)</SelectItem>
-              <SelectItem value="unpaid">غير مدفوع (متبقي)</SelectItem>
-              <SelectItem value="only_unpaid">غير مدفوع نهائياً</SelectItem>
-              <SelectItem value="partial">مدفوع جزئياً</SelectItem>
-            </SelectContent>
-          </Select>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="w-48 bg-slate-900 border-slate-700 justify-between text-right text-xs rounded-xl h-9 hover:bg-slate-900 hover:text-white">
+                <span className="truncate">
+                  {selectedStatuses.length === 3
+                    ? "كل الحالات"
+                    : selectedStatuses.length === 0
+                    ? "لم يتم تحديد أي حالة"
+                    : selectedStatuses.map((s) => STATUS_AR[s]).join("، ")}
+                </span>
+                <ChevronDown className="w-4 h-4 opacity-50 shrink-0" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-48 bg-slate-900 border-slate-700 text-slate-100">
+              <DropdownMenuCheckboxItem
+                checked={selectedStatuses.includes("paid")}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                     setSelectedStatuses([...selectedStatuses, "paid"]);
+                  } else {
+                     setSelectedStatuses(selectedStatuses.filter((s) => s !== "paid"));
+                  }
+                }}
+                className="text-right justify-start cursor-pointer hover:bg-primary/20"
+              >
+                مدفوع
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={selectedStatuses.includes("unpaid")}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                     setSelectedStatuses([...selectedStatuses, "unpaid"]);
+                  } else {
+                     setSelectedStatuses(selectedStatuses.filter((s) => s !== "unpaid"));
+                  }
+                }}
+                className="text-right justify-start cursor-pointer hover:bg-primary/20"
+              >
+                غير مدفوع
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={selectedStatuses.includes("partial")}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                     setSelectedStatuses([...selectedStatuses, "partial"]);
+                  } else {
+                     setSelectedStatuses(selectedStatuses.filter((s) => s !== "partial"));
+                  }
+                }}
+                className="text-right justify-start cursor-pointer hover:bg-primary/20"
+              >
+                مدفوع جزئياً
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs text-slate-300">السنة</Label>
@@ -246,8 +286,8 @@ function PaymentsPage() {
           </Select>
         </div>
 
-        {(filterYear !== "all" || filterMonth !== "all") && (
-          <Button variant="ghost" size="sm" onClick={() => { setFilterYear("all"); setFilterMonth("all"); }} className="mb-1">
+        {(filterYear !== "all" || filterMonth !== "all" || selectedStatuses.length !== 3) && (
+          <Button variant="ghost" size="sm" onClick={() => { setFilterYear("all"); setFilterMonth("all"); setSelectedStatuses(["paid", "unpaid", "partial"]); }} className="mb-1">
             مسح التصفية
           </Button>
         )}
