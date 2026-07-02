@@ -54,7 +54,7 @@ const statusVariant: Record<string, string> = {
 };
 
 function ChannelsPage() {
-  const { isStaff, isEmployee, user } = useAuth();
+  const { isStaff, isEmployee, isAdmin, user } = useAuth();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Channel | null>(null);
@@ -271,7 +271,7 @@ function ChannelsPage() {
             <Download className="w-4 h-4 ml-1" /> تصدير Excel
           </Button>
 
-          {isStaff && (
+          {isAdmin && (
             <Dialog
               open={open}
               onOpenChange={(v) => {
@@ -512,27 +512,27 @@ function ChannelsPage() {
               <TableRow>
                 <TableHead className="text-right">القناة</TableHead>
                 <TableHead className="text-right">العميل</TableHead>
-                {isStaff && <TableHead className="text-right">السيستم</TableHead>}
-                {isStaff && <TableHead className="text-center">نسبة العميل</TableHead>}
-                {isStaff && <TableHead className="text-center">نسبة السيستم</TableHead>}
-                {isStaff && <TableHead className="text-center">نسبة الشركة</TableHead>}
+                {isAdmin && <TableHead className="text-right">السيستم</TableHead>}
+                {isAdmin && <TableHead className="text-center">نسبة العميل</TableHead>}
+                {isAdmin && <TableHead className="text-center">نسبة السيستم</TableHead>}
+                {isAdmin && <TableHead className="text-center">نسبة الشركة</TableHead>}
                 <TableHead className="text-center">تفعيل الأرباح</TableHead>
                 <TableHead className="text-right">الحالة</TableHead>
                 <TableHead className="text-right">الرابط</TableHead>
-                {isStaff && <TableHead className="text-left">إجراءات</TableHead>}
+                {isAdmin && <TableHead className="text-left">إجراءات</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={isStaff ? 10 : 5} className="text-center">
+                  <TableCell colSpan={isAdmin ? 10 : 5} className="text-center">
                     جاري التحميل…
                   </TableCell>
                 </TableRow>
               )}
               {!isLoading && filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={isStaff ? 10 : 5} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={isAdmin ? 10 : 5} className="text-center text-muted-foreground py-8">
                     لا توجد قنوات
                   </TableCell>
                 </TableRow>
@@ -541,18 +541,18 @@ function ChannelsPage() {
                 <TableRow key={c.id}>
                   <TableCell className="font-medium text-right">{c.name}</TableCell>
                   <TableCell className="text-right">{c.clients?.name ?? "—"}</TableCell>
-                  {isStaff && <TableCell className="text-right text-white">{c.systems?.name ?? "مباشر"}</TableCell>}
-                  {isStaff && (
+                  {isAdmin && <TableCell className="text-right text-white">{c.systems?.name ?? "مباشر"}</TableCell>}
+                  {isAdmin && (
                     <TableCell dir="ltr" className="text-center text-white">
                       {c.client_percentage}%
                     </TableCell>
                   )}
-                  {isStaff && (
+                  {isAdmin && (
                     <TableCell dir="ltr" className="text-center text-white">
                       {c.system_id ? `${c.system_percentage}%` : "—"}
                     </TableCell>
                   )}
-                  {isStaff && (
+                  {isAdmin && (
                     <TableCell dir="ltr" className="text-center text-white">
                       {c.company_percentage ?? (100 - c.client_percentage - (c.system_percentage ?? 0))}%
                     </TableCell>
@@ -584,7 +584,7 @@ function ChannelsPage() {
                       "—"
                     )}
                   </TableCell>
-                  {isStaff && (
+                  {isAdmin && (
                     <TableCell className="text-left">
                       <div className="flex gap-1 justify-end">
                         <Button size="icon" variant="ghost" onClick={() => openEdit(c)}>
