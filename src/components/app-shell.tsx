@@ -101,14 +101,6 @@ export function AppShell({ children, roles, email }: { children: ReactNode; role
           })}
         </nav>
         <div className="p-3 border-t border-sidebar-border space-y-3">
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full justify-center border-slate-800 hover:bg-slate-900 text-slate-200"
-            onClick={() => setLang(lang === "ar" ? "en" : "ar")}
-          >
-            🌐 {lang === "ar" ? "English" : "العربية"}
-          </Button>
           <div className="px-3 py-1">
             <div className="text-xs text-muted-foreground">{roleLabel}</div>
             <div className="text-sm font-medium truncate" dir="ltr">{email}</div>
@@ -120,7 +112,23 @@ export function AppShell({ children, roles, email }: { children: ReactNode; role
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0 print:p-0">
+      <div className="flex-1 flex flex-col min-w-0 print:p-0 relative">
+        {/* Desktop Language Switcher - Floating top opposite side of title */}
+        <div className={cn(
+          "absolute top-6 z-30 hidden lg:block print:hidden",
+          lang === "ar" ? "left-6" : "right-6"
+        )}>
+          <Button
+            variant="outline"
+            size="icon"
+            className="w-10 h-10 rounded-full bg-slate-950/40 border-slate-800 hover:bg-slate-900 hover:text-white transition-all text-sm font-bold text-slate-300 shadow-lg shadow-black/20"
+            onClick={() => setLang(lang === "ar" ? "en" : "ar")}
+            title={lang === "ar" ? "Switch to English" : "التحويل للعربية"}
+          >
+            {lang === "ar" ? "EN" : "AR"}
+          </Button>
+        </div>
+
         <header className="lg:hidden flex items-center justify-between p-4 border-b bg-card print:hidden">
           <Button size="icon" variant="ghost" onClick={() => setOpen(!open)}><Menu /></Button>
           <span className="font-extrabold text-white text-base">{t("brandName")}</span>
