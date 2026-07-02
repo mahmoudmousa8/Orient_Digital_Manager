@@ -98,7 +98,6 @@ html {
     zoom: 1;
   }
   html {
-    direction: rtl;
     scrollbar-gutter: stable;
   }
   body[data-scroll-locked], 

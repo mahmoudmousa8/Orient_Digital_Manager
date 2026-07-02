@@ -113,11 +113,8 @@ export function AppShell({ children, roles, email }: { children: ReactNode; role
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0 print:p-0 relative">
-        {/* Desktop Language Switcher - Floating top opposite side of title */}
-        <div className={cn(
-          "absolute top-6 z-30 hidden lg:block print:hidden",
-          lang === "ar" ? "left-6" : "right-6"
-        )}>
+        {/* Desktop Language Switcher - Floating far left */}
+        <div className="absolute top-6 left-6 z-30 hidden lg:block print:hidden">
           <Button
             variant="outline"
             size="icon"
@@ -141,7 +138,12 @@ export function AppShell({ children, roles, email }: { children: ReactNode; role
             {lang === "ar" ? "EN" : "عربي"}
           </Button>
         </header>
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-auto print:p-0">{children}</main>
+        <main className={cn(
+          "flex-1 p-4 sm:p-6 lg:p-8 overflow-x-auto print:p-0",
+          lang === "en" && "lg:pl-20"
+        )}>
+          {children}
+        </main>
       </div>
     </div>
   );
