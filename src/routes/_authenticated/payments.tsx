@@ -57,6 +57,7 @@ function PaymentsPage() {
   const { isStaff } = useAuth();
   const qc = useQueryClient();
   const [historyFor, setHistoryFor] = useState<Pay | null>(null);
+  const [payTarget, setPayTarget] = useState<Pay | null>(null);
   const [search, setSearch] = useState("");
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>(["paid", "unpaid", "partial"]);
   const [filterYear, setFilterYear] = useState("all");
@@ -323,8 +324,13 @@ function PaymentsPage() {
                   <TableCell className="text-right"><Badge className={statusVariant[p.status]}>{STATUS_AR[p.status]}</Badge></TableCell>
                   <TableCell dir="ltr" className="text-xs text-right">{p.vodafone_transfer_no || "—"}{p.payment_date ? ` · ${p.payment_date}` : ""}</TableCell>
                   <TableCell className="text-left">
-                    <div className="flex justify-end">
-                      <Button size="sm" variant="outline" onClick={() => setHistoryFor(p)}>
+                    <div className="flex gap-2 justify-end">
+                      {isStaff && p.remaining > 0 && (
+                        <Button size="sm" className="bg-primary hover:bg-primary/90 text-white font-bold h-8 rounded-xl px-3" onClick={() => setPayTarget(p)}>
+                          <CreditCard className="w-4 h-4 ml-1" /> تسجيل دفع
+                        </Button>
+                      )}
+                      <Button size="sm" variant="outline" className="h-8 rounded-xl px-3" onClick={() => setHistoryFor(p)}>
                         <History className="w-4 h-4 ml-1" /> السجل
                       </Button>
                     </div>
@@ -398,7 +404,95 @@ function PaymentsPage() {
           <DialogFooter><Button variant="outline" onClick={() => setHistoryFor(null)}>إغلاق</Button></DialogFooter>
         </DialogContent>
       </Dialog>
+      <Dialog open={!!payTarget} onOpenChange={(v) => !v && setPayTarget(null)}>
+        <DialogContent dir="rtl" className="max-w-md bg-slate-950 border-slate-800 text-slate-100">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-white text-right">تسجيل دفعة مالية جديدة</DialogTitle>
+          </DialogHeader>
+          {payTarget && (
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const fd = new FormData(e.currentTarget);
+              const amount = Number(fd.get("amount"));
+              if (amount <= 0) { toast.error("المبلغ يجب أن يكون أكبر من صفر"); return; }
+              addTx.mutate({
+                payment_id: payTarget.id,
+                amount,
+                transaction_date: String(fd.get("transaction_date") || new Date().toISOString().slice(0, 10)),
+                vodafone_transfer_no: String(fd.get("vodafone_transfer_no") || "") || null,
+                notes: String(fd.get("notes") || "") || null,
+              }, {
+                onSuccess: () => {
+                  setPayTarget(null);
+                }
+              });
+            }} className="space-y-4 pt-2">
+              <div className="bg-slate-900 border border-slate-850 p-3 rounded-lg text-sm space-y-1 text-right">
+                <div>القناة: <strong>{payTarget.monthly_revenues?.channels?.name}</strong></div>
+                <div>العميل: <strong>{payTarget.monthly_revenues?.channels?.clients?.name}</strong></div>
+                {payTarget.monthly_revenues?.channels?.clients?.vodafone_cash && (
+                  <div className="text-primary font-semibold">محفظة/إنستاباي العميل: <span dir="ltr">{payTarget.monthly_revenues.channels.clients.vodafone_cash}</span></div>
+                )}
+                <div className="flex gap-4 pt-1 text-slate-300">
+                  <span>المستحق: <strong dir="ltr">{money(payTarget.monthly_revenues?.client_share)}</strong></span>
+                  <span>المدفوع: <strong dir="ltr" className="text-green-400">{money(payTarget.amount_paid)}</strong></span>
+                  <span>المتبقي: <strong dir="ltr" className="text-red-400">{money(payTarget.remaining)}</strong></span>
+                </div>
+              </div>
 
+              <div className="space-y-1 text-right">
+                <Label className="text-xs text-slate-300">المبلغ المدفوع (USD) *</Label>
+                <Input
+                  name="amount"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  max={payTarget.remaining}
+                  required
+                  dir="ltr"
+                  defaultValue={payTarget.remaining}
+                  className="bg-slate-900 border-slate-700 h-9 text-white text-right"
+                />
+                <span className="text-xs text-slate-400 block mt-1">تلقائياً مكتوب فيه المتبقي بالكامل للدفع السريع. يمكنك كتابة جزء منه فقط للدفع الجزئي.</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-right">
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-300">تاريخ التحويل</Label>
+                  <Input
+                    name="transaction_date"
+                    type="date"
+                    defaultValue={new Date().toISOString().slice(0, 10)}
+                    dir="ltr"
+                    className="bg-slate-900 border-slate-700 h-9 text-white"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-300">رقم التحويل / المعاملة</Label>
+                  <Input
+                    name="vodafone_transfer_no"
+                    placeholder="رقم المعاملة..."
+                    dir="ltr"
+                    className="bg-slate-900 border-slate-700 h-9 text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1 text-right">
+                <Label className="text-xs text-slate-300">ملاحظات</Label>
+                <Input name="notes" placeholder="ملاحظات اختيارية..." className="bg-slate-900 border-slate-700 h-9 text-white" />
+              </div>
+
+              <DialogFooter className="gap-2 pt-2">
+                <Button type="submit" className="w-full bg-primary hover:bg-primary/95 text-white" disabled={addTx.isPending}>
+                  {addTx.isPending ? "جاري التسجيل..." : "تأكيد وتسجيل الدفع"}
+                </Button>
+                <Button type="button" variant="outline" className="w-full border-slate-700 hover:bg-slate-900 text-white" onClick={() => setPayTarget(null)}>إلغاء</Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <AlertDialogContent dir="rtl">
           <AlertDialogHeader>
