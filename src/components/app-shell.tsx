@@ -107,12 +107,12 @@ export function AppShell({ children, roles, email }: { children: ReactNode; role
           <Button
             variant="outline"
             size="sm"
-            className="w-full justify-center border-slate-800 hover:bg-slate-900 text-slate-200"
+            className="w-3/4 mx-auto justify-center border-slate-800 hover:bg-slate-900 text-slate-200 flex"
             onClick={() => setLang(lang === "ar" ? "en" : "ar")}
           >
             🌐 {lang === "ar" ? "English" : "العربية"}
           </Button>
-          <Button variant="outline" size="sm" className="w-full" onClick={signOut}>
+          <Button variant="outline" size="sm" className="w-3/4 mx-auto flex justify-center items-center" onClick={signOut}>
             <LogOut className="w-4 h-4 ml-2" />
             {t("logout")}
           </Button>
