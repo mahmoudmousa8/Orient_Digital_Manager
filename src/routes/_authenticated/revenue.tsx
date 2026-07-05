@@ -34,7 +34,13 @@ type Revenue = {
   id: string; channel_id: string; period_month: string;
   total_revenue: number; client_percentage: number;
   client_share: number; company_share: number; notes: string | null;
-  channels?: { name: string; client_percentage: number; clients?: { name: string } | null } | null;
+  channels?: { 
+    name: string; 
+    client_percentage: number; 
+    system_id?: string | null;
+    systems?: { id: string; name: string } | null;
+    clients?: { name: string } | null 
+  } | null;
 };
 
 function firstOfMonth(d = new Date()) {
@@ -53,7 +59,16 @@ function RevenuePage() {
   const [search, setSearch] = useState("");
   const [filterYear, setFilterYear] = useState("all");
   const [filterMonth, setFilterMonth] = useState("all");
+  const [filterSystem, setFilterSystem] = useState("all");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+
+  const { data: systems = [] } = useQuery({
+    queryKey: ["systems"],
+    queryFn: async () => {
+      const { data } = await supabase.from("systems").select("id, name").order("name");
+      return data ?? [];
+    },
+  });
 
   const { data: channels = [] } = useQuery({
     queryKey: ["channels-min"],
@@ -68,7 +83,7 @@ function RevenuePage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("monthly_revenues")
-        .select("*, channels(name, client_percentage, clients(name), systems(name))")
+        .select("*, channels(name, client_percentage, system_id, clients(name), systems(id, name))")
         .order("period_month", { ascending: false });
       if (error) throw error;
       return data as Revenue[];
@@ -177,13 +192,20 @@ function RevenuePage() {
       const [year, month] = r.period_month.split("-");
       if (filterYear !== "all" && year !== filterYear) return false;
       if (filterMonth !== "all" && month !== filterMonth) return false;
+      if (filterSystem !== "all") {
+        if (filterSystem === "direct") {
+          if (r.channels?.system_id) return false;
+        } else {
+          if (r.channels?.system_id !== filterSystem) return false;
+        }
+      }
       if (q) {
         const hay = `${r.channels?.name ?? ""} ${r.channels?.clients?.name ?? ""} ${r.channels?.systems?.name ?? ""}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
-  }, [revenues, search, filterYear, filterMonth]);
+  }, [revenues, search, filterYear, filterMonth, filterSystem]);
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -264,6 +286,19 @@ function RevenuePage() {
           <Input placeholder={lang === "ar" ? "بحث بالقناة أو العميل…" : "Search by channel or client..."} value={search} onChange={(e) => setSearch(e.target.value)} className="search-input-padding" />
         </div>
         
+        <Select value={filterSystem} onValueChange={setFilterSystem}>
+          <SelectTrigger className="w-48 bg-slate-900 border-slate-700">
+            <SelectValue placeholder={lang === "ar" ? "كل الأنظمة" : "All Systems"} />
+          </SelectTrigger>
+          <SelectContent className="bg-slate-950 border-slate-800 text-slate-100">
+            <SelectItem value="all">{lang === "ar" ? "كل الأنظمة" : "All Systems"}</SelectItem>
+            <SelectItem value="direct">{lang === "ar" ? "مباشر (بدون سيستم)" : "Direct (No System)"}</SelectItem>
+            {systems.map((sys: any) => (
+              <SelectItem key={sys.id} value={sys.id}>{sys.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         <Select value={filterYear} onValueChange={setFilterYear}>
           <SelectTrigger className="w-32 bg-slate-900 border-slate-700">
             <SelectValue placeholder={t("yearLabel")} />
@@ -297,8 +332,8 @@ function RevenuePage() {
           </SelectContent>
         </Select>
 
-        {(filterYear !== "all" || filterMonth !== "all") && (
-          <Button variant="ghost" size="sm" onClick={() => { setFilterYear("all"); setFilterMonth("all"); }} className="text-slate-300 hover:text-white">
+        {(filterYear !== "all" || filterMonth !== "all" || filterSystem !== "all") && (
+          <Button variant="ghost" size="sm" onClick={() => { setFilterYear("all"); setFilterMonth("all"); setFilterSystem("all"); }} className="text-slate-300 hover:text-white">
             {t("clearFilters")}
           </Button>
         )}

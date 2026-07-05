@@ -29,9 +29,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Plus, Search, Eye, Copy, Trash2, Printer, Calendar, RefreshCw, X } from "lucide-react";
+import { FileText, Plus, Search, Eye, Copy, Trash2, Printer, Calendar, RefreshCw, X, Pencil } from "lucide-react";
 import { money, STATUS_AR } from "@/lib/format";
-import { createInvoice, duplicateInvoice, deleteInvoice } from "@/lib/invoices.functions";
+import { createInvoice, duplicateInvoice, deleteInvoice, updateInvoice } from "@/lib/invoices.functions";
 import { useLanguage } from "@/hooks/use-language";
 
 export const Route = createFileRoute("/_authenticated/invoices")({
@@ -87,12 +87,14 @@ function InvoicesPage() {
   const createInvoiceFn = useServerFn(createInvoice);
   const duplicateInvoiceFn = useServerFn(duplicateInvoice);
   const deleteInvoiceFn = useServerFn(deleteInvoice);
+  const updateInvoiceFn = useServerFn(updateInvoice);
 
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterClient, setFilterClient] = useState("all");
 
   const [createOpen, setCreateOpen] = useState(false);
+  const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   // New Invoice Form state
@@ -296,6 +298,42 @@ function InvoicesPage() {
     onError: (err: any) => toast.error(err.message),
   });
 
+  const updateMut = useMutation({
+    mutationFn: async () => {
+      if (!editingInvoice) return;
+      const itemsPayload = formItems.map((it) => ({
+        ...it,
+        views: Number(it.views || 0),
+        amount: Number(it.amount || 0),
+        clientShare: Number(it.clientShare || 0),
+        companyShare: Number(it.companyShare || 0),
+      }));
+      return updateInvoiceFn({
+        data: {
+          id: editingInvoice.id,
+          invoiceNumber: formInvoiceNo,
+          issueDate: formIssueDate,
+          dueDate: formDueDate,
+          status: editingInvoice.status,
+          currency: "USD",
+          taxRate: Number(formTax || 0),
+          discountRate: Number(formDiscount || 0),
+          notes: formNotes,
+          items: itemsPayload,
+        },
+      });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["invoices"] });
+      qc.invalidateQueries({ queryKey: ["payments"] });
+      toast.success(lang === "ar" ? "تم تعديل الفاتورة بنجاح" : "Invoice updated successfully");
+      setCreateOpen(false);
+      setEditingInvoice(null);
+      resetForm();
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
   const dupMut = useMutation({
     mutationFn: async (id: string) => duplicateInvoiceFn({ data: id }),
     onSuccess: () => {
@@ -326,8 +364,46 @@ function InvoicesPage() {
   }
 
   const openCreateDialog = () => {
+    setEditingInvoice(null);
     resetForm();
     setCreateOpen(true);
+  };
+
+  const openEditDialog = async (inv: Invoice) => {
+    setBusy(true);
+    setEditingInvoice(inv);
+    setFormClientId(inv.client_id);
+    setFormInvoiceNo(inv.invoice_number);
+    setFormIssueDate(inv.issue_date);
+    setFormDueDate(inv.due_date);
+    setFormTax((inv as any).tax_rate ?? 0);
+    setFormDiscount((inv as any).discount_rate ?? 0);
+    setFormNotes((inv as any).notes ?? "");
+    
+    try {
+      const { data: items, error } = await supabase
+        .from("invoice_items")
+        .select("*")
+        .eq("invoice_id", inv.id);
+      if (error) throw error;
+      
+      const mapped = (items ?? []).map((it) => ({
+        revenueId: it.revenue_id,
+        channelId: it.channel_id,
+        description: it.description,
+        views: it.views,
+        amount: it.amount,
+        clientPercentage: it.client_percentage,
+        clientShare: it.client_share,
+        companyShare: it.company_share,
+      }));
+      setFormItems(mapped);
+      setCreateOpen(true);
+    } catch (err: any) {
+      toast.error(lang === "ar" ? "فشل تحميل بنود الفاتورة" : "Failed to load invoice items");
+    } finally {
+      setBusy(false);
+    }
   };
 
   const filtered = useMemo(() => {
@@ -456,6 +532,9 @@ function InvoicesPage() {
                       </Button>
                       {isStaff && (
                         <>
+                          <Button size="icon" variant="ghost" onClick={() => openEditDialog(inv)} title={lang === "ar" ? "تعديل" : "Edit"}>
+                            <Pencil className="w-4 h-4 text-slate-300 hover:text-white" />
+                          </Button>
                           <Button size="icon" variant="ghost" onClick={() => dupMut.mutate(inv.id)} title={lang === "ar" ? "نسخ" : "Duplicate"}>
                             <Copy className="w-4 h-4" />
                           </Button>
@@ -474,16 +553,20 @@ function InvoicesPage() {
       </Card>
 
       {/* Create Dialog */}
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+      <Dialog open={createOpen} onOpenChange={(v) => { setCreateOpen(v); if (!v) { setEditingInvoice(null); resetForm(); } }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-slate-950 border border-slate-800 text-slate-100" dir={lang === "ar" ? "rtl" : "ltr"}>
           <DialogHeader>
-            <DialogTitle className="text-white text-right font-bold">{lang === "ar" ? "فاتورة جديدة للعميل" : "New Invoice for Client"}</DialogTitle>
+            <DialogTitle className="text-white text-right font-bold">
+              {editingInvoice 
+                ? (lang === "ar" ? "تعديل الفاتورة" : "Edit Invoice") 
+                : (lang === "ar" ? "فاتورة جديدة للعميل" : "New Invoice for Client")}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2 text-right">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1">
                 <Label htmlFor="create-client" className="text-slate-300">{lang === "ar" ? "العميل *" : "Client *"}</Label>
-                <Select value={formClientId} onValueChange={setFormClientId}>
+                <Select value={formClientId} onValueChange={setFormClientId} disabled={!!editingInvoice}>
                   <SelectTrigger id="create-client" className="bg-slate-900 border-slate-700 text-white">
                     <SelectValue placeholder={lang === "ar" ? "اختر العميل" : "Select client"} />
                   </SelectTrigger>
@@ -704,8 +787,13 @@ function InvoicesPage() {
 
           <DialogFooter className="mt-4 gap-2">
             <Button variant="outline" onClick={() => setCreateOpen(false)} type="button" className="border-slate-700 text-white hover:bg-slate-900 bg-slate-950">{t("cancel")}</Button>
-            <Button onClick={() => createMut.mutate()} disabled={createMut.isPending || formItems.length === 0}>
-              {createMut.isPending ? (lang === "ar" ? "جاري الحفظ..." : "Saving...") : (lang === "ar" ? "حفظ الفاتورة" : "Save Invoice")}
+            <Button 
+              onClick={() => editingInvoice ? updateMut.mutate() : createMut.mutate()} 
+              disabled={createMut.isPending || updateMut.isPending || formItems.length === 0}
+            >
+              {createMut.isPending || updateMut.isPending 
+                ? (lang === "ar" ? "جاري الحفظ..." : "Saving...") 
+                : (lang === "ar" ? "حفظ الفاتورة" : "Save Invoice")}
             </Button>
           </DialogFooter>
         </DialogContent>
