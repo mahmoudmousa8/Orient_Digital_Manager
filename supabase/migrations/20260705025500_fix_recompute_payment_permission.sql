@@ -2,6 +2,10 @@
 -- and granting execute permission on recompute_payment to authenticated role.
 
 GRANT EXECUTE ON FUNCTION public.recompute_payment(uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.tg_payment_transactions_rollup() TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.tg_revenue_ensure_payment() TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.tg_revenue_resync_payment() TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.set_updated_at() TO authenticated, service_role;
 
 CREATE OR REPLACE FUNCTION public.tg_payment_transactions_rollup()
 RETURNS trigger
