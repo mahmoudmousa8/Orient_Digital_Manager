@@ -23,7 +23,12 @@ export function egp(n: number | string | null | undefined) {
     minimumFractionDigits: 2, 
     maximumFractionDigits: 2 
   }).format(v);
-  return `\u200Eج.م\u00A0${numStr}`;
+  return (
+    <span className="inline-flex items-center gap-0.5" dir="ltr">
+      <span className="text-[11px] font-semibold text-muted-foreground/80 print:text-neutral-500 mr-0.5">ج.م</span>
+      <span>{numStr}</span>
+    </span>
+  );
 }
 
 type Employee = {
