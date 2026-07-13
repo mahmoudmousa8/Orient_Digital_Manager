@@ -402,7 +402,7 @@ export function EmployeesPage() {
       const totalNet = payrolls.reduce((sum, p) => sum + p.net_pay, 0);
 
       return (
-        <div className="hidden print:block w-full bg-white text-black font-sans relative print-container" style={{ direction: "rtl" }}>
+        <div id="invoice-card" className="hidden print:block w-full bg-white text-black font-sans relative print-container" style={{ direction: "rtl" }}>
           <style>{`
             @media print {
               @page {
@@ -410,9 +410,23 @@ export function EmployeesPage() {
               }
               body {
                 margin: 0 !important;
+                background-color: #ffffff !important;
+                color: #000000 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
               }
+            }
+            .print-container table th {
+              background-color: transparent !important;
+              color: #000000 !important;
+              border-bottom: 2px solid #000000 !important;
+              border-top: 2px solid #000000 !important;
+              font-weight: 900 !important;
+            }
+            .print-container table td {
+              background-color: transparent !important;
+              color: #000000 !important;
+              border-bottom: 1px solid #e2e8f0 !important;
             }
           `}</style>
           {/* Visual Header Corner Designs (Branding matching Reference Image) */}
@@ -560,7 +574,7 @@ export function EmployeesPage() {
       const remainingAmt = p.net_pay - paidAmt;
 
       return (
-        <div className="hidden print:block w-full bg-white text-black font-sans relative print-container" style={{ direction: "rtl" }}>
+        <div id="invoice-card" className="hidden print:block w-full bg-white text-black font-sans relative print-container" style={{ direction: "rtl" }}>
           <style>{`
             @media print {
               @page {
@@ -568,9 +582,23 @@ export function EmployeesPage() {
               }
               body {
                 margin: 0 !important;
+                background-color: #ffffff !important;
+                color: #000000 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
               }
+            }
+            .print-container table th {
+              background-color: transparent !important;
+              color: #000000 !important;
+              border-bottom: 2px solid #000000 !important;
+              border-top: 2px solid #000000 !important;
+              font-weight: 900 !important;
+            }
+            .print-container table td {
+              background-color: transparent !important;
+              color: #000000 !important;
+              border-bottom: 1px solid #e2e8f0 !important;
             }
           `}</style>
           {/* Visual Header Corner Designs (Branding matching Reference Image) */}
