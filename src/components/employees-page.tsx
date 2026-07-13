@@ -408,12 +408,10 @@ export function EmployeesPage() {
               @page {
                 margin: 0 !important;
               }
-              body {
-                margin: 0 !important;
+              html, body, #root, [data-reactroot], main, .min-h-screen, div {
                 background-color: #ffffff !important;
+                background: #ffffff !important;
                 color: #000000 !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
               }
             }
             .print-container table th {
@@ -580,12 +578,10 @@ export function EmployeesPage() {
               @page {
                 margin: 0 !important;
               }
-              body {
-                margin: 0 !important;
+              html, body, #root, [data-reactroot], main, .min-h-screen, div {
                 background-color: #ffffff !important;
+                background: #ffffff !important;
                 color: #000000 !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
               }
             }
             .print-container table th {
