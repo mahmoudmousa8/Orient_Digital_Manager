@@ -492,12 +492,12 @@ export function EmployeesPage() {
                     <th className="p-2 text-right">{lang === "ar" ? "الموظف" : "Employee"}</th>
                     <th className="p-2 text-right">{lang === "ar" ? "الوظيفة" : "Job Title"}</th>
                     <th className="p-2 text-left">{lang === "ar" ? "الراتب الأساسي" : "Basic Salary"}</th>
-                    <th className="p-2 text-center">{lang === "ar" ? "الحضور" : "Att."}</th>
-                    <th className="p-2 text-center">{lang === "ar" ? "الغياب" : "Abs."}</th>
+                    <th className="p-2 w-14 text-center px-1">{lang === "ar" ? "الحضور" : "Att."}</th>
+                    <th className="p-2 w-14 text-center px-1">{lang === "ar" ? "الغياب" : "Abs."}</th>
                     <th className="p-2 text-left text-red-650">{lang === "ar" ? "الخصومات" : "Deductions"}</th>
                     <th className="p-2 text-left text-emerald-650">{lang === "ar" ? "المكافآت" : "Bonuses"}</th>
                     <th className="p-2 text-left font-bold">{lang === "ar" ? "صافي المستحق" : "Net Due"}</th>
-                    <th className="p-2 w-32 text-center">{lang === "ar" ? "إمضاء المستلم" : "Signature"}</th>
+                    <th className="p-2 w-48 text-center">{lang === "ar" ? "إمضاء المستلم" : "Signature"}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
@@ -506,12 +506,12 @@ export function EmployeesPage() {
                       <td className="p-2 font-bold text-slate-900">{p.employees?.name}</td>
                       <td className="p-2 text-slate-600">{p.employees?.job_title}</td>
                       <td className="p-2 text-left font-semibold" dir="ltr">{egp(p.salary)}</td>
-                      <td className="p-2 text-center font-mono">{p.attendance_days}</td>
-                      <td className="p-2 text-center font-mono">{p.absence_days}</td>
+                      <td className="p-2 text-center font-mono px-1 w-14">{p.attendance_days}</td>
+                      <td className="p-2 text-center font-mono px-1 w-14">{p.absence_days}</td>
                       <td className="p-2 text-left text-red-650 font-semibold" dir="ltr">-{egp(p.deductions)}</td>
                       <td className="p-2 text-left text-emerald-600 font-semibold" dir="ltr">+{egp(p.bonuses)}</td>
                       <td className="p-2 text-left font-black text-purple-700" dir="ltr">{egp(p.net_pay)}</td>
-                      <td className="p-2 text-center text-slate-300 text-[9px] border-r border-slate-200">
+                      <td className="p-2 text-center text-slate-400 text-[9px] border-r border-slate-200 w-48 font-bold">
                         {lang === "ar" ? "التوقيع: ............" : "Sign: ............"}
                       </td>
                     </tr>
