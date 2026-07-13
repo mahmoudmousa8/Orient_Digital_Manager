@@ -625,9 +625,6 @@ export function EmployeesPage() {
 
             {/* Title Section (Matching Profit Invoice style) */}
             <div className="pt-4 border-b pb-2">
-              <h1 className="text-2xl font-black text-purple-705">
-                {lang === "ar" ? "تفاصيل راتب الموظف" : "PAYROLL DETAILS"}
-              </h1>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 text-xs">
                 <div className="space-y-1">
