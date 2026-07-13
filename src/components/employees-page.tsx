@@ -444,9 +444,6 @@ export function EmployeesPage() {
                 <img src={logoSrc} alt="Orient Digital" className="h-full w-full object-contain" />
               </div>
               <div className={lang === "ar" ? "text-left" : "text-right"}>
-                <div className="text-2xl font-black text-purple-700">
-                  {lang === "ar" ? "مسير رواتب مجمع" : "COLLECTIVE PAYROLL"}
-                </div>
                 <div className="text-sm font-bold text-neutral-500" dir="ltr">
                   PAY-{payrollYear}{payrollMonth}-ALL
                 </div>
