@@ -398,88 +398,119 @@ export function EmployeesPage() {
       const totalNet = payrolls.reduce((sum, p) => sum + p.net_pay, 0);
 
       return (
-        <div className="hidden print:block w-full p-6 bg-white text-black font-sans relative pb-8" style={{ direction: "rtl" }}>
+        <div className="hidden print:block w-full p-8 bg-white text-black font-sans relative" style={{ direction: "rtl" }}>
           {/* SVG Header corner decoration */}
-          <div className="absolute top-0 right-0 w-32 h-14 pointer-events-none">
+          <div className="absolute top-0 right-0 w-48 h-20 pointer-events-none">
             <svg viewBox="0 0 100 100" className="w-full h-full object-right-top" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M100 0H40L100 60V0Z" fill="#a21caf" />
               <path d="M100 15H70L100 45V15Z" fill="#000000" />
+              <path d="M100 30H85L100 45V30Z" fill="#a21caf" />
             </svg>
           </div>
 
-          <div className="flex items-start justify-between border-b pb-4 mb-6 pt-2">
-            <div className="bg-white p-2 border rounded-xl shadow-sm">
-              <img src="/logo.png" alt="Orient Digital" className="h-10 w-auto object-contain" />
+          {/* Top Branding Section */}
+          <div className="flex items-start justify-between flex-wrap gap-4 pt-4">
+            <div className="bg-white p-2.5 rounded-xl border shadow-sm inline-block">
+              <img src="/logo.png" alt="Orient Digital" className="h-14 w-auto object-contain" />
             </div>
-            <div className="text-right pl-8">
-              <h1 className="text-xl font-black text-purple-750">
+            <div className="text-right pl-12">
+              <div className="text-2xl font-black text-purple-705">
                 {lang === "ar" ? "كشف مسير الرواتب الشهري المجمع" : "Monthly Collective Payroll"}
-              </h1>
-              <p className="text-xs text-neutral-500 font-bold mt-0.5" dir="ltr">
+              </div>
+              <div className="text-sm font-bold text-neutral-500" dir="ltr">
                 Orient Digital - Period: {payrollYear} / {payrollMonth}
-              </p>
+              </div>
             </div>
           </div>
 
-          <div className="space-y-4">
-            <table className="w-full border-collapse text-[11px] text-right">
+          {/* Title Section (Matching Reference Image) */}
+          <div className="pt-8 border-b pb-4">
+            <h1 className="text-3xl font-black text-purple-750">
+              {lang === "ar" ? "إجمالي الرواتب والمستحقات" : "TOTAL PAYROLLS"}
+            </h1>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6 text-sm">
+              <div className="space-y-1">
+                <span className="text-black uppercase text-xs block font-extrabold">
+                  {lang === "ar" ? "مفصل لشهر:" : "DETAILED FOR PERIOD:"}
+                </span>
+                <span className="font-extrabold text-black text-base">
+                  {lang === "ar" ? `سنة ${payrollYear} - شهر ${payrollMonth}` : `${payrollYear} / ${payrollMonth}`}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Simple Table (Matching Invoice Style) */}
+          <div className="pt-6">
+            <table className="w-full text-xs border-collapse">
               <thead>
-                <tr className="border-y border-slate-900 text-slate-950 font-black bg-slate-50">
-                  <th className="p-2 text-right">{lang === "ar" ? "الموظف" : "Employee"}</th>
-                  <th className="p-2 text-right">{lang === "ar" ? "الوظيفة" : "Job Title"}</th>
-                  <th className="p-2 text-left">{lang === "ar" ? "الراتب الأساسي" : "Basic Salary"}</th>
-                  <th className="p-2 text-center">{lang === "ar" ? "الحضور" : "Att."}</th>
-                  <th className="p-2 text-center">{lang === "ar" ? "الغياب" : "Abs."}</th>
-                  <th className="p-2 text-left text-red-655">{lang === "ar" ? "الخصومات" : "Deductions"}</th>
-                  <th className="p-2 text-left text-emerald-650">{lang === "ar" ? "المكافآت" : "Bonuses"}</th>
-                  <th className="p-2 text-left font-bold">{lang === "ar" ? "صافي المستحق" : "Net Due"}</th>
-                  <th className="p-2 w-32 text-center">{lang === "ar" ? "إمضاء الموظف" : "Signature"}</th>
+                <tr className="border-y-2 border-slate-900 text-slate-950 font-black">
+                  <th className="p-3 text-right">{lang === "ar" ? "الموظف" : "Employee"}</th>
+                  <th className="p-3 text-right">{lang === "ar" ? "الوظيفة" : "Job Title"}</th>
+                  <th className="p-3 text-left">{lang === "ar" ? "الراتب الأساسي" : "Basic Salary"}</th>
+                  <th className="p-3 text-center">{lang === "ar" ? "الحضور" : "Att."}</th>
+                  <th className="p-3 text-center">{lang === "ar" ? "الغياب" : "Abs."}</th>
+                  <th className="p-3 text-left text-red-650">{lang === "ar" ? "الخصومات" : "Deductions"}</th>
+                  <th className="p-3 text-left text-emerald-650">{lang === "ar" ? "المكافآت" : "Bonuses"}</th>
+                  <th className="p-3 text-left font-bold">{lang === "ar" ? "صافي المستحق" : "Net Due"}</th>
+                  <th className="p-3 w-40 text-center">{lang === "ar" ? "إمضاء المستلم" : "Signature"}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {payrolls.map((p) => (
-                  <tr key={p.id} className="hover:bg-slate-50/50">
-                    <td className="p-2 font-bold text-slate-900">{p.employees?.name}</td>
-                    <td className="p-2 text-slate-600">{p.employees?.job_title}</td>
-                    <td className="p-2 text-left font-semibold" dir="ltr">{egp(p.salary)}</td>
-                    <td className="p-2 text-center font-mono">{p.attendance_days}</td>
-                    <td className="p-2 text-center font-mono">{p.absence_days}</td>
-                    <td className="p-2 text-left text-red-600 font-semibold" dir="ltr">{egp(p.deductions, "-")}</td>
-                    <td className="p-2 text-left text-emerald-600 font-semibold" dir="ltr">{egp(p.bonuses, "+")}</td>
-                    <td className="p-2 text-left font-black text-purple-700" dir="ltr">{egp(p.net_pay)}</td>
-                    <td className="p-2 text-center text-slate-300 text-[10px] border-r border-slate-200">
+                  <tr key={p.id} className="border-b hover:bg-slate-50/50">
+                    <td className="p-3 font-bold text-slate-900">{p.employees?.name}</td>
+                    <td className="p-3 text-slate-600">{p.employees?.job_title}</td>
+                    <td className="p-3 text-left font-semibold" dir="ltr">{egp(p.salary)}</td>
+                    <td className="p-3 text-center font-mono">{p.attendance_days}</td>
+                    <td className="p-3 text-center font-mono">{p.absence_days}</td>
+                    <td className="p-3 text-left text-red-650 font-semibold" dir="ltr">-{egp(p.deductions)}</td>
+                    <td className="p-3 text-left text-emerald-600 font-semibold" dir="ltr">+{egp(p.bonuses)}</td>
+                    <td className="p-3 text-left font-black text-purple-700" dir="ltr">{egp(p.net_pay)}</td>
+                    <td className="p-3 text-center text-slate-300 text-[10px] border-r border-slate-200">
                       {lang === "ar" ? "التوقيع: ............" : "Sign: ............"}
                     </td>
                   </tr>
                 ))}
-                {/* Summary Row */}
-                <tr className="border-t border-slate-900 font-black bg-slate-50 text-[11px]">
-                  <td className="p-2 text-right" colSpan={2}>
-                    {lang === "ar" ? "الإجمالي النهائي:" : "Total Summary:"}
-                  </td>
-                  <td className="p-2 text-left text-black" dir="ltr">{egp(totalBasic)}</td>
-                  <td className="p-2" colSpan={2}></td>
-                  <td className="p-2 text-left text-red-600" dir="ltr">{egp(totalDeductions, "-")}</td>
-                  <td className="p-2 text-left text-emerald-600" dir="ltr">{egp(totalBonuses, "+")}</td>
-                  <td className="p-2 text-left text-purple-705 font-black" dir="ltr">{egp(totalNet)}</td>
-                  <td className="p-2"></td>
-                </tr>
               </tbody>
             </table>
+          </div>
 
-            <div className="grid grid-cols-2 gap-4 pt-8">
-              <div className="space-y-6">
-                <p className="text-[11px] font-bold text-slate-700">
-                  {lang === "ar" ? "توقيع المسؤول المالي" : "Finance Controller"}
-                </p>
-                <div className="border-b border-dashed border-slate-400 w-36 h-4"></div>
+          {/* Total Section (Matching Invoice Style) */}
+          <div className="flex flex-col items-end pt-6 space-y-2">
+            <div className="w-full sm:w-80 space-y-1.5 text-sm">
+              <div className="flex justify-between border-b pb-1.5">
+                <span className="text-neutral-500">{lang === "ar" ? "إجمالي الرواتب الأساسية:" : "Total Base Salaries:"}</span>
+                <span className="font-bold text-black" dir="ltr">{egp(totalBasic)}</span>
               </div>
-              <div className="space-y-6 text-left justify-self-end">
-                <p className="text-[11px] font-bold text-slate-700">
-                  {lang === "ar" ? "اعتماد المدير العام" : "CEO Approval"}
-                </p>
-                <div className="border-b border-dashed border-slate-400 w-36 h-4"></div>
+              <div className="flex justify-between border-b pb-1.5 text-neutral-500">
+                <span>{lang === "ar" ? "إجمالي المكافآت:" : "Total Bonuses:"}</span>
+                <span className="text-emerald-600 font-bold" dir="ltr">+{egp(totalBonuses)}</span>
               </div>
+              <div className="flex justify-between border-b pb-1.5 text-neutral-500">
+                <span>{lang === "ar" ? "إجمالي الخصومات:" : "Total Deductions:"}</span>
+                <span className="text-red-600 font-bold" dir="ltr">-{egp(totalDeductions)}</span>
+              </div>
+              <div className="flex justify-between pt-1.5 text-base font-black text-purple-700">
+                <span>{lang === "ar" ? "صافي الرواتب الإجمالي:" : "Net Total Payroll:"}</span>
+                <span dir="ltr">{egp(totalNet)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Signatures block at the bottom */}
+          <div className="flex justify-between items-center mt-16 px-4 text-xs">
+            <div className="space-y-6">
+              <p className="font-bold text-slate-700">
+                {lang === "ar" ? "توقيع المسؤول المالي" : "Finance Controller"}
+              </p>
+              <div className="border-b border-dashed border-slate-400 w-44 pt-4"></div>
+            </div>
+            <div className="space-y-6 text-left">
+              <p className="font-bold text-slate-700">
+                {lang === "ar" ? "اعتماد المدير العام" : "CEO Approval"}
+              </p>
+              <div className="border-b border-dashed border-slate-400 w-44 pt-4"></div>
             </div>
           </div>
         </div>
@@ -489,167 +520,168 @@ export function EmployeesPage() {
     if (printType === "payslip" && printTargetPayroll) {
       const p = printTargetPayroll;
       return (
-        <div className="hidden print:block w-full p-8 bg-white text-black font-sans relative pb-8" style={{ direction: "rtl" }}>
+        <div className="hidden print:block w-full p-8 bg-white text-black font-sans relative" style={{ direction: "rtl" }}>
           {/* SVG Header corner decoration */}
           <div className="absolute top-0 right-0 w-48 h-20 pointer-events-none">
             <svg viewBox="0 0 100 100" className="w-full h-full object-right-top" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M100 0H40L100 60V0Z" fill="#a21caf" />
               <path d="M100 15H70L100 45V15Z" fill="#000000" />
+              <path d="M100 30H85L100 45V30Z" fill="#a21caf" />
             </svg>
           </div>
 
-          {/* Branding Header */}
-          <div className="flex items-start justify-between border-b pb-4 mb-6 pt-2">
-            <div className="bg-white p-2 border rounded-xl shadow-sm">
-              <img src="/logo.png" alt="Orient Digital" className="h-12 w-auto object-contain" />
+          {/* Top Branding Section */}
+          <div className="flex items-start justify-between flex-wrap gap-4 pt-4">
+            <div className="bg-white p-2.5 rounded-xl border shadow-sm inline-block">
+              <img src="/logo.png" alt="Orient Digital" className="h-14 w-auto object-contain" />
             </div>
             <div className="text-right pl-12">
-              <h1 className="text-xl font-black text-purple-750">
-                {lang === "ar" ? "كشف راتب موظف تفصيلي" : "Employee Payslip"}
-              </h1>
-              <p className="text-xs text-neutral-500 font-bold mt-0.5" dir="ltr">
-                PAYSLIP STATEMENT
-              </p>
+              <div className="text-2xl font-black text-purple-705">
+                {lang === "ar" ? "قسيمة راتب" : "PAYSLIP STATEMENT"}
+              </div>
+              <div className="text-sm font-bold text-neutral-500" dir="ltr">
+                EMP-{p.employee_id.substring(0, 8).toUpperCase()}-{payrollYear}{payrollMonth}
+              </div>
             </div>
           </div>
 
-          {/* Employee Profile Details */}
-          <div className="pt-2 border-b pb-4">
-            <h2 className="text-sm font-black text-purple-705 mb-3">
-              {lang === "ar" ? "بيانات الموظف" : "EMPLOYEE DETAILS"}
-            </h2>
-            <div className="grid grid-cols-2 gap-4 text-xs">
-              <div className="space-y-1.5">
-                <div>
-                  <span className="text-neutral-500 font-bold block text-[10px]">
-                    {lang === "ar" ? "اسم الموظف:" : "Employee Name:"}
-                  </span>
-                  <span className="font-black text-slate-900 text-sm">{p.employees?.name}</span>
-                </div>
-                <div>
-                  <span className="text-neutral-500 font-bold block text-[10px]">
-                    {lang === "ar" ? "الوظيفة:" : "Job Title:"}
-                  </span>
-                  <span className="font-semibold text-slate-800">{p.employees?.job_title}</span>
-                </div>
+          {/* Title Section (Matching Reference Image) */}
+          <div className="pt-8 border-b pb-4">
+            <h1 className="text-3xl font-black text-purple-750">
+              {lang === "ar" ? "تفاصيل راتب الموظف" : "PAYROLL STATEMENT"}
+            </h1>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6 text-sm">
+              <div className="space-y-1">
+                <span className="text-black uppercase text-xs block font-extrabold">
+                  {lang === "ar" ? "معلومات الموظف:" : "EMPLOYEE INFO:"}
+                </span>
+                <span className="font-extrabold text-black text-base">
+                  {p.employees?.name}
+                </span>
+                <span className="block text-xs text-neutral-500">
+                  {lang === "ar" ? `الوظيفة: ${p.employees?.job_title}` : `Job Title: ${p.employees?.job_title}`}
+                </span>
               </div>
-              <div className="space-y-1.5 text-left">
-                <div>
-                  <span className="text-neutral-500 font-bold block text-[10px]">
-                    {lang === "ar" ? "فترة الراتب:" : "Period:"}
-                  </span>
-                  <span className="font-bold text-slate-900" dir="ltr">{payrollYear} / {payrollMonth}</span>
-                </div>
+
+              <div className="space-y-1 sm:text-left print:text-left">
+                <span className="text-black uppercase text-xs block font-extrabold">
+                  {lang === "ar" ? "فترة الراتب:" : "PERIOD:"}
+                </span>
+                <span className="font-bold text-slate-800" dir="ltr">
+                  {payrollYear} / {payrollMonth}
+                </span>
                 {p.payment_date && (
-                  <div>
-                    <span className="text-neutral-500 font-bold block text-[10px]">
-                      {lang === "ar" ? "تاريخ الصرف:" : "Pay Date:"}
-                    </span>
-                    <span className="font-bold text-slate-900" dir="ltr">{p.payment_date}</span>
-                  </div>
+                  <span className="block text-xs text-neutral-500">
+                    {lang === "ar" ? `تاريخ الصرف: ${p.payment_date}` : `Pay Date: ${p.payment_date}`}
+                  </span>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Detailed Statement Table */}
-          <div className="pt-4">
-            <table className="w-full text-xs border-collapse">
+          {/* Simple Table (Matching Invoice Style) */}
+          <div className="pt-6">
+            <table className="w-full text-sm border-collapse">
               <thead>
-                <tr className="border-y border-slate-900 text-slate-950 font-black bg-slate-50">
-                  <th className="text-right p-2.5">{lang === "ar" ? "البند" : "Payroll Item"}</th>
-                  <th className="text-center p-2.5">{lang === "ar" ? "التفاصيل" : "Details"}</th>
-                  <th className="text-left p-2.5">{lang === "ar" ? "القيمة" : "Amount"}</th>
+                <tr className="border-y-2 border-slate-900 text-slate-950 font-black">
+                  <th className="text-right p-3">{lang === "ar" ? "البند" : "ITEM"}</th>
+                  <th className="text-center p-3">{lang === "ar" ? "التفاصيل" : "DETAILS"}</th>
+                  <th className="text-left p-3">{lang === "ar" ? "القيمة" : "AMOUNT"}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
-                <tr>
-                  <td className="p-2.5 font-semibold text-black">
+              <tbody className="divide-y divide-slate-200">
+                <tr className="border-b">
+                  <td className="p-3 font-medium text-black">
                     {lang === "ar" ? "الراتب الأساسي" : "Basic Salary"}
                   </td>
-                  <td className="p-2.5 text-center text-neutral-500">
+                  <td className="p-3 text-center text-neutral-500">
                     {lang === "ar" ? "الراتب المتفق عليه في العقد" : "Contractual base salary"}
                   </td>
-                  <td className="p-2.5 text-left font-bold" dir="ltr">{egp(p.salary)}</td>
+                  <td className="p-3 text-left font-bold text-black" dir="ltr">
+                    {egp(p.salary)}
+                  </td>
                 </tr>
-                <tr>
-                  <td className="p-2.5 font-semibold text-black">
+                <tr className="border-b">
+                  <td className="p-3 font-medium text-black">
                     {lang === "ar" ? "الحضور والغياب" : "Attendance"}
                   </td>
-                  <td className="p-2.5 text-center text-neutral-500">
+                  <td className="p-3 text-center text-neutral-500">
                     {lang === "ar"
                       ? "حضور " + p.attendance_days + " يوم | غياب " + p.absence_days + " يوم"
                       : "Attended " + p.attendance_days + " days | Absent " + p.absence_days + " days"}
                   </td>
-                  <td className="p-2.5 text-left font-bold text-neutral-400">—</td>
+                  <td className="p-3 text-left font-bold text-neutral-400">—</td>
                 </tr>
                 {p.bonuses > 0 && (
-                  <tr>
-                    <td className="p-2.5 font-semibold text-emerald-600">
+                  <tr className="border-b">
+                    <td className="p-3 font-medium text-emerald-600">
                       {lang === "ar" ? "المكافآت والبدلات" : "Bonuses & Allowances"}
                     </td>
-                    <td className="p-2.5 text-center text-neutral-500">{p.notes || (lang === "ar" ? "مكافأة أداء حوافز" : "Performance incentive")}</td>
-                    <td className="p-2.5 text-left font-bold text-emerald-600" dir="ltr">+{egp(p.bonuses)}</td>
+                    <td className="p-3 text-center text-neutral-500">
+                      {p.notes || (lang === "ar" ? "حوافز ومكافآت أداء" : "Performance incentive")}
+                    </td>
+                    <td className="p-3 text-left font-bold text-emerald-600" dir="ltr">
+                      +{egp(p.bonuses)}
+                    </td>
                   </tr>
                 )}
                 {p.deductions > 0 && (
-                  <tr>
-                    <td className="p-2.5 font-semibold text-red-650">
+                  <tr className="border-b">
+                    <td className="p-3 font-medium text-red-650">
                       {lang === "ar" ? "الخصومات والاستقطاعات" : "Deductions"}
                     </td>
-                    <td className="p-2.5 text-center text-neutral-500">{lang === "ar" ? "خصومات غياب أو جزاءات" : "Absence or penalty deductions"}</td>
-                    <td className="p-2.5 text-left font-bold text-red-650" dir="ltr">-{egp(p.deductions)}</td>
+                    <td className="p-3 text-center text-neutral-500">
+                      {lang === "ar" ? "خصم غياب أو جزاءات إدارية" : "Absence or administrative penalty"}
+                    </td>
+                    <td className="p-3 text-left font-bold text-red-650" dir="ltr">
+                      -{egp(p.deductions)}
+                    </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
 
-          {/* Totals Section */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6 pt-4 border-t">
-            <div>
-              {p.notes && (
-                <div className="p-2.5 bg-slate-50 rounded-lg text-[10px] space-y-1">
-                  <span className="font-bold text-slate-700 block">{lang === "ar" ? "ملاحظات الصرف:" : "Notes:"}</span>
-                  <span className="text-slate-600">{p.notes}</span>
+          {/* Total Section (Matching Invoice Style) */}
+          <div className="flex flex-col items-end pt-6 space-y-2">
+            <div className="w-full sm:w-80 space-y-1.5 text-sm">
+              <div className="flex justify-between border-b pb-1.5">
+                <span className="text-neutral-500">{lang === "ar" ? "الراتب الأساسي:" : "Base Salary:"}</span>
+                <span className="font-bold text-black" dir="ltr">{egp(p.salary)}</span>
+              </div>
+              {p.bonuses > 0 && (
+                <div className="flex justify-between border-b pb-1.5 text-neutral-500">
+                  <span>{lang === "ar" ? "المكافآت والبدلات:" : "Bonuses:"}</span>
+                  <span className="text-emerald-600 font-bold" dir="ltr">+{egp(p.bonuses)}</span>
                 </div>
               )}
-            </div>
-            
-            {/* Totals Summary */}
-            <div className="bg-slate-50 p-3 rounded-lg space-y-1.5 text-xs">
-              <div className="flex justify-between border-b pb-1">
-                <span>{lang === "ar" ? "الراتب الأساسي:" : "Basic Salary:"}</span>
-                <span className="font-bold text-slate-900" dir="ltr">{egp(p.salary)}</span>
-              </div>
-              <div className="flex justify-between border-b pb-1 text-emerald-600 font-semibold">
-                <span>{lang === "ar" ? "المكافآت والبدلات (+):" : "Bonuses (+):"}</span>
-                <span dir="ltr">+{egp(p.bonuses)}</span>
-              </div>
-              <div className="flex justify-between border-b pb-1 text-red-600 font-semibold">
-                <span>{lang === "ar" ? "الخصومات (-):" : "Deductions (-):"}</span>
-                <span dir="ltr">-{egp(p.deductions)}</span>
-              </div>
-              <div className="flex justify-between text-sm font-black pt-1 text-purple-700">
+              {p.deductions > 0 && (
+                <div className="flex justify-between border-b pb-1.5 text-neutral-500">
+                  <span>{lang === "ar" ? "الخصومات والاستقطاعات:" : "Deductions:"}</span>
+                  <span className="text-red-650 font-bold" dir="ltr">-{egp(p.deductions)}</span>
+                </div>
+              )}
+              <div className="flex justify-between pt-1.5 text-base font-black text-purple-705">
                 <span>{lang === "ar" ? "صافي الراتب المستحق:" : "Net Due Salary:"}</span>
                 <span dir="ltr">{egp(p.net_pay)}</span>
               </div>
             </div>
           </div>
 
-          {/* Signatures Footer */}
-          <div className="flex justify-between items-center mt-12 px-4 text-xs">
-            <div className="space-y-8">
+          {/* Signatures block at the bottom */}
+          <div className="flex justify-between items-center mt-16 px-4 text-xs">
+            <div className="space-y-6">
               <p className="font-bold text-slate-700">
                 {lang === "ar" ? "توقيع المستلم (الموظف):" : "Employee Signature:"}
               </p>
-              <div className="border-b border-dashed border-slate-400 w-36"></div>
+              <div className="border-b border-dashed border-slate-400 w-44 pt-4"></div>
             </div>
-            <div className="space-y-8 text-left">
+            <div className="space-y-6 text-left">
               <p className="font-bold text-slate-700">
                 {lang === "ar" ? "توقيع المسؤول المالي والإداري:" : "Management Signature:"}
               </p>
-              <div className="border-b border-dashed border-slate-400 w-36"></div>
+              <div className="border-b border-dashed border-slate-400 w-44 pt-4"></div>
             </div>
           </div>
         </div>
