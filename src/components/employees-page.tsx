@@ -520,7 +520,7 @@ export function EmployeesPage() {
                 <tr>
                   <td className="p-3 font-semibold text-black">الراتب الأساسي / Basic Salary</td>
                   <td className="p-3 text-center text-neutral-500">الراتب المتفق عليه في العقد</td>
-                  <td className="p-3 text-left font-bold" dir="ltr">${p.salary.toFixed(2)}</td>
+                  <td className="p-3 text-left font-bold" dir="ltr">{egp(p.salary)}</td>
                 </tr>
                 <tr>
                   <td className="p-3 font-semibold text-black">الحضور والغياب / Attendance</td>
@@ -531,14 +531,14 @@ export function EmployeesPage() {
                   <tr>
                     <td className="p-3 font-semibold text-emerald-600">المكافآت والبدلات / Bonuses & Allowances</td>
                     <td className="p-3 text-center text-neutral-500">{p.notes || "مكافأة أداء / حوافز إضافية"}</td>
-                    <td className="p-3 text-left font-bold text-emerald-600" dir="ltr">+${p.bonuses.toFixed(2)}</td>
+                    <td className="p-3 text-left font-bold text-emerald-600" dir="ltr">+{egp(p.bonuses)}</td>
                   </tr>
                 )}
                 {p.deductions > 0 && (
                   <tr>
                     <td className="p-3 font-semibold text-red-650">الخصومات والاستقطاعات / Deductions</td>
                     <td className="p-3 text-center text-neutral-500">خصومات غياب أو جزاءات</td>
-                    <td className="p-3 text-left font-bold text-red-600" dir="ltr">-${p.deductions.toFixed(2)}</td>
+                    <td className="p-3 text-left font-bold text-red-600" dir="ltr">-{egp(p.deductions)}</td>
                   </tr>
                 )}
               </tbody>
@@ -560,19 +560,19 @@ export function EmployeesPage() {
             <div className="bg-slate-50 p-4 rounded-lg space-y-2 text-sm">
               <div className="flex justify-between border-b pb-1">
                 <span>الراتب الأساسي:</span>
-                <span className="font-bold text-slate-900" dir="ltr">${p.salary.toFixed(2)}</span>
+                <span className="font-bold text-slate-900" dir="ltr">{egp(p.salary)}</span>
               </div>
               <div className="flex justify-between border-b pb-1 text-emerald-600 font-semibold">
                 <span>المكافآت والبدلات (+):</span>
-                <span dir="ltr">+${p.bonuses.toFixed(2)}</span>
+                <span dir="ltr">+{egp(p.bonuses)}</span>
               </div>
               <div className="flex justify-between border-b pb-1 text-red-600 font-semibold">
                 <span>الخصومات (-):</span>
-                <span dir="ltr">-${p.deductions.toFixed(2)}</span>
+                <span dir="ltr">-{egp(p.deductions)}</span>
               </div>
               <div className="flex justify-between text-base font-black pt-1 text-purple-700">
                 <span>صافي الراتب المستحق:</span>
-                <span dir="ltr">${p.net_pay.toFixed(2)}</span>
+                <span dir="ltr">{egp(p.net_pay)}</span>
               </div>
             </div>
           </div>
