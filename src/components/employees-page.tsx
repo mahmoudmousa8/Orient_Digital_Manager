@@ -23,7 +23,7 @@ export function egp(n: number | string | null | undefined) {
     minimumFractionDigits: 2, 
     maximumFractionDigits: 2 
   }).format(v);
-  return `\u200E${numStr} ج.م`;
+  return `\u200Eج.م\u00A0${numStr}`;
 }
 
 type Employee = {
