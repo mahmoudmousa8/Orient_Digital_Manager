@@ -17,6 +17,15 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useLanguage } from "@/hooks/use-language";
 import { money } from "@/lib/format";
 
+export function egp(n: number | string | null | undefined) {
+  const v = Number(n ?? 0);
+  const numStr = new Intl.NumberFormat("en-US", { 
+    minimumFractionDigits: 2, 
+    maximumFractionDigits: 2 
+  }).format(v);
+  return `\u200E${numStr} ج.م`;
+}
+
 type Employee = {
   id: string;
   name: string;
@@ -734,18 +743,18 @@ export function EmployeesPage() {
                         </TableCell>
                         <TableCell className="text-right">{p.employees?.job_title}</TableCell>
                         <TableCell dir="ltr" className="text-right">
-                          {money(p.salary)}
+                          {egp(p.salary)}
                         </TableCell>
                         <TableCell className="text-center">{p.attendance_days}</TableCell>
                         <TableCell className="text-center">{p.absence_days}</TableCell>
                         <TableCell dir="ltr" className="text-left text-red-400 font-medium">
-                          -{money(p.deductions)}
+                          -{egp(p.deductions)}
                         </TableCell>
                         <TableCell dir="ltr" className="text-left text-emerald-400 font-medium">
-                          +{money(p.bonuses)}
+                          +{egp(p.bonuses)}
                         </TableCell>
                         <TableCell dir="ltr" className="text-left font-bold text-indigo-400">
-                          {money(p.net_pay)}
+                          {egp(p.net_pay)}
                         </TableCell>
                         <TableCell className="text-right">
                           <span
@@ -845,7 +854,7 @@ export function EmployeesPage() {
                         </TableCell>
                         <TableCell className="text-right">{e.job_title}</TableCell>
                         <TableCell dir="ltr" className="text-right text-indigo-400 font-bold">
-                          {money(e.salary)}
+                          {egp(e.salary)}
                         </TableCell>
                         <TableCell className="text-right" dir="ltr">
                           {e.phone || "—"}
@@ -910,7 +919,7 @@ export function EmployeesPage() {
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-slate-300">{lang === "ar" ? "الراتب الأساسي (USD) *" : "Basic Salary (USD) *"}</Label>
+              <Label className="text-slate-300">{lang === "ar" ? "الراتب الأساسي (ج.م) *" : "Basic Salary (EGP) *"}</Label>
               <Input
                 type="number"
                 min="0"
@@ -974,7 +983,7 @@ export function EmployeesPage() {
                 <div className="text-xs text-slate-400">{editingPayroll.employees?.job_title}</div>
                 <div className="text-xs text-indigo-400 font-bold mt-1">
                   {lang === "ar" ? "الراتب الأساسي: " : "Basic Salary: "}
-                  {money(editingPayroll.salary)}
+                  {egp(editingPayroll.salary)}
                 </div>
               </div>
 
@@ -1009,7 +1018,7 @@ export function EmployeesPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-slate-300 text-red-400">{t("deductions")} ($)</Label>
+                  <Label className="text-slate-300 text-red-400">{t("deductions")} (ج.م)</Label>
                   <Input
                     type="number"
                     min="0"
@@ -1023,7 +1032,7 @@ export function EmployeesPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-slate-300 text-emerald-400">{t("bonuses")} ($)</Label>
+                  <Label className="text-slate-300 text-emerald-400">{t("bonuses")} (ج.م)</Label>
                   <Input
                     type="number"
                     min="0"
@@ -1069,7 +1078,7 @@ export function EmployeesPage() {
               <div className="flex justify-between items-center text-sm font-bold bg-slate-900/50 p-3 rounded-lg border border-slate-800 mt-2">
                 <span className="text-slate-300">{lang === "ar" ? "صافي المستحق (تلقائي):" : "Calculated Net Due:"}</span>
                 <span className="text-indigo-400 text-base" dir="ltr">
-                  {money(editingPayroll.salary - payrollForm.deductions + payrollForm.bonuses)}
+                  {egp(editingPayroll.salary - payrollForm.deductions + payrollForm.bonuses)}
                 </span>
               </div>
             </div>
