@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Users, Youtube, DollarSign, CreditCard, FileText, FileSpreadsheet, LogOut, Menu, UserPlus, Settings, ShieldCheck, ClipboardCheck } from "lucide-react";
+import { LayoutDashboard, Users, Youtube, DollarSign, CreditCard, FileText, FileSpreadsheet, LogOut, Menu, UserPlus, Settings, ShieldCheck, ClipboardCheck, Briefcase } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ const staffNav = [
 ];
 
 const adminExtras = [
+  { to: "/employees", label: "الموظفين", key: "employees", icon: Briefcase },
   { to: "/users", label: "المستخدمون", key: "users", icon: Users },
   { to: "/settings", label: "الإعدادات", key: "settings", icon: Settings },
 ];

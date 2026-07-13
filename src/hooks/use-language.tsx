@@ -119,6 +119,28 @@ const translations: Record<Language, Record<string, any>> = {
     deleteTxDesc: "هذا الإجراء سيقوم بحذف سجل الدفعة المالية وإلغاء الإيصال التلقائي وتحديث أرصدة الفواتير المتبقية.",
     quickPayTitle: "تسجيل دفعة مالية جديدة",
     quickPayDesc: "تلقائياً مكتوب فيه المتبقي بالكامل للدفع السريع. يمكنك كتابة جزء منه فقط للدفع الجزئي.",
+    
+    // Employees & Payroll
+    employees: "الموظفين",
+    jobTitle: "الوظيفة",
+    basicSalary: "الراتب الأساسي",
+    attendanceDays: "أيام الحضور",
+    absenceDays: "أيام الغياب",
+    deductions: "الخصومات",
+    bonuses: "المكافآت",
+    netPay: "صافي المستحق",
+    employeeSignature: "توقيع الموظف",
+    generatePayroll: "توليد مسير الرواتب",
+    printPayrollSheet: "طباعة كشف الرواتب",
+    printPayslip: "طباعة قسيمة الراتب",
+    newEmployee: "إضافة موظف",
+    editEmployee: "تعديل بيانات موظف",
+    employeePhone: "الهاتف",
+    employeeNotes: "الملاحظات",
+    payrollPeriod: "شهر مسير الرواتب",
+    monthlyPayrollTitle: "مسير الرواتب الشهري",
+    confirmPayrollGeneration: "توليد مسير رواتب جديد",
+    confirmPayrollGenerationDesc: "هذا الإجراء سيقوم بإنشاء سجلات رواتب مسودة لكافة الموظفين للشهر المختار بناءً على رواتبهم الأساسية.",
   },
   en: {
     // Sidebar & Navigation
@@ -229,6 +251,28 @@ const translations: Record<Language, Record<string, any>> = {
     deleteTxDesc: "This action will delete the payment record and update the remaining invoice balances.",
     quickPayTitle: "Register New Payment",
     quickPayDesc: "Pre-filled with full remaining balance for quick pay. Enter less for partial payment.",
+
+    // Employees & Payroll
+    employees: "Employees",
+    jobTitle: "Job Title",
+    basicSalary: "Basic Salary",
+    attendanceDays: "Attendance Days",
+    absenceDays: "Absence Days",
+    deductions: "Deductions",
+    bonuses: "Bonuses",
+    netPay: "Net Pay",
+    employeeSignature: "Employee Signature",
+    generatePayroll: "Generate Payroll",
+    printPayrollSheet: "Print Payroll Sheet",
+    printPayslip: "Print Payslip",
+    newEmployee: "Add Employee",
+    editEmployee: "Edit Employee Details",
+    employeePhone: "Phone",
+    employeeNotes: "Notes",
+    payrollPeriod: "Payroll Month",
+    monthlyPayrollTitle: "Monthly Payroll",
+    confirmPayrollGeneration: "Generate New Payroll",
+    confirmPayrollGenerationDesc: "This will create draft payroll records for all active employees for the selected month using their basic salaries.",
   }
 };
 
