@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useLanguage } from "@/hooks/use-language";
+import { useSettings } from "@/hooks/use-settings";
 import { money } from "@/lib/format";
 
 export function egp(n: number | string | null | undefined, showSign: "" | "+" | "-" = "") {
@@ -65,6 +66,7 @@ type Payroll = {
 export function EmployeesPage() {
   const { isStaff, isAdmin } = useAuth();
   const { t, lang } = useLanguage();
+  const { data: settings } = useSettings();
   const qc = useQueryClient();
 
   // Dialog States
@@ -391,6 +393,8 @@ export function EmployeesPage() {
   const printableArea = useMemo(() => {
     if (!printType) return null;
 
+    const logoSrc = settings?.logo_url || "/logo.png";
+
     if (printType === "sheet") {
       const totalBasic = payrolls.reduce((sum, p) => sum + p.salary, 0);
       const totalDeductions = payrolls.reduce((sum, p) => sum + p.deductions, 0);
@@ -398,7 +402,7 @@ export function EmployeesPage() {
       const totalNet = payrolls.reduce((sum, p) => sum + p.net_pay, 0);
 
       return (
-        <div className="hidden print:block w-full p-8 bg-white text-black font-sans relative print-container" style={{ direction: "rtl" }}>
+        <div className="hidden print:block w-full bg-white text-black font-sans relative print-container" style={{ direction: "rtl" }}>
           <style>{`
             @media print {
               @page {
@@ -408,10 +412,6 @@ export function EmployeesPage() {
                 margin: 0 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
-              }
-              .print-container {
-                padding: 1.6cm !important;
-                box-sizing: border-box !important;
               }
             }
           `}</style>
@@ -425,13 +425,13 @@ export function EmployeesPage() {
           </div>
 
           {/* Contents */}
-          <div className="space-y-4 text-right font-sans" style={{ direction: "rtl" }}>
+          <div className="p-10 space-y-4 text-right font-sans" style={{ direction: "rtl" }}>
             {/* Top Branding Section */}
             <div className="flex items-start justify-between flex-wrap gap-4 pt-4">
               <div className="bg-white rounded-xl border shadow-sm flex items-center justify-center h-16 w-16 p-2">
-                <img src="/logo.png" alt="Orient Digital" className="h-full w-full object-contain" />
+                <img src={logoSrc} alt="Orient Digital" className="h-full w-full object-contain" />
               </div>
-              <div className="text-right">
+              <div className={lang === "ar" ? "text-left" : "text-right"}>
                 <div className="text-2xl font-black text-purple-700">
                   {lang === "ar" ? "مسير رواتب مجمع" : "COLLECTIVE PAYROLL"}
                 </div>
@@ -560,7 +560,7 @@ export function EmployeesPage() {
       const remainingAmt = p.net_pay - paidAmt;
 
       return (
-        <div className="hidden print:block w-full p-8 bg-white text-black font-sans relative print-container" style={{ direction: "rtl" }}>
+        <div className="hidden print:block w-full bg-white text-black font-sans relative print-container" style={{ direction: "rtl" }}>
           <style>{`
             @media print {
               @page {
@@ -570,10 +570,6 @@ export function EmployeesPage() {
                 margin: 0 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
-              }
-              .print-container {
-                padding: 1.6cm !important;
-                box-sizing: border-box !important;
               }
             }
           `}</style>
@@ -587,13 +583,13 @@ export function EmployeesPage() {
           </div>
 
           {/* Contents */}
-          <div className="space-y-4 text-right font-sans" style={{ direction: "rtl" }}>
+          <div className="p-10 space-y-4 text-right font-sans" style={{ direction: "rtl" }}>
             {/* Top Branding Section */}
             <div className="flex items-start justify-between flex-wrap gap-4 pt-4">
               <div className="bg-white rounded-xl border shadow-sm flex items-center justify-center h-16 w-16 p-2">
-                <img src="/logo.png" alt="Orient Digital" className="h-full w-full object-contain" />
+                <img src={logoSrc} alt="Orient Digital" className="h-full w-full object-contain" />
               </div>
-              <div className="text-right">
+              <div className={lang === "ar" ? "text-left" : "text-right"}>
                 <div className="text-2xl font-black text-purple-705">
                   {lang === "ar" ? "قسيمة راتب" : "PAYSLIP STATEMENT"}
                 </div>
@@ -756,7 +752,8 @@ export function EmployeesPage() {
       );
     }
 
-    return null;  }, [printType, printTargetPayroll, payrolls, payrollYear, payrollMonth]);
+    return null;
+  }, [printType, printTargetPayroll, payrolls, payrollYear, payrollMonth, settings, lang]);
 
   // If not admin, redirect or show not authorized
   if (!isAdmin) {
