@@ -297,8 +297,8 @@ export function EmployeesPage() {
       const ded = Number(payrollForm.deductions);
       const bon = Number(payrollForm.bonuses);
 
-      // Calculation: Basic Salary - Deductions + Bonuses
-      const calculatedNet = salary - ded + bon;
+      // Calculation: Basic Salary - Deductions + Bonuses - (Absence Days * (Basic Salary / 30))
+      const calculatedNet = Math.max(0, Math.round((salary - ded + bon - (abs * (salary / 30))) * 100) / 100);
 
       const payload = {
         attendance_days: att,
@@ -1207,9 +1207,14 @@ export function EmployeesPage() {
                     min="0"
                     max="31"
                     value={payrollForm.attendance_days}
-                    onChange={(e) =>
-                      setPayrollForm({ ...payrollForm, attendance_days: Number(e.target.value) })
-                    }
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setPayrollForm({
+                        ...payrollForm,
+                        attendance_days: val,
+                        absence_days: Math.max(0, 30 - val)
+                      });
+                    }}
                     className="bg-slate-900 border-slate-700 text-white text-center"
                   />
                 </div>
@@ -1220,9 +1225,14 @@ export function EmployeesPage() {
                     min="0"
                     max="31"
                     value={payrollForm.absence_days}
-                    onChange={(e) =>
-                      setPayrollForm({ ...payrollForm, absence_days: Number(e.target.value) })
-                    }
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setPayrollForm({
+                        ...payrollForm,
+                        absence_days: val,
+                        attendance_days: Math.max(0, 30 - val)
+                      });
+                    }}
                     className="bg-slate-900 border-slate-700 text-white text-center"
                   />
                 </div>
@@ -1290,7 +1300,7 @@ export function EmployeesPage() {
               <div className="flex justify-between items-center text-sm font-bold bg-slate-900/50 p-3 rounded-lg border border-slate-800 mt-2">
                 <span className="text-slate-300">{lang === "ar" ? "صافي المستحق (تلقائي):" : "Calculated Net Due:"}</span>
                 <span className="text-indigo-400 text-base" dir="ltr">
-                  {egp(editingPayroll.salary - payrollForm.deductions + payrollForm.bonuses)}
+                  {egp(Math.max(0, Math.round((editingPayroll.salary - payrollForm.deductions + payrollForm.bonuses - (payrollForm.absence_days * (editingPayroll.salary / 30))) * 100) / 100))}
                 </span>
               </div>
             </div>
