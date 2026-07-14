@@ -119,7 +119,16 @@ function InvoiceDetailsPage() {
   });
 
   const handlePrint = () => {
+    const originalTitle = document.title;
+    const clientName = inv.clients?.name || "";
+    const invNo = inv.invoice_number || "";
+    document.title = globalLang === "ar"
+      ? `فاتورة - ${clientName} - ${invNo}`
+      : `Invoice - ${clientName} - ${invNo}`;
     window.print();
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 500);
   };
 
   const copyShareLink = () => {

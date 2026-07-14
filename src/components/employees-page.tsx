@@ -376,16 +376,31 @@ export function EmployeesPage() {
   const triggerPrintSheet = () => {
     setPrintType("sheet");
     setPrintTargetPayroll(null);
+    const originalTitle = document.title;
+    document.title = lang === "ar"
+      ? `مسير رواتب مجمع - ${payrollYear}-${payrollMonth}`
+      : `Collective Payroll - ${payrollYear}-${payrollMonth}`;
     setTimeout(() => {
       window.print();
+      setTimeout(() => {
+        document.title = originalTitle;
+      }, 500);
     }, 200);
   };
 
   const triggerPrintPayslip = (pay: Payroll) => {
     setPrintType("payslip");
     setPrintTargetPayroll(pay);
+    const originalTitle = document.title;
+    const employeeName = pay.employees?.name || "موظف";
+    document.title = lang === "ar"
+      ? `قسيمة راتب - ${employeeName} - ${payrollYear}-${payrollMonth}`
+      : `Payslip - ${employeeName} - ${payrollYear}-${payrollMonth}`;
     setTimeout(() => {
       window.print();
+      setTimeout(() => {
+        document.title = originalTitle;
+      }, 500);
     }, 200);
   };
 

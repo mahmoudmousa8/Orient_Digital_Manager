@@ -98,7 +98,19 @@ function PublicInvoicePreview() {
             <span className="text-sm text-slate-500">حالة الفاتورة:</span>
             <Badge className={statusVariant[inv.status]}>{STATUS_AR[inv.status]}</Badge>
           </div>
-          <Button onClick={() => window.print()} size="sm">
+          <Button 
+            onClick={() => {
+              const originalTitle = document.title;
+              const clientName = inv.clients?.name || "";
+              const invNo = inv.invoice_number || "";
+              document.title = `فاتورة - ${clientName} - ${invNo}`;
+              window.print();
+              setTimeout(() => {
+                document.title = originalTitle;
+              }, 500);
+            }} 
+            size="sm"
+          >
             <Download className="w-4 h-4 ml-1" /> تحميل / طباعة PDF
           </Button>
         </div>
