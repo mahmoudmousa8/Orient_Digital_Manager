@@ -397,7 +397,7 @@ export function EmployeesPage() {
 
     if (printType === "sheet") {
       const totalBasic = payrolls.reduce((sum, p) => sum + p.salary, 0);
-      const totalDeductions = payrolls.reduce((sum, p) => sum + p.deductions, 0);
+      const totalDeductions = payrolls.reduce((sum, p) => sum + p.deductions + Math.round((p.absence_days * (p.salary / 30)) * 100) / 100, 0);
       const totalBonuses = payrolls.reduce((sum, p) => sum + p.bonuses, 0);
       const totalNet = payrolls.reduce((sum, p) => sum + p.net_pay, 0);
 
@@ -508,7 +508,7 @@ export function EmployeesPage() {
                       <td className="p-2 text-left font-semibold" dir="ltr">{egp(p.salary)}</td>
                       <td className="p-2 text-center font-mono px-1 w-14">{p.attendance_days}</td>
                       <td className="p-2 text-center font-mono px-1 w-14">{p.absence_days}</td>
-                      <td className="p-2 text-left text-red-650 font-semibold" dir="ltr">-{egp(p.deductions)}</td>
+                      <td className="p-2 text-left text-red-650 font-semibold" dir="ltr">-{egp(p.deductions + Math.round((p.absence_days * (p.salary / 30)) * 100) / 100)}</td>
                       <td className="p-2 text-left text-emerald-600 font-semibold" dir="ltr">+{egp(p.bonuses)}</td>
                       <td className="p-2 text-left font-black text-purple-700" dir="ltr">{egp(p.net_pay)}</td>
                       <td className="p-2 text-center text-slate-400 text-[9px] border-r border-slate-200 w-48 font-bold">
@@ -686,6 +686,21 @@ export function EmployeesPage() {
                     </td>
                     <td className="p-2.5 text-left font-bold text-neutral-400">—</td>
                   </tr>
+                  {p.absence_days > 0 && (
+                    <tr className="border-b">
+                      <td className="p-2.5 font-medium text-red-600">
+                        {lang === "ar" ? "خصم الغياب" : "Absence Deduction"}
+                      </td>
+                      <td className="p-2.5 text-center text-neutral-500 text-xs">
+                        {lang === "ar"
+                          ? `خصم ${p.absence_days} أيام غياب (يوم الراتب = ${egp(Math.round((p.salary / 30) * 100) / 100)})`
+                          : `Deduction for ${p.absence_days} absent days (daily rate = ${egp(Math.round((p.salary / 30) * 100) / 100)})`}
+                      </td>
+                      <td className="p-2.5 text-left font-bold text-red-600" dir="ltr">
+                        -{egp(Math.round((p.absence_days * (p.salary / 30)) * 100) / 100)}
+                      </td>
+                    </tr>
+                  )}
                   {p.bonuses > 0 && (
                     <tr className="border-b">
                       <td className="p-2.5 font-medium text-emerald-600">
@@ -727,6 +742,12 @@ export function EmployeesPage() {
                   <div className="flex justify-between border-b pb-1 text-neutral-500">
                     <span>{lang === "ar" ? "المكافآت والبدلات:" : "Bonuses:"}</span>
                     <span className="text-emerald-600 font-bold" dir="ltr">+{egp(p.bonuses)}</span>
+                  </div>
+                )}
+                {p.absence_days > 0 && (
+                  <div className="flex justify-between border-b pb-1 text-neutral-500">
+                    <span>{lang === "ar" ? "خصم الغياب:" : "Absence Deduction:"}</span>
+                    <span className="text-red-650 font-bold" dir="ltr">-{egp(Math.round((p.absence_days * (p.salary / 30)) * 100) / 100)}</span>
                   </div>
                 )}
                 {p.deductions > 0 && (
@@ -960,7 +981,7 @@ export function EmployeesPage() {
                         <TableCell className="text-center">{p.attendance_days}</TableCell>
                         <TableCell className="text-center">{p.absence_days}</TableCell>
                         <TableCell dir="ltr" className="text-left text-red-400 font-medium">
-                          -{egp(p.deductions)}
+                          -{egp(p.deductions + Math.round((p.absence_days * (p.salary / 30)) * 100) / 100)}
                         </TableCell>
                         <TableCell dir="ltr" className="text-left text-emerald-400 font-medium">
                           +{egp(p.bonuses)}
