@@ -669,7 +669,7 @@ export function EmployeesPage() {
                       {lang === "ar" ? "الراتب الأساسي" : "Basic Salary"}
                     </td>
                     <td className="p-2.5 text-center text-neutral-500">
-                      {lang === "ar" ? "الراتب المتفق عليه في العقد" : "Contractual base salary"}
+                      {lang === "ar" ? "الراتب الأساسي" : "Contractual base salary"}
                     </td>
                     <td className="p-2.5 text-left font-bold text-black" dir="ltr">
                       {egp(p.salary)}
