@@ -107,6 +107,36 @@ export const createInvoice = createServerFn({ method: "POST" })
         .from("payments")
         .update({ invoice_id: invoiceId })
         .in("revenue_id", linkedRevenueIds);
+
+      // Clean up any duplicate items created by database trigger (tg_revenue_views_sync)
+      const { data: allItems } = await db
+        .from("invoice_items")
+        .select("id, revenue_id, description")
+        .eq("invoice_id", invoiceId);
+
+      if (allItems && allItems.length > 0) {
+        const seenRevIds = new Set<string>();
+        const dupItemIds = new Set<string>();
+
+        for (const item of allItems) {
+          if (item.revenue_id) {
+            if (seenRevIds.has(item.revenue_id)) {
+              if (item.description.includes("- أرباح شهر ")) {
+                dupItemIds.add(item.id);
+              } else {
+                const prev = allItems.find((x) => x.revenue_id === item.revenue_id && x.id !== item.id && x.description.includes("- أرباح شهر "));
+                if (prev) dupItemIds.add(prev.id);
+              }
+            } else {
+              seenRevIds.add(item.revenue_id);
+            }
+          }
+        }
+
+        if (dupItemIds.size > 0) {
+          await db.from("invoice_items").delete().in("id", Array.from(dupItemIds));
+        }
+      }
     }
 
     // 4. Trigger recalculation
@@ -180,6 +210,36 @@ export const updateInvoice = createServerFn({ method: "POST" })
     if (newRevIds.length > 0) {
       await db.from("monthly_revenues").update({ invoice_id: input.id }).in("id", newRevIds);
       await db.from("payments").update({ invoice_id: input.id }).in("revenue_id", newRevIds);
+
+      // Clean up any duplicate items created by database trigger (tg_revenue_views_sync)
+      const { data: allItems } = await db
+        .from("invoice_items")
+        .select("id, revenue_id, description")
+        .eq("invoice_id", input.id);
+
+      if (allItems && allItems.length > 0) {
+        const seenRevIds = new Set<string>();
+        const dupItemIds = new Set<string>();
+
+        for (const item of allItems) {
+          if (item.revenue_id) {
+            if (seenRevIds.has(item.revenue_id)) {
+              if (item.description.includes("- أرباح شهر ")) {
+                dupItemIds.add(item.id);
+              } else {
+                const prev = allItems.find((x) => x.revenue_id === item.revenue_id && x.id !== item.id && x.description.includes("- أرباح شهر "));
+                if (prev) dupItemIds.add(prev.id);
+              }
+            } else {
+              seenRevIds.add(item.revenue_id);
+            }
+          }
+        }
+
+        if (dupItemIds.size > 0) {
+          await db.from("invoice_items").delete().in("id", Array.from(dupItemIds));
+        }
+      }
     }
 
     // 4. Recalculate
