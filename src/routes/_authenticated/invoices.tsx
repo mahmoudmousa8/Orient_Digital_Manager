@@ -195,13 +195,12 @@ function InvoicesPage() {
       }
 
       const mapped = revenues.map((r: any) => {
-        const pctText = r.client_percentage ? ` (%${r.client_percentage})` : "";
         return {
           revenueId: r.id,
           channelId: r.channel_id,
           description: lang === "ar" 
-            ? `صافي أرباح قناة (${r.channels?.name})${pctText} - شهر ${targetMonthStr}` 
-            : `Net Earnings for channel (${r.channels?.name})${pctText} - Month ${targetMonthStr}`,
+            ? `صافي أرباح قناة (${r.channels?.name}) - شهر ${targetMonthStr}` 
+            : `Net Earnings for channel (${r.channels?.name}) - Month ${targetMonthStr}`,
           views: Number(r.views || 0),
           amount: Number(r.client_share || 0),
           clientPercentage: Number(r.client_percentage || 50),
