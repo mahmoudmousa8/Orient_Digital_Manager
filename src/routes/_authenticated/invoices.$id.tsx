@@ -247,7 +247,7 @@ function InvoiceDetailsPage() {
               {/* Title Section (Matching Attached Reference Image) */}
               <div className="pt-8 border-b pb-4">
                 <h1 className={`text-3xl font-black text-purple-700 ${lang === 'en' ? 'uppercase tracking-wide' : ''}`}>
-                  {lang === "ar" ? "إجمالي الأرباح" : "TOTAL PROFITS"}
+                  {lang === "ar" ? "صافي أرباح العميل" : "NET CLIENT PROFITS"}
                 </h1>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6 text-sm">

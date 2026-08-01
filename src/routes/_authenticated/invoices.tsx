@@ -158,13 +158,8 @@ function InvoicesPage() {
     }
     setBusy(true);
     try {
-      // Calculate 2 months prior for revenues (e.g. invoice month 7 gets revenues of month 5)
-      const [year, month] = formMonth.split("-").map(Number);
-      const priorDate = new Date(year, month - 1 - 2, 1);
-      const priorYear = priorDate.getFullYear();
-      const priorMonth = String(priorDate.getMonth() + 1).padStart(2, '0');
-      const priorMonthStr = `${priorYear}-${priorMonth}`;
-      const start = priorMonthStr + "-01";
+      const targetMonthStr = formMonth;
+      const start = targetMonthStr + "-01";
       
       // Get all channels belonging to this client
       const { data: clientChannels, error: chErr } = await supabase
@@ -192,29 +187,34 @@ function InvoicesPage() {
       if (!revenues || revenues.length === 0) {
         toast.info(
           lang === "ar" 
-            ? `لا توجد إيرادات غير مفوترة لهذا العميل في شهر أرباحه المحدد (${priorMonthStr})` 
-            : `No unbilled revenues found for this client in the selected earnings month (${priorMonthStr})`
+            ? `لا توجد إيرادات غير مفوترة لهذا العميل في شهر أرباحه المحدد (${targetMonthStr})` 
+            : `No unbilled revenues found for this client in the selected earnings month (${targetMonthStr})`
         );
         setBusy(false);
         return;
       }
 
-      const mapped = revenues.map((r: any) => ({
-        revenueId: r.id,
-        channelId: r.channel_id,
-        description: lang === "ar" ? `أرباح قناة (${r.channels?.name}) - شهر ${priorMonthStr}` : `Earnings for channel (${r.channels?.name}) - Month ${priorMonthStr}`,
-        views: Number(r.views || 0),
-        amount: Number(r.client_share || 0),
-        clientPercentage: Number(r.client_percentage || 50),
-        clientShare: Number(r.client_share || 0),
-        companyShare: Number(r.company_share || 0),
-      }));
+      const mapped = revenues.map((r: any) => {
+        const pctText = r.client_percentage ? ` (%${r.client_percentage})` : "";
+        return {
+          revenueId: r.id,
+          channelId: r.channel_id,
+          description: lang === "ar" 
+            ? `صافي أرباح قناة (${r.channels?.name})${pctText} - شهر ${targetMonthStr}` 
+            : `Net Earnings for channel (${r.channels?.name})${pctText} - Month ${targetMonthStr}`,
+          views: Number(r.views || 0),
+          amount: Number(r.client_share || 0),
+          clientPercentage: Number(r.client_percentage || 50),
+          clientShare: Number(r.client_share || 0),
+          companyShare: Number(r.company_share || 0),
+        };
+      });
 
       setFormItems([...formItems, ...mapped]);
       toast.success(
         lang === "ar" 
-          ? `تم تحميل ${revenues.length} من بنود أرباح القنوات` 
-          : `Successfully loaded ${revenues.length} channel earnings items`
+          ? `تم تحميل ${revenues.length} من بنود صافي أرباح القنوات` 
+          : `Successfully loaded ${revenues.length} channel net earnings items`
       );
     } catch (err: any) {
       toast.error(err.message || (lang === "ar" ? "فشل تحميل الإيرادات" : "Failed to load revenues"));
