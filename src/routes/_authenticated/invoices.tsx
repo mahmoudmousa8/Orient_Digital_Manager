@@ -210,7 +210,16 @@ function InvoicesPage() {
         };
       });
 
-      setFormItems([...formItems, ...mapped]);
+      setFormItems((prev) => {
+        const customItems = prev.filter((it) => !it.revenueId);
+        const uniqueMappedMap = new Map<string, any>();
+        mapped.forEach((m: any) => {
+          if (m.revenueId) {
+            uniqueMappedMap.set(m.revenueId, m);
+          }
+        });
+        return [...customItems, ...Array.from(uniqueMappedMap.values())];
+      });
       toast.success(
         lang === "ar" 
           ? `تم تحميل ${revenues.length} من بنود صافي أرباح القنوات` 
@@ -387,7 +396,8 @@ function InvoicesPage() {
         .eq("invoice_id", inv.id);
       if (error) throw error;
       
-      const mapped = (items ?? []).map((it) => ({
+      const seenKeys = new Set<string>();
+      const deduplicated = (items ?? []).map((it) => ({
         revenueId: it.revenue_id,
         channelId: it.channel_id,
         description: it.description,
@@ -396,8 +406,14 @@ function InvoicesPage() {
         clientPercentage: it.client_percentage,
         clientShare: it.client_share,
         companyShare: it.company_share,
-      }));
-      setFormItems(mapped);
+      })).filter((it) => {
+        const key = it.revenueId ? `rev_${it.revenueId}` : `ch_${it.channelId || it.description}_${it.amount}`;
+        if (seenKeys.has(key)) return false;
+        seenKeys.add(key);
+        return true;
+      });
+
+      setFormItems(deduplicated);
       setCreateOpen(true);
     } catch (err: any) {
       toast.error(lang === "ar" ? "فشل تحميل بنود الفاتورة" : "Failed to load invoice items");
