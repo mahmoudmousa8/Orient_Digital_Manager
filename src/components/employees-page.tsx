@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Briefcase, Plus, Pencil, Trash2, Search, Printer, FileText, Calendar, DollarSign, Wallet, CheckCircle2, ShieldAlert, TrendingUp } from "lucide-react";
+import { Briefcase, Plus, Pencil, Trash2, Search, Printer, FileText, Calendar, DollarSign, Wallet, CheckCircle2, ShieldAlert, TrendingUp, Users } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -888,6 +888,107 @@ export function EmployeesPage() {
         </div>
       </div>
 
+      {/* 6 KPI Cards Grid (Matching Dashboard Reference Screenshot Style) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 my-3">
+        {/* Card 1: Total Net Payroll */}
+        <div className="bg-[#0e0e15] border border-slate-800/80 hover:border-purple-500/40 rounded-2xl p-5 relative shadow-lg transition-all duration-300">
+          <div className="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center shadow-md absolute left-5 top-5">
+            <Wallet className="w-4 h-4" />
+          </div>
+          <span className="text-sm font-extrabold text-slate-200 block text-right">
+            {lang === "ar" ? "إجمالي مسير الرواتب" : "Total Net Payroll"}
+          </span>
+          <div className="text-2xl sm:text-3xl font-black text-white text-right mt-3 tracking-tight" dir="ltr">
+            {egp(payrollStats.totalNet)}
+          </div>
+          <div className="text-xs text-slate-400 text-right mt-3 font-medium">
+            {lang === "ar" ? "صافي المبالغ المستحقة لجميع الموظفين" : "Total net payable amount for all employees"}
+          </div>
+        </div>
+
+        {/* Card 2: Paid Salaries */}
+        <div className="bg-[#0e0e15] border border-slate-800/80 hover:border-emerald-500/40 rounded-2xl p-5 relative shadow-lg transition-all duration-300">
+          <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-md absolute left-5 top-5">
+            <CheckCircle2 className="w-4 h-4" />
+          </div>
+          <span className="text-sm font-extrabold text-slate-200 block text-right">
+            {lang === "ar" ? "الرواتب المدفوعة" : "Paid Salaries"}
+          </span>
+          <div className="text-2xl sm:text-3xl font-black text-white text-right mt-3 tracking-tight" dir="ltr">
+            {egp(payrollStats.totalPaid)}
+          </div>
+          <div className="text-xs text-slate-400 text-right mt-3 font-medium">
+            {lang === "ar" ? `إجمالي المبالغ التي تم تحويلها (تم صرف ${payrollStats.paidCount})` : `Total amount paid (${payrollStats.paidCount} employees)`}
+          </div>
+        </div>
+
+        {/* Card 3: Pending Salaries */}
+        <div className="bg-[#0e0e15] border border-slate-800/80 hover:border-amber-500/40 rounded-2xl p-5 relative shadow-lg transition-all duration-300">
+          <div className="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center shadow-md absolute left-5 top-5">
+            <ShieldAlert className="w-4 h-4" />
+          </div>
+          <span className="text-sm font-extrabold text-slate-200 block text-right">
+            {lang === "ar" ? "أرصدة معلقة غير مدفوعة" : "Pending Unpaid Salaries"}
+          </span>
+          <div className="text-2xl sm:text-3xl font-black text-white text-right mt-3 tracking-tight" dir="ltr">
+            {egp(payrollStats.totalPending)}
+          </div>
+          <div className="text-xs text-slate-400 text-right mt-3 font-medium">
+            {lang === "ar" ? `عدد الرواتب غير المدفوعة حالياً: ${payrollStats.pendingCount}` : `Pending unpaid payroll count: ${payrollStats.pendingCount}`}
+          </div>
+        </div>
+
+        {/* Card 4: Total Employees */}
+        <div className="bg-[#0e0e15] border border-slate-800/80 hover:border-teal-500/40 rounded-2xl p-5 relative shadow-lg transition-all duration-300">
+          <div className="w-8 h-8 rounded-full bg-teal-600 text-white flex items-center justify-center shadow-md absolute left-5 top-5">
+            <Users className="w-4 h-4" />
+          </div>
+          <span className="text-sm font-extrabold text-slate-200 block text-right">
+            {lang === "ar" ? "إجمالي الكوادر والموظفين" : "Total Employees"}
+          </span>
+          <div className="text-2xl sm:text-3xl font-black text-white text-right mt-3 tracking-tight">
+            {employees.length}
+          </div>
+          <div className="text-xs text-slate-400 text-right mt-3 font-medium">
+            {lang === "ar" ? "عدد حسابات الموظفين المسجلين حالياً" : "Total registered employee accounts"}
+          </div>
+        </div>
+
+        {/* Card 5: Total Base Salaries */}
+        <div className="bg-[#0e0e15] border border-slate-800/80 hover:border-blue-500/40 rounded-2xl p-5 relative shadow-lg transition-all duration-300">
+          <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-md absolute left-5 top-5">
+            <DollarSign className="w-4 h-4" />
+          </div>
+          <span className="text-sm font-extrabold text-slate-200 block text-right">
+            {lang === "ar" ? "إجمالي العقود الأساسية" : "Total Base Contracts"}
+          </span>
+          <div className="text-2xl sm:text-3xl font-black text-white text-right mt-3 tracking-tight" dir="ltr">
+            {egp(payrollStats.totalBasic)}
+          </div>
+          <div className="text-xs text-slate-400 text-right mt-3 font-medium">
+            {lang === "ar" ? "مجموع الرواتب الأساسية قبل الخصم والإضافة" : "Total contract base salaries before adjustments"}
+          </div>
+        </div>
+
+        {/* Card 6: Deductions & Bonuses */}
+        <div className="bg-[#0e0e15] border border-slate-800/80 hover:border-fuchsia-500/40 rounded-2xl p-5 relative shadow-lg transition-all duration-300">
+          <div className="w-8 h-8 rounded-full bg-fuchsia-600 text-white flex items-center justify-center shadow-md absolute left-5 top-5">
+            <TrendingUp className="w-4 h-4" />
+          </div>
+          <span className="text-sm font-extrabold text-slate-200 block text-right">
+            {lang === "ar" ? "خصومات ومكافآت الشهر" : "Monthly Adjustments"}
+          </span>
+          <div className="text-xl sm:text-2xl font-black text-white text-right mt-3 tracking-tight flex items-center justify-end gap-2" dir="ltr">
+            <span className="text-emerald-400">+{egp(payrollStats.totalBonuses)}</span>
+            <span className="text-slate-600 font-normal">/</span>
+            <span className="text-rose-400">-{egp(payrollStats.totalDeductions)}</span>
+          </div>
+          <div className="text-xs text-slate-400 text-right mt-3 font-medium">
+            {lang === "ar" ? "إجمالي المكافآت والبدلات مقابل خصومات الغياب" : "Total bonuses vs absence deductions"}
+          </div>
+        </div>
+      </div>
+
       <Tabs defaultValue="payroll" className="w-full">
         <TabsList className="bg-slate-900 border border-slate-800 p-1 mb-4">
           <TabsTrigger value="payroll" className="data-[state=active]:bg-primary">
@@ -991,93 +1092,6 @@ export function EmployeesPage() {
                   </AlertDialogContent>
                 </AlertDialog>
               )}
-            </div>
-          </div>
-
-          {/* KPI Summary Indicators Cards (Matching Reference Style) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-4">
-            {/* 1. Total Net Due (إجمالي مسير الرواتب) */}
-            <div className="bg-slate-950/90 border border-purple-900/50 hover:border-purple-500/60 rounded-2xl p-5 shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-[1.01] relative overflow-hidden group">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black uppercase text-purple-300/90 tracking-wider">
-                  {lang === "ar" ? "إجمالي مسير الرواتب" : "Total Net Payroll"}
-                </span>
-                <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 group-hover:bg-purple-500/20 transition-colors">
-                  <Wallet className="w-5 h-5" />
-                </div>
-              </div>
-              <div className="mt-3">
-                <div className="text-2xl sm:text-3xl font-black text-purple-400 tracking-tight" dir="ltr">
-                  {egp(payrollStats.totalNet)}
-                </div>
-                <p className="text-[11px] font-semibold text-slate-400 mt-2 flex items-center justify-between border-t border-slate-900/80 pt-2">
-                  <span>{lang === "ar" ? "المستحقات الكلية لكافة الموظفين" : "Total net payable to all employees"}</span>
-                  <span className="text-purple-400 font-extrabold">({payrolls.length} {lang === "ar" ? "موظف" : "emp"})</span>
-                </p>
-              </div>
-            </div>
-
-            {/* 2. Total Paid (الرواتب المدفوعة) */}
-            <div className="bg-slate-950/90 border border-amber-900/50 hover:border-amber-500/60 rounded-2xl p-5 shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-[1.01] relative overflow-hidden group">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black uppercase text-amber-300/90 tracking-wider">
-                  {lang === "ar" ? "الرواتب المدفوعة" : "Paid Salaries"}
-                </span>
-                <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 group-hover:bg-amber-500/20 transition-colors">
-                  <CheckCircle2 className="w-5 h-5" />
-                </div>
-              </div>
-              <div className="mt-3">
-                <div className="text-2xl sm:text-3xl font-black text-amber-400 tracking-tight" dir="ltr">
-                  {egp(payrollStats.totalPaid)}
-                </div>
-                <p className="text-[11px] font-semibold text-slate-400 mt-2 flex items-center justify-between border-t border-slate-900/80 pt-2">
-                  <span>{lang === "ar" ? "المبالغ التي تم تحويلها وصرفها" : "Total amount paid to employees"}</span>
-                  <span className="text-amber-400 font-extrabold">({payrollStats.paidCount} {lang === "ar" ? "مسدد" : "paid"})</span>
-                </p>
-              </div>
-            </div>
-
-            {/* 3. Total Pending / Unpaid (الرواتب المعلقة / غير المدفوعة) */}
-            <div className="bg-slate-950/90 border border-rose-900/50 hover:border-rose-500/60 rounded-2xl p-5 shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-[1.01] relative overflow-hidden group">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black uppercase text-rose-300/90 tracking-wider">
-                  {lang === "ar" ? "الرواتب المعلقة" : "Pending Salaries"}
-                </span>
-                <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 group-hover:bg-rose-500/20 transition-colors">
-                  <ShieldAlert className="w-5 h-5" />
-                </div>
-              </div>
-              <div className="mt-3">
-                <div className="text-2xl sm:text-3xl font-black text-rose-400 tracking-tight" dir="ltr">
-                  {egp(payrollStats.totalPending)}
-                </div>
-                <p className="text-[11px] font-semibold text-slate-400 mt-2 flex items-center justify-between border-t border-slate-900/80 pt-2">
-                  <span>{lang === "ar" ? "الرواتب المتبقية في انتظار الصرف" : "Remaining balance under processing"}</span>
-                  <span className="text-rose-400 font-extrabold">({payrollStats.pendingCount} {lang === "ar" ? "معلق" : "pending"})</span>
-                </p>
-              </div>
-            </div>
-
-            {/* 4. Total Basic & Deductions (إجمالي العقود الأساسية والخصومات والمكافآت) */}
-            <div className="bg-slate-950/90 border border-cyan-900/50 hover:border-cyan-500/60 rounded-2xl p-5 shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-[1.01] relative overflow-hidden group">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black uppercase text-cyan-300/90 tracking-wider">
-                  {lang === "ar" ? "إجمالي العقود الأساسية" : "Total Contract Salaries"}
-                </span>
-                <div className="p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 group-hover:bg-cyan-500/20 transition-colors">
-                  <TrendingUp className="w-5 h-5" />
-                </div>
-              </div>
-              <div className="mt-3">
-                <div className="text-2xl sm:text-3xl font-black text-cyan-400 tracking-tight" dir="ltr">
-                  {egp(payrollStats.totalBasic)}
-                </div>
-                <p className="text-[11px] font-semibold text-slate-400 mt-2 flex items-center justify-between border-t border-slate-900/80 pt-2">
-                  <span>{lang === "ar" ? "خصومات:" : "Ded:"} <strong className="text-rose-400 font-bold" dir="ltr">-{egp(payrollStats.totalDeductions)}</strong></span>
-                  <span>{lang === "ar" ? "مكافآت:" : "Bon:"} <strong className="text-emerald-400 font-bold" dir="ltr">+{egp(payrollStats.totalBonuses)}</strong></span>
-                </p>
-              </div>
             </div>
           </div>
 
