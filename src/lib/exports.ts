@@ -397,59 +397,78 @@ export function downloadRevenueTemplate(channels?: any[]) {
   
   let data = [];
   if (channels && channels.length > 0) {
-    // Include all active channels so user can fill revenues manually
-    const activeChannels = channels.filter(c => c.status === 'active' || !c.status);
-    data = activeChannels.map((c, index) => {
+    // Include only active and monetized channels
+    const activeMonetizedChannels = channels.filter(
+      (c) => (c.status === "active" || !c.status) && c.is_monetized !== false
+    );
+    data = activeMonetizedChannels.map((c, index) => {
       const rowNum = index + 2; // Row 1 is header, data starts at row 2
       const clientPct = c.client_percentage ?? 50;
       const systemPct = c.system_percentage ?? 0;
       const companyPct = 100 - clientPct - systemPct;
+      const systemName = (Array.isArray(c.systems) ? c.systems[0]?.name : c.systems?.name) ?? "";
       return {
         "الشهر": currentMonth,
         "القناة": c.name,
+        "السيستم": systemName,
         "العميل": c.clients?.name ?? "",
         "إجمالي الإيراد": "", // Left empty for user input
         "نسبة العميل": clientPct,
         "نسبة السيستم": systemPct,
         "نسبة الشركة": companyPct,
-        "حصة العميل": { t: "n", f: `ROUND(D${rowNum}*E${rowNum}/100, 2)` },
-        "حصة السيستم": { t: "n", f: `ROUND(D${rowNum}*F${rowNum}/100, 2)` },
-        "حصة الشركة": { t: "n", f: `ROUND(D${rowNum}*G${rowNum}/100, 2)` }
+        "حصة العميل": { t: "n", f: `ROUND(E${rowNum}*F${rowNum}/100, 2)` },
+        "حصة السيستم": { t: "n", f: `ROUND(E${rowNum}*G${rowNum}/100, 2)` },
+        "حصة الشركة": { t: "n", f: `ROUND(E${rowNum}*H${rowNum}/100, 2)` }
       };
     });
   }
 
-  // If no active channels, fallback to mock examples
+  // If no active monetized channels, fallback to mock examples
   if (data.length === 0) {
     data = [
       {
         "الشهر": currentMonth,
         "القناة": "قناة تجريبية 1",
+        "السيستم": "سيستم تجريبي",
         "العميل": "عميل تجريبي 1",
         "إجمالي الإيراد": "",
         "نسبة العميل": 60,
         "نسبة السيستم": 10,
         "نسبة الشركة": 30,
-        "حصة العميل": { t: "n", f: "ROUND(D2*E2/100, 2)" },
-        "حصة السيستم": { t: "n", f: "ROUND(D2*F2/100, 2)" },
-        "حصة الشركة": { t: "n", f: "ROUND(D2*G2/100, 2)" }
+        "حصة العميل": { t: "n", f: "ROUND(E2*F2/100, 2)" },
+        "حصة السيستم": { t: "n", f: "ROUND(E2*G2/100, 2)" },
+        "حصة الشركة": { t: "n", f: "ROUND(E2*H2/100, 2)" }
       },
       {
         "الشهر": currentMonth,
         "القناة": "قناة تجريبية 2",
+        "السيستم": "سيستم تجريبي",
         "العميل": "عميل تجريبي 2",
         "إجمالي الإيراد": "",
         "نسبة العميل": 65,
         "نسبة السيستم": 0,
         "نسبة الشركة": 35,
-        "حصة العميل": { t: "n", f: "ROUND(D3*E3/100, 2)" },
-        "حصة السيستم": { t: "n", f: "ROUND(D3*F3/100, 2)" },
-        "حصة الشركة": { t: "n", f: "ROUND(D3*G3/100, 2)" }
+        "حصة العميل": { t: "n", f: "ROUND(E3*F3/100, 2)" },
+        "حصة السيستم": { t: "n", f: "ROUND(E3*G3/100, 2)" },
+        "حصة الشركة": { t: "n", f: "ROUND(E3*H3/100, 2)" }
       }
     ];
   }
 
   const ws = XLSX.utils.json_to_sheet(data);
+  ws["!cols"] = [
+    { wch: 12 }, // الشهر
+    { wch: 30 }, // القناة
+    { wch: 20 }, // السيستم
+    { wch: 22 }, // العميل
+    { wch: 16 }, // إجمالي الإيراد
+    { wch: 12 }, // نسبة العميل
+    { wch: 12 }, // نسبة السيستم
+    { wch: 12 }, // نسبة الشركة
+    { wch: 14 }, // حصة العميل
+    { wch: 14 }, // حصة السيستم
+    { wch: 14 }, // حصة الشركة
+  ];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Revenues");
   XLSX.writeFile(wb, "revenue-import-template.xlsx");
