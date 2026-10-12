@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ShieldCheck, Unlink, UserPlus, Link2, Search, Lock, ShieldAlert, Power, Pencil, Users } from "lucide-react";
+import { ShieldCheck, Unlink, UserPlus, Link2, Search, Lock, ShieldAlert, Power, Pencil, Users, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,6 +35,7 @@ import {
   listUserPermissions,
   unlinkUserFromClients,
   toggleUserActive,
+  deleteAppUser,
 } from "@/lib/permissions.functions";
 import { createAppUser, resetClientPassword, updateAppUser } from "@/lib/admin.functions";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -67,6 +68,7 @@ export function UsersPage() {
   const updateUserFn = useServerFn(updateAppUser);
   const toggleActiveFn = useServerFn(toggleUserActive);
   const resetPasswordFn = useServerFn(resetClientPassword);
+  const deleteUserFn = useServerFn(deleteAppUser);
 
   // Lists and Queries
   const { data, isLoading } = useQuery({
@@ -122,7 +124,10 @@ export function UsersPage() {
   const [resetting, setResetting] = useState(false);
 
   // Unlink State
-  const [unlinkTarget, setUnlinkTarget] = useState<string | null>(null);
+  const [unlinkTarget, setUnlinkTarget] = useState<{ userId: string; name: string } | null>(null);
+
+  // Delete State
+  const [deleteTarget, setDeleteTarget] = useState<{ userId: string; name: string } | null>(null);
 
   useEffect(() => {
     if (!loading && !isAdmin) navigate({ to: "/dashboard", replace: true });
@@ -228,6 +233,16 @@ export function UsersPage() {
       qc.invalidateQueries({ queryKey: ["user-permissions"] });
     } catch (e: any) {
       toast.error(e.message ?? (lang === "ar" ? "فشل فك الارتباط" : "Failed to unlink"));
+    }
+  }
+
+  async function handleDeleteUser(userId: string) {
+    try {
+      await deleteUserFn({ data: { userId } });
+      toast.success(lang === "ar" ? "تم حذف المستخدم بنجاح" : "User deleted successfully");
+      qc.invalidateQueries({ queryKey: ["user-permissions"] });
+    } catch (e: any) {
+      toast.error(e.message ?? (lang === "ar" ? "فشل حذف المستخدم" : "Failed to delete user"));
     }
   }
 
@@ -523,13 +538,25 @@ export function UsersPage() {
                               <Button
                                 size="icon"
                                 variant="ghost"
-                                title={lang === "ar" ? "فك ربط العملاء" : "Unlink Clients"}
-                                onClick={() => setUnlinkTarget(u.userId)}
-                                className="text-slate-400 hover:text-red-400 hover:bg-slate-800"
+                                title={lang === "ar" ? "فك ربط العملاء عن هذا المستخدم" : "Unlink Clients"}
+                                onClick={() => setUnlinkTarget({ userId: u.userId, name: u.fullName || u.email })}
+                                className="text-slate-400 hover:text-amber-400 hover:bg-slate-800"
                               >
                                 <Unlink className="w-4 h-4" />
                               </Button>
                             )}
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              title={isSelf 
+                                ? (lang === "ar" ? "لا يمكنك حذف حسابك الشخصي" : "Cannot delete own account") 
+                                : (lang === "ar" ? "حذف المستخدم نهائياً" : "Delete User Permanently")}
+                              onClick={() => setDeleteTarget({ userId: u.userId, name: u.fullName || u.email })}
+                              disabled={isSelf}
+                              className={isSelf ? "text-slate-600 cursor-not-allowed opacity-40" : "text-slate-400 hover:text-red-500 hover:bg-slate-800"}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -745,12 +772,12 @@ export function UsersPage() {
 
       {/* Unlink AlertDialog */}
       <AlertDialog open={!!unlinkTarget} onOpenChange={(o) => !o && setUnlinkTarget(null)}>
-        <AlertDialogContent dir={lang === "ar" ? "rtl" : "ltr"} className="text-right">
+        <AlertDialogContent dir={lang === "ar" ? "rtl" : "ltr"} className="text-right bg-slate-950 border border-slate-800 text-slate-100">
           <AlertDialogHeader>
             <AlertDialogTitle className={lang === "en" ? "text-left text-white font-bold font-black" : "text-white font-bold font-black"}>
-              {lang === "ar" ? "هل تريد فك ربط كافة العملاء عن هذا المستخدم؟" : "Do you want to unlink all clients from this user?"}
+              {lang === "ar" ? `هل تريد فك ربط كافة العملاء عن (${unlinkTarget?.name})؟` : `Do you want to unlink all clients from (${unlinkTarget?.name})?`}
             </AlertDialogTitle>
-            <AlertDialogDescription className={lang === "en" ? "text-left" : "text-right"}>
+            <AlertDialogDescription className={lang === "en" ? "text-left text-slate-400" : "text-right text-slate-400"}>
               {lang === "ar" 
                 ? "هذا الإجراء سيقوم بإزالة ارتباط كافة العملاء بهذا الحساب، ولن يتمكن هذا الحساب من رؤية أي قنوات أو تقارير تخص هؤلاء العملاء." 
                 : "This action will remove all client links from this account. This user will no longer be able to see any channels or reports for these clients."}
@@ -761,13 +788,53 @@ export function UsersPage() {
             <AlertDialogAction
               onClick={() => {
                 if (unlinkTarget) {
-                  unlink(unlinkTarget);
+                  unlink(unlinkTarget.userId);
                   setUnlinkTarget(null);
                 }
               }}
-              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+              className="bg-amber-600 hover:bg-amber-700 text-white"
             >
               {lang === "ar" ? "نعم، فك الربط" : "Yes, Unlink"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete User AlertDialog */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent dir={lang === "ar" ? "rtl" : "ltr"} className="text-right bg-slate-950 border border-slate-800 text-slate-100">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white font-bold text-right text-destructive flex items-center gap-2 justify-end">
+              <Trash2 className="w-5 h-5 text-destructive" />
+              {lang === "ar" ? `هل أنت متأكد من حذف المستخدم (${deleteTarget?.name}) نهائياً؟` : `Confirm permanent deletion of (${deleteTarget?.name})?`}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-300 text-right mt-2 space-y-2">
+              <p>
+                {lang === "ar"
+                  ? `سيتم حذف حساب المستخدم (${deleteTarget?.name}) نهائياً من قاعدة البيانات وإلغاء ارتباطه بكافة العملاء والمهام المسندة إليه فوراً.`
+                  : `User account (${deleteTarget?.name}) will be permanently deleted from the database and unlinked from all clients and assigned tasks.`}
+              </p>
+              <p className="text-xs text-rose-400 font-bold">
+                {lang === "ar"
+                  ? "تحذير: هذا الإجراء نهائي ولا يمكن التراجع عنه مطلقاً."
+                  : "Warning: This action is permanent and cannot be undone."}
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 mt-4">
+            <AlertDialogCancel className="bg-slate-900 border-slate-700 text-white hover:bg-slate-800">
+              {lang === "ar" ? "إلغاء" : "Cancel"}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteTarget) {
+                  handleDeleteUser(deleteTarget.userId);
+                  setDeleteTarget(null);
+                }
+              }}
+              className="bg-destructive hover:bg-destructive/90 text-white"
+            >
+              {lang === "ar" ? "نعم، حذف المستخدم نهائياً" : "Yes, Delete User"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

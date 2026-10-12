@@ -4,11 +4,21 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 type AppRole = "admin" | "employee" | "client";
 
 async function assertAdmin(context: any) {
-  const { data: isAdmin } = await context.supabase.rpc("has_role", {
-    _user_id: context.userId,
-    _role: "admin",
-  });
-  if (!isAdmin) throw new Error("صلاحيات غير كافية");
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: roleRow } = await supabaseAdmin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", context.userId)
+    .eq("role", "admin")
+    .maybeSingle();
+
+  if (!roleRow) {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("صلاحيات غير كافية - هذه العملية تتطلب صلاحية مسؤول");
+  }
 }
 
 export const listUserPermissions = createServerFn({ method: "GET" })
@@ -113,5 +123,64 @@ export const toggleUserActive = createServerFn({ method: "POST" })
       .update({ is_active: data.isActive })
       .eq("id", data.userId);
     if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const unlinkClient = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: any) => {
+    if (!input?.clientId) throw new Error("العميل مطلوب");
+    return { clientId: String(input.clientId) };
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("clients")
+      .update({ user_id: null })
+      .eq("id", data.clientId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const deleteAppUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: any) => {
+    if (!input?.userId) throw new Error("المستخدم مطلوب");
+    return { userId: String(input.userId) };
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    if (data.userId === context.userId) {
+      throw new Error("لا يمكنك حذف حسابك الشخصي");
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // 1. Unlink any clients linked to this user
+    await supabaseAdmin
+      .from("clients")
+      .update({ user_id: null })
+      .eq("user_id", data.userId);
+
+    // 2. Clear foreign references in other tables
+    await supabaseAdmin
+      .from("payment_transactions")
+      .update({ created_by: null })
+      .eq("created_by", data.userId);
+
+    await supabaseAdmin
+      .from("channel_publishing_tracker")
+      .update({ assigned_to: null })
+      .eq("assigned_to", data.userId);
+
+    // 3. Delete user roles and profile
+    await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
+    await supabaseAdmin.from("profiles").delete().eq("id", data.userId);
+
+    // 4. Delete user from auth.users
+    const { error: deleteErr } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
+    if (deleteErr) throw new Error(deleteErr.message);
+
     return { ok: true };
   });

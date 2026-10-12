@@ -208,9 +208,6 @@ export const updateAppUser = createServerFn({ method: "POST" })
     if (!userId) throw new Error("المستخدم مطلوب");
     if (!/^\S+@\S+\.\S+$/.test(email)) throw new Error("بريد إلكتروني غير صالح");
     if (!["admin", "employee", "client"].includes(role)) throw new Error("دور غير صالح");
-    if (role === "client" && clientIds.length === 0 && !newClientName) {
-      throw new Error("اختر العميل المرتبط أو أدخل اسم عميل جديد");
-    }
     return { userId, email, role: role as "admin" | "employee" | "client", fullName, clientIds, newClientName };
   })
   .handler(async ({ data, context }) => {
@@ -273,3 +270,5 @@ export const updateAppUser = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
+
+export { deleteAppUser, unlinkClient } from "./permissions.functions";

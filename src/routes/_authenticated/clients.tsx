@@ -12,7 +12,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Pencil, Trash2, Users, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, Search, Unlink } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { money, parsePaymentMethod } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/use-language";
@@ -44,6 +45,7 @@ function ClientsPage() {
   const [editing, setEditing] = useState<Client | null>(null);
   const [search, setSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [unlinkClientTarget, setUnlinkClientTarget] = useState<Client | null>(null);
   const [filterPayment, setFilterPayment] = useState("all"); // all, instapay, wallet
   const [paymentType, setPaymentType] = useState<"wallet" | "instapay">("wallet");
 
@@ -100,6 +102,19 @@ function ClientsPage() {
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["clients"] }); toast.success("تم حذف العميل"); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const unlinkClientMut = useMutation({
+    mutationFn: async (clientId: string) => {
+      const { error } = await supabase.from("clients").update({ user_id: null }).eq("id", clientId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["clients"] });
+      toast.success(lang === "ar" ? "تم فك ارتباط حساب المستخدم بنجاح" : "User unlinked from client successfully");
+      setUnlinkClientTarget(null);
+    },
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -258,7 +273,16 @@ function ClientsPage() {
                 return (
                   <TableRow key={c.id}>
                     <TableCell className="font-semibold text-slate-400 text-right">{index + 1}</TableCell>
-                    <TableCell className="font-medium text-right">{c.name}</TableCell>
+                    <TableCell className="font-medium text-right">
+                      <div className="flex items-center gap-2 justify-end">
+                        {c.user_id ? (
+                          <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-400 border-emerald-500/20 px-1.5 py-0 font-normal">
+                            {lang === "ar" ? "مرتبط بحساب" : "Linked"}
+                          </Badge>
+                        ) : null}
+                        <span>{c.name}</span>
+                      </div>
+                    </TableCell>
                     <TableCell dir="ltr" className="text-right">{c.phone || "—"}</TableCell>
                     <TableCell dir="ltr" className="text-right">
                       {c.vodafone_cash ? (
@@ -291,6 +315,17 @@ function ClientsPage() {
                     <TableCell dir="ltr" className="text-white font-medium text-left">{money(s.payout)}</TableCell>
                     <TableCell className="text-left">
                       <div className="flex gap-1 justify-end">
+                        {c.user_id && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            title={lang === "ar" ? "فك ارتباط حساب المستخدم عن هذا العميل" : "Unlink User Account"}
+                            onClick={() => setUnlinkClientTarget(c)}
+                            className="text-slate-400 hover:text-amber-400"
+                          >
+                            <Unlink className="w-4 h-4" />
+                          </Button>
+                        )}
                         <Button size="icon" variant="ghost" onClick={() => handleEditClick(c)}><Pencil className="w-4 h-4" /></Button>
                         <Button size="icon" variant="ghost" onClick={() => setDeleteTarget(c.id)}><Trash2 className="w-4 h-4 text-slate-300 hover:text-red-400 transition-colors" /></Button>
                       </div>
@@ -324,6 +359,34 @@ function ClientsPage() {
               {lang === "ar" ? "نعم، احذف العميل" : "Yes, delete client"}
             </AlertDialogAction>
             <AlertDialogCancel className="bg-slate-800 text-white border-slate-700 hover:bg-slate-700">{t("cancel")}</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!unlinkClientTarget} onOpenChange={(o) => !o && setUnlinkClientTarget(null)}>
+        <AlertDialogContent dir={lang === "ar" ? "rtl" : "ltr"} className="bg-slate-900 border border-slate-800 text-slate-100">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white text-right">
+              {lang === "ar" ? `هل تريد فك ارتباط حساب المستخدم عن العميل (${unlinkClientTarget?.name})؟` : `Unlink user account from (${unlinkClientTarget?.name})?`}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-400 text-right">
+              {lang === "ar"
+                ? "سيتم إلغاء ارتباط حساب الدخول الخاص بهذا العميل، ولن يتمكن المستخدم المرتبط به سابقاً من رؤية قنوات وبيانات هذا العميل حتى يتم ربطه مجدداً."
+                : "The user account linked to this client will be disconnected. The user will no longer see this client's data until re-linked."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="bg-slate-800 text-white border-slate-700 hover:bg-slate-700">{t("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (unlinkClientTarget) {
+                  unlinkClientMut.mutate(unlinkClientTarget.id);
+                }
+              }}
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              {lang === "ar" ? "نعم، فك الارتباط" : "Yes, Unlink"}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
